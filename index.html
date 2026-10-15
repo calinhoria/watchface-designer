@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Watchface Designer</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="toolbar">
+  <div class="actions">
+    <button id="btnNew" title="New watchface"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15h6"/></svg>New</button>
+    <button id="btnUndo" class="icon-only" title="Undo (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+    <button id="btnRedo" class="icon-only" title="Redo (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+    <span class="sep"></span>
+    <button id="btnOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Import</button>
+    <button id="btnExport" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 3v6h6V3M8 15h8v6H8z"/></svg>Save</button>
+    <button id="btnCompile" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12 4 7.5M12 12v9M12 12l8-4.5"/></svg>Compile</button>
+    <span class="sep"></span>
+    <button id="btnAddImg" disabled title="Add image layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 19 5-5 3 3 3-3 3 3"/></svg>+Img</button>
+    <button id="btnAddNum" disabled title="Add digital number layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 3 8 21M16 3l-2 18M4 9h17M3 15h17"/></svg>+Num</button>
+    <button id="btnAddList" disabled title="Add image-list layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5" cy="18" r="1.2"/></svg>+List</button>
+    <button id="btnAddClock" disabled title="Add analog clock layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>+Clock</button>
+    <button id="btnAddBtn" disabled title="Add tap button layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>+Btn</button>
+    <button id="btnUpload" disabled title="Upload PNG images"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 20h16"/></svg>Upload PNG</button>
+    <input id="fileUpload" type="file" accept="image/png,image/bmp" multiple hidden />
+    <input id="fileFont" type="file" accept=".ttf,.otf,.woff,.woff2" hidden />
+  </div>
+</header>
+<main>
+  <section class="left">
+    <div class="panel">
+      <h3>Slots <span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span></h3>
+      <div id="slots"></div>
+      <label class="row">Title <input id="inpTitle" type="text" /></label>
+      <div class="row small" id="screenInfo"></div>
+    </div>
+    <div class="panel grow">
+      <h3>Layers <span id="wcount"></span> <span class="lbtns"><button id="btnUp" title="Move layer up">↑</button><button id="btnDown" title="Move layer down">↓</button></span></h3>
+      <div id="layers"></div>
+    </div>
+  </section>
+  <section class="center">
+    <div class="watch-head"><span id="watchTitle">No face loaded</span><span id="watchSub" class="sub"></span></div>
+    <div class="canvas-wrap">
+      <canvas id="cv"></canvas>
+    </div>
+    <div class="hint">Drag widget to move · click layer to select · preview uses decoded PNGs (black = transparent, like original Magick step).</div>
+    <div id="meta" class="meta-status"></div>
+  </section>
+  <section class="right">
+    <div class="panel">
+      <h3>Properties</h3>
+      <div id="props"><p class="muted">Select a layer.</p></div>
+    </div>
+    <div class="panel grow">
+      <h3>Images <span id="icount"></span></h3>
+      <div id="images"></div>
+    </div>
+  </section>
+</main>
+<div id="slotModal" class="modal-backdrop" hidden>
+  <div class="modal">
+    <h3>Add slot</h3>
+    <label class="row">Role
+      <select id="slotRole">
+        <option value="face">Face (main watchface)</option>
+        <option value="aod">AOD (always-on display)</option>
+      </select>
+    </label>
+    <div class="modal-btns">
+      <button id="slotCancel">Cancel</button>
+      <button id="slotCreate">Add</button>
+    </div>
+  </div>
+</div>
+<div id="newFaceModal" class="modal-backdrop" hidden>
+  <div class="modal">
+    <h3>New watchface</h3>
+    <label class="row">Name <input id="newFaceName" type="text" placeholder="My face" /></label>
+    <label class="row">Device
+      <select id="newFaceDevice"></select>
+    </label>
+    <div class="modal-btns">
+      <button id="newFaceCancel">Cancel</button>
+      <button id="newFaceCreate">Create</button>
+    </div>
+  </div>
+</div>
+<script src="renderer.js"></script>
+</body>
+</html>
