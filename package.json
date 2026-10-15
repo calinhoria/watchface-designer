@@ -9,11 +9,14 @@
     "dist": "electron-builder",
     "dist-mac": "electron-builder --mac",
     "dist-win": "electron-builder --win",
-    "dist-linux": "electron-builder --linux"
+    "dist-linux": "electron-builder --linux",
+    "css": "tailwindcss -i styles-src.css -o styles.css --minify"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
     "electron": "^33.4.11",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "tailwindcss": "^4.3.3"
   },
   "dependencies": {
     "pngjs": "^7.0.0"

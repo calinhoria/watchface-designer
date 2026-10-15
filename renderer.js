@@ -672,6 +672,7 @@ window.addEventListener('keydown', (e) => {
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return; // native text undo
   if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
   else if (e.key === 'y') { e.preventDefault(); redo(); }
+  else if (e.key === 's' && !$('btnExport').disabled) { e.preventDefault(); $('btnExport').click(); }
 });
 $('btnUp').disabled = true; $('btnDown').disabled = true; $('btnAddSlot').disabled = true;
 $('btnCompile').onclick = async () => {

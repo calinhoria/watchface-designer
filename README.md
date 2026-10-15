@@ -20,8 +20,14 @@ No BMP/Magick round-trip: RGBA goes straight to PNG via `pngjs` (pure JS, no nat
 ## Run
 ```bash
 npm install
-npm start
+npm start        # UI styling is pre-built (styles.css compiled from styles-src.css)
+npm run css      # rebuild styles.css after editing styles-src.css (Tailwind v4 CLI, offline)
 ```
+
+UI: Tailwind v4 (bundled/compiled at build time, no runtime CDN). Design tokens
+live in `styles-src.css` (@theme: bg/panel/line/ink/mut/acc). Toolbar: New |
+undo/redo | Import · Save (Ctrl+S) | add-tools group (Img/Num/List/Clock/Btn/PNG)
+| primary Compile on the right.
 
 ## Package
 ```bash

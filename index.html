@@ -6,56 +6,66 @@
 <title>Watchface Designer</title>
 <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-<header class="toolbar">
-  <div class="actions">
-    <button id="btnNew" title="New watchface"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15h6"/></svg>New</button>
-    <button id="btnUndo" class="icon-only" title="Undo (Ctrl+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
-    <button id="btnRedo" class="icon-only" title="Redo (Ctrl+Shift+Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
-    <span class="sep"></span>
-    <button id="btnOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Import</button>
-    <button id="btnExport" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 3v6h6V3M8 15h8v6H8z"/></svg>Save</button>
-    <button id="btnCompile" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12 4 7.5M12 12v9M12 12l8-4.5"/></svg>Compile</button>
-    <span class="sep"></span>
-    <button id="btnAddImg" disabled title="Add image layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 19 5-5 3 3 3-3 3 3"/></svg>+Img</button>
-    <button id="btnAddNum" disabled title="Add digital number layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 3 8 21M16 3l-2 18M4 9h17M3 15h17"/></svg>+Num</button>
-    <button id="btnAddList" disabled title="Add image-list layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5" cy="18" r="1.2"/></svg>+List</button>
-    <button id="btnAddClock" disabled title="Add analog clock layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>+Clock</button>
-    <button id="btnAddBtn" disabled title="Add tap button layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>+Btn</button>
-    <button id="btnUpload" disabled title="Upload PNG images"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 20h16"/></svg>Upload PNG</button>
-    <input id="fileUpload" type="file" accept="image/png,image/bmp" multiple hidden />
-    <input id="fileFont" type="file" accept=".ttf,.otf,.woff,.woff2" hidden />
+<body class="bg-bg text-ink select-none">
+<header class="flex items-center gap-1.5 px-3 h-[46px] bg-panel border-b border-line">
+  <!-- file group -->
+  <button id="btnNew" title="New watchface" class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M12 12v6M9 15h6"/></svg>New</button>
+  <button id="btnUndo" title="Undo (Ctrl+Z)" disabled class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+  <button id="btnRedo" title="Redo (Ctrl+Shift+Z)" disabled class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+  <span class="h-5 w-px bg-white/10 mx-1"></span>
+  <button id="btnOpen" title="Import a .bin watchface" class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Import</button>
+  <button id="btnExport" title="Save project (Ctrl+S)" disabled class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 3v6h6V3M8 15h8v6H8z"/></svg>Save</button>
+
+  <!-- add tools group -->
+  <span class="h-5 w-px bg-white/10 mx-1"></span>
+  <div class="flex items-center gap-1 p-1 rounded-lg bg-black/25 border border-line">
+    <button id="btnAddImg" title="Add image layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 19 5-5 3 3 3-3 3 3"/></svg>Img</button>
+    <button id="btnAddNum" title="Add digital number layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 3 8 21M16 3l-2 18M4 9h17M3 15h17"/></svg>Num</button>
+    <button id="btnAddList" title="Add image-list layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5" cy="18" r="1.2"/></svg>List</button>
+    <button id="btnAddClock" title="Add analog clock layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Clock</button>
+    <button id="btnAddBtn" title="Add tap button layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>Btn</button>
+    <span class="h-4 w-px bg-white/10 mx-0.5"></span>
+    <button id="btnUpload" title="Upload PNG images" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 20h16"/></svg>PNG</button>
   </div>
+
+  <div class="flex-1"></div>
+
+  <!-- primary action -->
+  <button id="btnCompile" title="Compile to installable .bin" disabled class="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-lg text-[13px] font-semibold bg-acc hover:bg-acc2 text-white shadow-md shadow-acc/25 transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12 4 7.5M12 12v9M12 12l8-4.5"/></svg>Compile</button>
+
+  <input id="fileUpload" type="file" accept="image/png,image/bmp" multiple hidden />
+  <input id="fileFont" type="file" accept=".ttf,.otf,.woff,.woff2" hidden />
 </header>
-<main>
-  <section class="left">
-    <div class="panel">
-      <h3>Slots <span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span></h3>
-      <div id="slots"></div>
+<main class="grid gap-3 p-3 h-[calc(100vh-58px)] grid-cols-[288px_minmax(0,1fr)_304px]">
+  <section class="left flex flex-col gap-3 min-h-0">
+    <div class="rounded-xl border border-line bg-panel p-3">
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2">Slots <span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span></h3>
+      <div id="slots" class="mb-2"></div>
       <label class="row">Title <input id="inpTitle" type="text" /></label>
       <div class="row small" id="screenInfo"></div>
     </div>
-    <div class="panel grow">
-      <h3>Layers <span id="wcount"></span> <span class="lbtns"><button id="btnUp" title="Move layer up">↑</button><button id="btnDown" title="Move layer down">↓</button></span></h3>
-      <div id="layers"></div>
+    <div class="rounded-xl border border-line bg-panel p-3 flex flex-col min-h-0 flex-1">
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2">Layers <span id="wcount"></span><span class="flex-1"></span><span class="lbtns"><button id="btnUp" title="Move layer up">↑</button><button id="btnDown" title="Move layer down">↓</button></span></h3>
+      <div id="layers" class="overflow-auto min-h-0"></div>
     </div>
   </section>
-  <section class="center">
-    <div class="watch-head"><span id="watchTitle">No face loaded</span><span id="watchSub" class="sub"></span></div>
-    <div class="canvas-wrap">
-      <canvas id="cv"></canvas>
+  <section class="center flex flex-col items-center gap-2.5 min-w-0 min-h-0">
+    <div class="text-center">
+      <div id="watchTitle" class="text-[17px] font-bold leading-tight">No face loaded</div>
+      <div id="watchSub" class="text-xs text-mut mt-0.5"></div>
     </div>
-    <div class="hint">Drag widget to move · click layer to select · preview uses decoded PNGs (black = transparent, like original Magick step).</div>
+    <div class="canvas-wrap"><canvas id="cv"></canvas></div>
     <div id="meta" class="meta-status"></div>
+    <div class="text-xs text-mut text-center">Drag widget to move · click layer to select · Ctrl+Z undo</div>
   </section>
-  <section class="right">
-    <div class="panel">
-      <h3>Properties</h3>
-      <div id="props"><p class="muted">Select a layer.</p></div>
+  <section class="flex flex-col gap-3 min-h-0">
+    <div class="rounded-xl border border-line bg-panel p-3">
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2">Properties</h3>
+      <div id="props" class="text-[13px]"><p class="muted">Select a layer.</p></div>
     </div>
-    <div class="panel grow">
-      <h3>Images <span id="icount"></span></h3>
-      <div id="images"></div>
+    <div class="rounded-xl border border-line bg-panel p-3 flex flex-col min-h-0 flex-1">
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2">Images <span id="icount"></span></h3>
+      <div id="images" class="overflow-auto min-h-0"></div>
     </div>
   </section>
 </main>
