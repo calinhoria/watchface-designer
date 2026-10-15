@@ -14,6 +14,7 @@
   <button id="btnRedo" title="Redo (Ctrl+Shift+Z)" disabled class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
   <span class="h-5 w-px bg-white/10 mx-1"></span>
   <button id="btnOpen" title="Import a .bin watchface" class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Import</button>
+  <button id="btnOpenProject" title="Open an existing project folder" class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M15.5 12.5h5M18 10v5"/></svg>Open</button>
   <button id="btnExport" title="Save project (Ctrl+S)" disabled class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3h11l3 3v15H5z"/><path d="M9 3v6h6V3M8 15h8v6H8z"/></svg>Save</button>
 
   <!-- add tools group -->
@@ -39,7 +40,7 @@
 <main class="grid gap-3 p-3 grid-cols-[288px_minmax(0,1fr)_304px]">
   <section class="left flex flex-col gap-3 min-w-0">
     <div class="panel-c rounded-xl border border-line bg-panel p-3" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Slots <span class="chev">▾</span><span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span></h3>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Slots <span class="flex-1"></span><span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span><span class="chev">▾</span></h3>
       <div class="pbody">
         <div id="slots" class="mb-2"></div>
         <label class="row">Title <input id="inpTitle" type="text" /></label>
@@ -47,7 +48,7 @@
       </div>
     </div>
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Layers <span id="wcount"></span><span class="flex-1"></span><span class="lbtns"><button id="btnUp" title="Move layer up">↑</button><button id="btnDown" title="Move layer down">↓</button></span></h3>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Layers <span id="wcount"></span><span class="flex-1"></span><span class="lbtns"><button id="btnUp" title="Move layer up">↑</button><button id="btnDown" title="Move layer down">↓</button></span><span class="chev">▾</span></h3>
       <div id="layers" class="pbody"></div>
     </div>
   </section>
@@ -62,11 +63,11 @@
   </section>
   <section class="flex flex-col gap-3 min-w-0">
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Properties <span class="chev">▾</span></h3>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Properties <span class="flex-1"></span><span class="chev">▾</span></h3>
       <div id="props" class="pbody text-[13px]"><p class="muted">Select a layer.</p></div>
     </div>
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Images <span id="icount"></span><span class="chev">▾</span></h3>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Images <span id="icount"></span><span class="flex-1"></span><span class="chev">▾</span></h3>
       <div id="images" class="pbody"></div>
     </div>
   </section>

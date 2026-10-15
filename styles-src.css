@@ -41,12 +41,22 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 
 /* slots strip */
 #slots { display: flex; gap: 4px; flex-wrap: wrap; }
-#slots button {
-  background: #0d0f14; border: 1px solid var(--color-line); color: var(--color-mut);
-  font-size: 12px; padding: 5px 12px; border-radius: 8px; cursor: pointer; transition: all .12s;
+.slot-chip {
+  display: inline-flex; align-items: center; border: 1px solid var(--color-line);
+  background: #0d0f14; border-radius: 8px; overflow: hidden; transition: border-color .12s;
 }
-#slots button:hover { color: var(--color-ink); border-color: #39415a; }
-#slots button.sel { background: var(--color-acc); border-color: var(--color-acc); color: #fff; font-weight: 600; }
+.slot-chip:hover { border-color: #39415a; }
+.slot-chip.sel { border-color: var(--color-acc); background: rgb(91 140 255 / .16); }
+.slot-btn {
+  background: transparent; border: 0; color: var(--color-mut);
+  font-size: 12px; padding: 5px 10px; cursor: pointer;
+}
+.slot-chip.sel .slot-btn { color: #fff; font-weight: 600; }
+.slot-del {
+  background: transparent; border: 0; border-left: 1px solid var(--color-line);
+  color: var(--color-mut); font-size: 11px; line-height: 1; padding: 6px 7px; cursor: pointer;
+}
+.slot-del:hover { background: #7f2b32; color: #fff; }
 
 /* layer rows */
 #layers { display: flex; flex-direction: column; gap: 2px; }

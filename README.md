@@ -9,7 +9,8 @@ to a pure-JS Electron app that runs on **macOS, Windows, Linux**.
 - Decode images without native deps (RLE v10/v11/v20, RGB565→RGBA, indexed8+palette, RedmiWatch3Active sparse codecs ported from `XiaomiWatch.Common` IL)
 - Designer: canvas preview (watch name above it), collapsible panels (max-height 600 with scroll), layers (add/reorder/hide/delete inline), drag-move, property editor (incl. tap actions ⚡), title edit, undo/redo (toolbar + Ctrl+Z / Ctrl+Shift+Z)
 - New watchface: toolbar `New` button → device picker (8 supported devices) + name field → blank face at the right screen size (preview auto-composed from canvas on compile)
-- Slots: `+` in the Slots panel adds a slot with a role dialog (Face / AOD); the status line lives under the canvas, not in the toolbar
+- Slots: `+` adds a slot with a role dialog (Face / AOD), and each chip has a remove (`✕`) button; at least one slot is always kept. Status line lives under the canvas, not in the toolbar.
+- Open: reopen a saved project folder (`.fprj` + `images/`, plus `AOD/` `AOD2/`…); remembers the folder so Save overwrites in place
 - Images: PNG upload, per-image delete (with usage check)
 - Fonts → digits: pick one of 5 bundled OFL Google fonts (or import .ttf/.otf) on any DigitalNum/ImageList layer to generate the 0-9 BitmapList PNGs on the fly (size + color + faux bold/italic, auto-regenerates on every change, stale files deleted)
 - Save: `images/*.png` + `<name>.fprj` (FaceProject XML, same attrs as C# `Serialize()`) + composed `preview.png`; extra slots go to `AOD/` `AOD2/`… Stale images are pruned on re-save. First save asks for a folder, later saves reuse it.
@@ -26,7 +27,7 @@ npm run css      # rebuild styles.css after editing styles-src.css (Tailwind v4 
 
 UI: Tailwind v4 (bundled/compiled at build time, no runtime CDN). Design tokens
 live in `styles-src.css` (@theme: bg/panel/line/ink/mut/acc). Toolbar: New |
-undo/redo | Import · Save (Ctrl+S) | add-tools group (Img/Num/List/Clock/Btn/PNG)
+undo/redo | Import/Open · Save (Ctrl+S) | add-tools group (Img/Digital/List/Clock/Btn/PNG)
 | primary Compile on the right.
 
 ## Package

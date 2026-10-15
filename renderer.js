@@ -73,6 +73,22 @@ function slotName(i) {
   return i === 0 ? 'Face' : `AOD ${i}`;
 }
 $('btnAddSlot').onclick = () => { if (project) $('slotModal').hidden = false; };
+function removeSlot(i) {
+  if (!project || project.slots.length <= 1) return; // keep at least one
+  const s = project.slots[i];
+  const n = s.widgets.length + s.images.length;
+  if (n && !confirm(`Remove ${slotName(i)}? It has ${s.widgets.length} layer(s) and ${s.images.length} image(s).`)) return;
+  if (i === 0) {
+    // deleting the face keeps an AOD as the new face so the file stays valid
+    if (!confirm('This is the main Face slot. The next slot becomes the new Face. Continue?')) return;
+  }
+  pushHistory();
+  project.slots.splice(i, 1);
+  project.slots.forEach((x, k) => { x.index = k; if (k === 0) x.role = 'face'; else if (!x.role || x.role === 'face') x.role = 'aod'; });
+  slotIndex = Math.max(0, Math.min(slotIndex, project.slots.length - 1));
+  selected = -1; imgCache.clear();
+  refreshPanels(); render();
+}
 $('slotCancel').onclick = () => { $('slotModal').hidden = true; };
 $('slotCreate').onclick = () => {
   if (!project) return;
@@ -306,12 +322,23 @@ function refreshPanels() {
   // slots
   const sl = $('slots'); sl.innerHTML = '';
   project.slots.forEach((x, i) => {
+    const wrap = document.createElement('span');
+    wrap.className = 'slot-chip' + (i === slotIndex ? ' sel' : '');
     const b = document.createElement('button');
+    b.className = 'slot-btn';
     b.textContent = slotName(i);
     b.title = (x.role || (i === 0 ? 'face' : 'aod')) === 'face' ? 'Main watchface' : 'Always-on display variant';
-    if (i === slotIndex) b.className = 'sel';
     b.onclick = () => { slotIndex = i; selected = -1; imgCache.clear(); refreshPanels(); render(); };
-    sl.appendChild(b);
+    wrap.appendChild(b);
+    if (project.slots.length > 1) {
+      const x2 = document.createElement('button');
+      x2.className = 'slot-del';
+      x2.textContent = '✕';
+      x2.title = `Remove ${slotName(i)}`;
+      x2.onclick = (ev) => { ev.stopPropagation(); removeSlot(i); };
+      wrap.appendChild(x2);
+    }
+    sl.appendChild(wrap);
   });
   // layers
   const L = $('layers'); L.innerHTML = '';
@@ -647,9 +674,18 @@ $('btnNew').onclick = openNewFaceDialog;
 $('newFaceCancel').onclick = () => { $('newFaceModal').hidden = true; };
 $('newFaceCreate').onclick = createNewFace;
 $('newFaceModal').addEventListener('mousedown', (e) => { if (e.target === $('newFaceModal')) $('newFaceModal').hidden = true; });
+$('btnOpenProject').onclick = async () => {
+  const res = await window.api.openProject();
+  if (!res) return;
+  if (res.error) { $('meta').textContent = res.error; return; }
+  loadProject(res);
+};
 $('btnOpen').onclick = async () => {
   const res = await window.api.openBinDialog();
   if (!res) return;
+  loadProject(res);
+};
+function loadProject(res) {
   project = res; slotIndex = 0; selected = -1; imgCache.clear();
   past = []; future = [];
   pushHistory(); // baseline for undo
@@ -659,7 +695,7 @@ $('btnOpen').onclick = async () => {
   for (const id of ['btnExport', 'btnCompile', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnUp', 'btnDown']) $(id).disabled = false;
   if (res.version !== 2) $('btnCompile').disabled = true;
   refreshPanels(); render();
-};
+}
 $('btnAddImg').onclick = () => addWidget('img');
 $('btnAddNum').onclick = () => addWidget('num');
 $('btnAddList').onclick = () => addWidget('list');

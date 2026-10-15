@@ -67,6 +67,66 @@ ipcMain.handle('open-bin-dialog', async () => {
 });
 ipcMain.handle('open-bin-path', async (_e, p) => handleOpenBin(p));
 
+// Open a saved project folder: <dir>/<base>.fprj + images/ (+ AOD/ AOD2/…)
+ipcMain.handle('open-project', async () => {
+  const { parseFprj } = require('./core/fprj');
+  const r = await dialog.showOpenDialog(win, {
+    title: 'Open project', properties: ['openDirectory'],
+  });
+  if (r.canceled || !r.filePaths.length) return null;
+  const root = r.filePaths[0];
+  // accept either the project dir itself or a parent containing it
+  const candidates = [root, ...fs.readdirSync(root)
+    .map((n) => path.join(root, n))
+    .filter((p) => { try { return fs.statSync(p).isDirectory() && fs.readdirSync(p).some((f) => f.endsWith('.fprj')); } catch (e) { return false; } })];
+  const projDir = candidates.find((p) => { try { return fs.readdirSync(p).some((f) => f.endsWith('.fprj')); } catch (e) { return false; } });
+  if (!projDir) return { error: 'No .fprj file found in that folder.' };
+  const fprjName = fs.readdirSync(projDir).find((f) => f.endsWith('.fprj'));
+  const base = path.basename(fprjName, '.fprj');
+  const xface = parseFprj(fs.readFileSync(path.join(projDir, fprjName), 'utf8'));
+
+  const readSlot = (dir, index, role) => {
+    const imgDir = path.join(dir, 'images');
+    const images = [];
+    if (fs.existsSync(imgDir)) {
+      for (const f of fs.readdirSync(imgDir)) {
+        if (!f.toLowerCase().endsWith('.png')) continue;
+        const png = PNG.sync.read(fs.readFileSync(path.join(imgDir, f)));
+        images.push({ name: f, width: png.width, height: png.height, url: 'data:image/png;base64,' + fs.readFileSync(path.join(imgDir, f)).toString('base64') });
+      }
+    }
+    let previewUrl = null;
+    const pv = path.join(dir, 'preview.png');
+    if (fs.existsSync(pv)) previewUrl = 'data:image/png;base64,' + fs.readFileSync(pv).toString('base64');
+    return { index, role, widgets: index === 0 ? xface.Screen.Widgets : [], rawActions: [], images, previewUrl };
+  };
+
+  const slots = [];
+  let i = 0;
+  for (const name of fs.readdirSync(projDir)) {
+    if (!fs.statSync(path.join(projDir, name)).isDirectory()) continue;
+    if (name === 'images') continue;
+    if (/^AOD\d*$/i.test(name)) {
+      const n = name === 'AOD' ? 1 : parseInt(name.slice(3), 10) || 1;
+      slots[n] = readSlot(path.join(projDir, name), n, 'aod');
+      i = Math.max(i, n);
+    }
+  }
+  slots[0] = readSlot(projDir, 0, 'face');
+  for (let k = 0; k <= i; k++) if (!slots[k]) slots[k] = { index: k, role: 'aod', widgets: [], rawActions: [], images: [], previewUrl: null };
+  const clean = slots.filter(Boolean);
+
+  const type = xface.DeviceType;
+  return {
+    filePath: null, base, savePath: projDir,
+    version: 2, watchType: type, watchName: watchDisplayName(type),
+    screenW: getScreenWidth(type) || 466, screenH: getScreenHeight(type) || 466,
+    title: xface.Screen.Title || base, faceId: '',
+    previewUrl: clean[0].previewUrl,
+    slots: clean,
+  };
+});
+
 // Compile current project state to .bin (V2, 8Pro-family watches)
 ipcMain.handle('compile-bin', async (_e, payload) => {
   const { compileFaceProject } = require('./core/packer');
