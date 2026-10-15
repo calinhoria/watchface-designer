@@ -107,7 +107,7 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
     if ((re.title || '') !== (payload.title || '')) issues.push(`title mismatch: ${JSON.stringify(re.title)}`);
     if (re.slots.length !== slots.length) issues.push(`slot count ${re.slots.length} != ${slots.length}`);
     re.slots.forEach((s, i) => {
-      const want = slots[i].widgets.length;
+      const want = slots[i].widgets.filter((wg) => !wg._hidden).length;
       if (s.widgets.length !== want) issues.push(`slot ${i}: ${s.widgets.length} widgets != ${want}`);
       const wantTaps = (slots[i].rawActions || []).length;
       if ((s.rawActions || []).length !== wantTaps) issues.push(`slot ${i}: ${(s.rawActions || []).length} tap zones != ${wantTaps}`);

@@ -138,6 +138,30 @@ function shapeName(s) {
   return s === 30 ? 'Image' : s === 31 ? 'ImageList' : s === 32 ? 'DigitalNum'
     : s === 27 ? 'AnalogClock' : s === 43 ? 'Gauge' : s === 34 ? 'Container' : `Shape${s}`;
 }
+const SVG = {
+  img: '<path d="M3 5h18v14H3z" opacity="0"/><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 19 5-5 3 3 3-3 3 3"/>',
+  list: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5" cy="18" r="1.2"/>',
+  num: '<path d="M10 3 8 21M16 3l-2 18M4 9h17M3 15h17"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  gauge: '<path d="M12 5a8 8 0 0 1 8 8"/><path d="M12 5a8 8 0 0 0-8 8v1h3l1-2h8"/>',
+  box: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16"/>',
+  square: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M4 4l16 16"/><path d="M10.6 5.7A8.7 8.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17.5 17.5 0 0 1-2.3 3.1M6.6 6.9C4 8.8 2.5 12 2.5 12S6 18.5 12 18.5c1.2 0 2.3-.2 3.3-.6"/>',
+  trash: '<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/>',
+};
+function shapeIcon(s) {
+  const p = s === 30 ? SVG.img : s === 31 ? SVG.list : s === 32 ? SVG.num
+    : s === 27 ? SVG.clock : s === 43 ? SVG.gauge : s === 34 ? SVG.box : SVG.square;
+  return `<svg class="licon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+// collapsible panels: header click toggles (buttons inside header excluded)
+document.querySelectorAll('[data-panel]').forEach((p) => {
+  p.querySelector('[data-panel-head]').addEventListener('click', (e) => {
+    if (e.target.closest('button')) return; // toolbar buttons stay clickable
+    p.classList.toggle('collapsed');
+  });
+});
 function hasTap(w) { return Boolean(w && (w._action || /\[[^\]]+\]/.test(w.Name || ''))); }
 function paintLayer(i) {
   const s = slot();
@@ -147,7 +171,27 @@ function paintLayer(i) {
   const src = w.DataSrcValue || w.DataSrcIndex;
   const extra = src ? ` · ${datasrcLabel(src)}` : '';
   const tap = hasTap(w) ? ' ⚡' : '';
-  d.innerHTML = `<span>${i}: ${w.Name || ''}</span><span class="tag">${shapeName(w.Shape)} ${w.X},${w.Y}${extra}${tap}</span>`;
+  const tagText = `${shapeName(w.Shape)} ${w.X},${w.Y}${extra}${tap}`;
+  d.innerHTML = `<span class="lname">${shapeIcon(w.Shape)}<span class="nname">${w.Name || ''}${w._hidden ? ' <em>(hidden)</em>' : ''}</span></span>`
+    + `<span class="lrow-r"><span class="tag">${tagText}</span>`
+    + `<button class="lb eye" title="${w._hidden ? 'Show layer' : 'Hide layer'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${w._hidden ? SVG.eyeOff : SVG.eye}</svg></button>`
+    + `<button class="lb trash" title="Delete layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${SVG.trash}</svg></button>`
+    + `</span>`;
+  d.querySelector('.eye').onclick = (ev) => {
+    ev.stopPropagation();
+    pushHistory();
+    w._hidden = !w._hidden;
+    paintLayer(i); render();
+  };
+  d.querySelector('.trash').onclick = (ev) => {
+    ev.stopPropagation();
+    pushHistory();
+    s.widgets.splice(i, 1);
+    if (selected === i) selected = -1;
+    else if (selected > i) selected -= 1;
+    refreshPanels(); render();
+  };
+  d.onclick = () => { selected = i; refreshPanels(); render(); };
 }
 // Tap targets known by the RW4 action packer (core/packer.js RW4_ACTIONS).
 const TAP_APPS = ['steps', 'calories', 'standing', 'moving', 'hrm', 'spo2', 'stress', 'sleep', 'weather', 'alarm', 'timer', 'stopwatch', 'cards', 'music', 'compass', 'scheduler', 'flashlight', 'photo', 'findphone', 'breath', 'contact', 'egg', 'todo', 'tomato', 'worldclock', 'phone', 'voice', 'mihome', 'women', 'pressure', 'vitality', 'settings', 'launcher', 'wechat', 'alipay', 'checktool', 'calendar'];
@@ -192,7 +236,7 @@ async function render() {
   const urlByName = new Map(s.images.map(i => [i.name, i.url]));
   for (let vi = 0; vi < s.widgets.length; vi++) {
     const w = s.widgets[vi];
-    if (w.Alpha === 0) continue;
+    if (w.Alpha === 0 || w._hidden) continue;
     try {
       if (w.Shape === 30 && w.Bitmap && urlByName.has(w.Bitmap)) {
         const img = await loadImage(w.Bitmap, urlByName.get(w.Bitmap));
@@ -273,8 +317,7 @@ function refreshPanels() {
   const L = $('layers'); L.innerHTML = '';
   s.widgets.forEach((w, i) => {
     const d = document.createElement('div');
-    d.className = 'layer' + (i === selected ? ' sel' : '');
-    d.onclick = () => { selected = i; refreshPanels(); render(); };
+    d.className = 'layer' + (i === selected ? ' sel' : '') + (w._hidden ? ' hid' : '');
     L.appendChild(d); paintLayer(i);
   });
   if ((s.rawActions || []).length) {
@@ -420,9 +463,7 @@ function refreshPanels() {
       }
     }
   }
-  const del = document.createElement('button'); del.textContent = 'Delete layer'; del.style.marginTop = '8px';
-  del.onclick = () => { pushHistory(); s.widgets.splice(selected, 1); selected = -1; refreshPanels(); render(); };
-  P.appendChild(grid); P.appendChild(del);
+  P.appendChild(grid);
   // capture pre-edit state for undo (dedupe makes repeats harmless)
   grid.querySelectorAll('input,select').forEach((el) => {
     el.addEventListener('focus', pushHistory);
@@ -754,6 +795,7 @@ cv.addEventListener('mousedown', (e) => {
   const mx = (e.clientX - r.left) * (cv.width / r.width), my = (e.clientY - r.top) * (cv.height / r.height);
   const s = slot();
   for (let i = s.widgets.length - 1; i >= 0; i--) {
+    if (s.widgets[i]._hidden) continue;
     const vb = visualBox(s.widgets[i]);
     const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
     if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) {

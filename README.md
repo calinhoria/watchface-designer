@@ -7,7 +7,7 @@ to a pure-JS Electron app that runs on **macOS, Windows, Linux**.
 - Open Xiaomi watchface `.bin` (v1/v2/v3 magic detection, same as `Unpacker.cs`)
 - Detect watch (`WatchDetector` + `WatchScreen` tables ported: Gen1/Gen2/Gen3, Redmi Watch 2/3/4, Mi Band 7 Pro/8/8 Pro/9, Mi Watch S3, RedmiWatch3Active…)
 - Decode images without native deps (RLE v10/v11/v20, RGB565→RGBA, indexed8+palette, RedmiWatch3Active sparse codecs ported from `XiaomiWatch.Common` IL)
-- Designer: canvas preview (watch name above it), layers (add/reorder/delete), drag-move, property editor (incl. tap actions ⚡), title edit, undo/redo (toolbar + Ctrl+Z / Ctrl+Shift+Z)
+- Designer: canvas preview (watch name above it), collapsible panels (max-height 600 with scroll), layers (add/reorder/hide/delete inline), drag-move, property editor (incl. tap actions ⚡), title edit, undo/redo (toolbar + Ctrl+Z / Ctrl+Shift+Z)
 - New watchface: toolbar `New` button → device picker (8 supported devices) + name field → blank face at the right screen size (preview auto-composed from canvas on compile)
 - Slots: `+` in the Slots panel adds a slot with a role dialog (Face / AOD); the status line lives under the canvas, not in the toolbar
 - Images: PNG upload, per-image delete (with usage check)

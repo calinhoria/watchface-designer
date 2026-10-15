@@ -12,7 +12,7 @@
 }
 
 html, body { height: 100%; }
-body { background: var(--color-bg); color: var(--color-ink); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+body { background: var(--color-bg); color: var(--color-ink); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; overflow-y: auto; user-select: none; }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: #2b3242; border-radius: 6px; border: 2px solid var(--color-bg); }
@@ -48,7 +48,7 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 #slots button:hover { color: var(--color-ink); border-color: #39415a; }
 #slots button.sel { background: var(--color-acc); border-color: var(--color-acc); color: #fff; font-weight: 600; }
 
-/* layers list */
+/* layer rows */
 #layers { display: flex; flex-direction: column; gap: 2px; }
 .layer {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
@@ -57,8 +57,27 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 }
 .layer:hover { background: #ffffff0a; }
 .layer.sel { background: rgb(91 140 255 / .14); border-left-color: var(--color-acc); }
-.layer.sel span:first-child { color: #cdd9ff; }
+.layer.hid { opacity: .45; }
+.layer .nname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.layer .lname { display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.layer .licon { width: 15px; height: 15px; flex: none; color: var(--color-mut); }
+.layer .lrow-r { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.layer .lb {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px; background: transparent;
+  color: var(--color-mut); cursor: pointer; opacity: 0; transition: opacity .12s;
+}
+.layer .lb svg { width: 14px; height: 14px; }
+.layer:hover .lb, .layer.sel .lb { opacity: 1; }
+.layer .lb:hover { background: #ffffff12; color: var(--color-ink); }
+.layer .lb.trash:hover { color: #ff9d9d; }
 .tag { color: var(--color-mut); font-size: 11px; white-space: nowrap; }
+
+/* collapsible panels: grow with content, cap 600px, internal scroll */
+.panel-c .pbody { max-height: 600px; overflow-y: auto; }
+.panel-c .chev { display: inline-block; transition: transform .15s; margin-left: 4px; color: var(--color-mut); }
+.panel-c.collapsed .pbody { display: none; }
+.panel-c.collapsed .chev { transform: rotate(-90deg); }
 
 /* images grid */
 #images { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

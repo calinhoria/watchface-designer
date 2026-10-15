@@ -247,7 +247,8 @@ function singlePayload(w, h, bgra) {
 
 // ---- face preparation: validate + expand model into pack plan ----
 function prepareFace(deviceType, slot, faceIndex, warnings) {
-  const widgets = slot.widgets || [];
+  // hidden layers are design-time only: excluded from compile
+  const widgets = (slot.widgets || []).filter(w => !w._hidden);
   const images = slot.images || {};
   const getImg = (name) => {
     const im = images[name];
