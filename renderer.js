@@ -1215,10 +1215,33 @@ async function render() {
         ctx.drawImage(img, (w.X || 0) * scale, (w.Y || 0) * scale, (w.Width || img.naturalWidth) * scale, (w.Height || img.naturalHeight) * scale);
       }
     } catch (e) { /* missing img */ }
-    if (vi === selected && !exportRender) {
+    if (vi === selected && !exportRender && groupSel.size <= 1) {
       const vb = visualBox(s.widgets[vi]);
       ctx.strokeStyle = '#2f6feb'; ctx.lineWidth = 2;
       ctx.strokeRect(vb.x * scale, vb.y * scale, Math.max(vb.w * scale, 8), Math.max(vb.h * scale, 8));
+    }
+  }
+  // A group (or any multi-selection) gets one box around the whole selection,
+  // with a faint outline per member, instead of only the primary's box.
+  if (!exportRender && groupSel.size > 1) {
+    const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._hidden);
+    if (ids.length > 1) {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const i of ids) {
+        const vb = visualBox(s.widgets[i]);
+        x0 = Math.min(x0, vb.x); y0 = Math.min(y0, vb.y);
+        x1 = Math.max(x1, vb.x + vb.w); y1 = Math.max(y1, vb.y + vb.h);
+      }
+      ctx.save();
+      ctx.strokeStyle = 'rgba(47,111,235,0.45)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      for (const i of ids) {
+        const vb = visualBox(s.widgets[i]);
+        ctx.strokeRect(vb.x * scale, vb.y * scale, Math.max(vb.w * scale, 8), Math.max(vb.h * scale, 8));
+      }
+      ctx.setLineDash([]);
+      ctx.strokeStyle = '#2f6feb'; ctx.lineWidth = 2;
+      ctx.strokeRect(x0 * scale, y0 * scale, Math.max((x1 - x0) * scale, 8), Math.max((y1 - y0) * scale, 8));
+      ctx.restore();
     }
   }
   if (exportRender) return; // grid, guides and tap markers are editor-only
@@ -3001,6 +3024,33 @@ $('btnExport').onclick = async () => {
 };
 // canvas hit-test + drag
 let drag = null;
+// Topmost visible layer under a client point (canvas coordinates, like the drag
+// path). Used by the drag and by double-click drill-in.
+function hitWidget(clientX, clientY) {
+  if (!project) return -1;
+  const r = cv.getBoundingClientRect();
+  const sc = cv.width / (project.screenW || 240);
+  const mx = (clientX - r.left) * (cv.width / r.width), my = (clientY - r.top) * (cv.height / r.height);
+  const s = slot();
+  for (let i = s.widgets.length - 1; i >= 0; i--) {
+    if (s.widgets[i]._hidden) continue;
+    const vb = visualBox(s.widgets[i]);
+    const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
+    if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) return i;
+  }
+  return -1;
+}
+// Double-clicking a layer picks it out of a group/multi-selection, so the group
+// stops being selected and the child can be moved or edited on its own.
+cv.addEventListener('dblclick', (e) => {
+  if (!project) return;
+  const i = hitWidget(e.clientX, e.clientY);
+  if (i < 0) return;
+  const s = slot();
+  if (s.widgets[i]._locked) return;
+  selected = i; groupSel = new Set([i]);
+  refreshPanels(); render();
+});
 cv.addEventListener('mousedown', (e) => {
   if (!project) return;
   const r = cv.getBoundingClientRect();
