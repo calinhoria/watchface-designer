@@ -112,13 +112,17 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .group-row.drop-in { border-color: var(--color-acc); background: #5b8cff29; }
 /* alignment helper buttons in the group box */
 .aligntools { display: flex; gap: 2px; flex-wrap: wrap; }
+/* beat #props button (id specificity): no chrome, just the glyph */
+#props .aligntools button,
 .aligntools button {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; padding: 0; cursor: pointer;
-  background: transparent; border: 0; color: var(--color-ink); border-radius: 6px;
+  width: 32px; height: 32px; padding: 0; cursor: pointer;
+  background: transparent !important; border: 0 !important;
+  color: var(--color-ink); border-radius: 6px;
 }
-.aligntools button:hover { background: #ffffff12; color: #fff; }
-.aligntools svg { width: 21px; height: 21px; }
+#props .aligntools button:hover,
+.aligntools button:hover { background: #ffffff12 !important; color: #fff; }
+.aligntools svg { width: 27px; height: 27px; }
 .group-row .lb { width: 20px; height: 20px; border-radius: 5px; background: transparent; border: 0; color: var(--color-mut); cursor: pointer; }
 .group-row .lb:hover { background: #ffffff12; color: var(--color-ink); }
 .layer.ingroup { margin-left: 14px; }
