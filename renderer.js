@@ -1941,8 +1941,8 @@ function refreshPanels() {
       ['Align bottom edges (device)', '<path d="M4 20.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="10.5" width="4.5" height="7" rx="1"/>', () => alignSelection('bottom')],
     ]);
     alignRow('Distribute', [
-      ['Space evenly across the device', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/><path d="M7.6 12h2.2M14.4 12h2.2"/>', () => distributeSelection('evenly')],
-      ['Space between (device edges)', '<path d="M3 4v16M21 4v16"/><rect x="5" y="6.5" width="3.5" height="11" rx="1"/><rect x="10.2" y="9.5" width="3.5" height="5" rx="1"/><rect x="15.5" y="6.5" width="3.5" height="11" rx="1"/>', () => distributeSelection('between')],
+      ['Equal gaps between the selected layers (outermost stay put)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/><path d="M7.6 12h2.2M14.4 12h2.2"/>', () => distributeSelection('evenly')],
+      ['Spread across the device (first at the left edge, last at the right)', '<path d="M3 4v16M21 4v16"/><rect x="5" y="6.5" width="3.5" height="11" rx="1"/><rect x="10.2" y="9.5" width="3.5" height="5" rx="1"/><rect x="15.5" y="6.5" width="3.5" height="11" rx="1"/>', () => distributeSelection('between')],
       ['Pack to the left edge', '<path d="M3 4v16"/><rect x="6" y="6" width="3.5" height="12" rx="1"/><rect x="10.5" y="6" width="3.5" height="12" rx="1"/><rect x="15" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('left')],
       ['Pack to the right edge', '<path d="M21 4v16"/><rect x="5.5" y="6" width="3.5" height="12" rx="1"/><rect x="10" y="6" width="3.5" height="12" rx="1"/><rect x="14.5" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('right')],
     ]);
@@ -2445,14 +2445,21 @@ function alignSelection(mode) {
   }
   refreshPanels(); render();
 }
-// Distribute across the DEVICE width (0 .. screenW).
+// Distribute the selection horizontally.
 // mode: evenly | between | left | right
+//   evenly  = design-tool "distribute spacing": the outermost layers stay put,
+//             the gaps between them are equalised (no jump to the device edges)
+//   between = spread across the DEVICE, first layer at 0 and last at screenW
+//   left/right = pack the row against that device edge
 function distributeSelection(mode) {
   if (!project) return;
   const s = slot();
   const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._locked);
-  if (ids.length < 2) return;
-  const W = project.screenW || 0;
+  if (ids.length < 2) {
+    $('meta').textContent = 'Select 2+ layers (Ctrl/Cmd+click, or click a group) to distribute.';
+    return;
+  }
+  const W = project.screenW || 432;
   pushHistory();
   const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) })).sort((a, b) => a.b.x - b.b.x);
   const totalW = items.reduce((a, o) => a + o.b.w, 0);
@@ -2464,9 +2471,16 @@ function distributeSelection(mode) {
   } else if (mode === 'right') {
     let x = W;
     for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; o.w.X = Math.round(x); }
+  } else if (mode === 'between') {
+    const gap = span / gaps;
+    let x = 0;
+    for (const o of items) { o.w.X = Math.round(x); x += o.b.w + gap; }
   } else {
-    const gap = span / (mode === 'between' ? gaps : gaps + 1);
-    let x = mode === 'between' ? 0 : gap;
+    // evenly: keep the ends, equalise the gaps in between
+    const left = items[0].b.x;
+    const right = items[items.length - 1].b.x + items[items.length - 1].b.w;
+    const gap = ((right - left) - totalW) / gaps;
+    let x = left;
     for (const o of items) { o.w.X = Math.round(x); x += o.b.w + gap; }
   }
   refreshPanels(); render();
