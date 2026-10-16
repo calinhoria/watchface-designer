@@ -75,9 +75,39 @@ function enhanceSelect(sel) {
     };
     const render = () => { renderBtn(); renderPop(); };
     let open = false;
-    const onDoc = (e) => { if (!wrap.contains(e.target)) close(); };
-    const close = () => { if (!open) return; open = false; wrap.classList.remove('open'); document.removeEventListener('mousedown', onDoc, true); };
-    const show = () => { if (open) return; open = true; renderPop(); wrap.classList.add('open'); document.addEventListener('mousedown', onDoc, true); };
+    const onDoc = (e) => { if (!wrap.contains(e.target) && !pop.contains(e.target)) close(); };
+    const onScroll = () => close();
+    const close = () => {
+      if (!open) return;
+      open = false;
+      pop.classList.remove('open');
+      pop.style.cssText = '';
+      wrap.appendChild(pop);
+      btn.classList.remove('open');
+      document.removeEventListener('mousedown', onDoc, true);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+    };
+    // popup is moved to <body> with fixed positioning so it is never clipped
+    // by the scrollable panels; repositioned under the trigger button
+    const show = () => {
+      if (open) return;
+      open = true;
+      renderPop();
+      document.body.appendChild(pop);
+      pop.classList.add('open');
+      const r = btn.getBoundingClientRect();
+      pop.style.position = 'fixed';
+      pop.style.left = r.left + 'px';
+      pop.style.width = Math.max(r.width, 180) + 'px';
+      const ph = pop.offsetHeight;
+      pop.style.top = (r.bottom + 4 + ph > window.innerHeight && r.top - 4 - ph > 0)
+        ? (r.top - 4 - ph) + 'px' : (r.bottom + 4) + 'px';
+      btn.classList.add('open');
+      document.addEventListener('mousedown', onDoc, true);
+      window.addEventListener('scroll', onScroll, true);
+      window.addEventListener('resize', onScroll);
+    };
     btn.onclick = () => (open ? close() : show());
     sel.addEventListener('change', render);
     sel._nselRender = render;
