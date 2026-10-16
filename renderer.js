@@ -3176,7 +3176,9 @@ function fontStyleKey(f) {
   const t = f.fill || 'solid';
   if (t === 'solid') return '';
   const clean = (s) => String(s || '').replace(/[^a-z0-9]/gi, '');
-  const parts = [t];
+  // v2: the CSS-angle math changed (was rotated 90 degrees) — bumping the key
+  // forces stale fill-styled glyph sets to regenerate
+  const parts = ['v2', t];
   if (t === 'gradient') parts.push(clean(f.gradFrom || f.color), clean(f.gradTo));
   else if (t === 'css') parts.push(String(f.cssFill || '').replace(/[^a-z0-9%.,#]/gi, '').slice(0, 40));
   else if (t === 'outline') parts.push(clean(f.outlineColor || f.color), String(f.outlineWidth == null ? 2 : f.outlineWidth));
@@ -3786,6 +3788,13 @@ async function loadProject(res) {
   setUseCurrentTime(res.useCurrentTime == null ? true : !!res.useCurrentTime);
   project = res; slotIndex = 0; selected = -1; selZone = -1; imgCache.clear();
   setEmptyState();
+  // self-heal stale fill-styled glyph sets (their gradient math may predate a
+  // fix): regenerate any non-solid font fill once on load
+  for (const s of res.slots) for (const w of s.widgets) {
+    if (w._font && w._font.family && w._font.fill && w._font.fill !== 'solid') {
+      regenerateWidgetGlyphs(w, s).catch(() => { });
+    }
+  }
   $('imagesPanel').classList.add('collapsed'); // Images always opens collapsed
   // custom fonts saved with the project (fonts/<file>) -> re-register
   for (const f of res.customFonts || []) {
