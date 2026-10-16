@@ -1904,27 +1904,37 @@ function refreshPanels() {
     gb.appendChild(gfRow);
     gb.appendChild(gfBody);
     renderGroupFill();
-    // alignment helpers: horizontal (left/centre/right) + vertical (top/middle/bottom)
-    const aliRow = mkRow('Align', 'Align the selected layers');
-    const aliwrap = document.createElement('div');
-    aliwrap.className = 'aligntools';
-    const ALIGN = [
-      ['left', 'Align left', '<path d="M4 3v18"/><rect x="7" y="6" width="12" height="4"/><rect x="7" y="14" width="8" height="4"/>'],
-      ['hcenter', 'Align horizontal centre', '<path d="M12 3v18"/><rect x="5" y="6" width="14" height="4"/><rect x="8" y="14" width="8" height="4"/>'],
-      ['right', 'Align right', '<path d="M20 3v18"/><rect x="5" y="6" width="12" height="4"/><rect x="9" y="14" width="8" height="4"/>'],
-      ['top', 'Align top', '<path d="M3 4h18"/><rect x="6" y="7" width="4" height="12"/><rect x="14" y="7" width="4" height="8"/>'],
-      ['vcenter', 'Align vertical middle', '<path d="M3 12h18"/><rect x="6" y="5" width="4" height="14"/><rect x="14" y="8" width="4" height="8"/>'],
-      ['bottom', 'Align bottom', '<path d="M3 20h18"/><rect x="6" y="5" width="4" height="12"/><rect x="14" y="9" width="4" height="8"/>'],
-    ];
-    for (const [mode, tip, path] of ALIGN) {
-      const b = document.createElement('button');
-      b.type = 'button'; b.title = tip;
-      b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
-      b.onclick = () => alignSelection(mode);
-      aliwrap.appendChild(b);
-    }
-    aliRow.appendChild(aliwrap);
-    gb.appendChild(aliRow);
+    // alignment helpers: one row per axis, then a distribute row
+    const alignRow = (label, defs) => {
+      const row = mkRow(label, `Align / distribute the selected layers (${label})`);
+      const wrap = document.createElement('div');
+      wrap.className = 'aligntools';
+      for (const [tip, path, fn] of defs) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.title = tip;
+        b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+        b.onclick = fn;
+        wrap.appendChild(b);
+      }
+      row.appendChild(wrap);
+      gb.appendChild(row);
+    };
+    alignRow('Align X', [
+      ['Align left edges', '<path d="M3 3v18"/><rect x="7" y="5" width="12" height="5" rx="1"/><rect x="7" y="14" width="8" height="5" rx="1"/>', () => alignSelection('left')],
+      ['Align horizontal centres', '<path d="M12 3v18"/><rect x="5" y="5" width="14" height="5" rx="1"/><rect x="8" y="14" width="8" height="5" rx="1"/>', () => alignSelection('hcenter')],
+      ['Align right edges', '<path d="M21 3v18"/><rect x="5" y="5" width="12" height="5" rx="1"/><rect x="9" y="14" width="8" height="5" rx="1"/>', () => alignSelection('right')],
+    ]);
+    alignRow('Align Y', [
+      ['Align top edges', '<path d="M3 3h18"/><rect x="5" y="7" width="5" height="12" rx="1"/><rect x="14" y="7" width="5" height="8" rx="1"/>', () => alignSelection('top')],
+      ['Align vertical middles', '<path d="M3 12h18"/><rect x="5" y="6" width="5" height="14" rx="1"/><rect x="14" y="8" width="5" height="8" rx="1"/>', () => alignSelection('vcenter')],
+      ['Align bottom edges', '<path d="M3 21h18"/><rect x="5" y="5" width="5" height="12" rx="1"/><rect x="14" y="9" width="5" height="8" rx="1"/>', () => alignSelection('bottom')],
+    ]);
+    alignRow('Distribute', [
+      ['Space evenly', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('evenly')],
+      ['Space between (ends pinned)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="8" width="4" height="8" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('between')],
+      ['Pack left', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="8" y="6" width="4" height="12" rx="1"/><rect x="13" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('left')],
+      ['Pack right', '<rect x="7" y="6" width="4" height="12" rx="1"/><rect x="12" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('right')],
+    ]);
     const arow = document.createElement('div'); arow.className = 'row rowcontrols';
     const ungroup = document.createElement('button'); ungroup.textContent = 'Ungroup';
     ungroup.onclick = () => ungroupSelection();
@@ -2432,6 +2442,33 @@ function alignSelection(mode) {
     else if (mode === 'vcenter') dy = cy - (o.b.y + o.b.h / 2);
     o.w.X = Math.round((o.w.X || 0) + dx);
     o.w.Y = Math.round((o.w.Y || 0) + dy);
+  }
+  refreshPanels(); render();
+}
+// Distribute the current selection horizontally.
+// mode: evenly | between | left | right
+function distributeSelection(mode) {
+  if (!project) return;
+  const s = slot();
+  const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._locked);
+  if (ids.length < 2) return;
+  pushHistory();
+  const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) })).sort((a, b) => a.b.x - b.b.x);
+  const minX = Math.min(...items.map((o) => o.b.x));
+  const maxX = Math.max(...items.map((o) => o.b.x + o.b.w));
+  const totalW = items.reduce((a, o) => a + o.b.w, 0);
+  const gaps = items.length - 1;
+  const span = maxX - minX - totalW;
+  if (mode === 'left') {
+    let x = minX;
+    for (const o of items) { o.w.X = Math.round((o.w.X || 0) + (x - o.b.x)); x += o.b.w; }
+  } else if (mode === 'right') {
+    let x = maxX;
+    for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; o.w.X = Math.round((o.w.X || 0) + (x - o.b.x)); }
+  } else {
+    const gap = span / (mode === 'between' ? gaps : gaps + 1);
+    let x = mode === 'between' ? minX : minX + gap;
+    for (const o of items) { o.w.X = Math.round((o.w.X || 0) + (x - o.b.x)); x += o.b.w + gap; }
   }
   refreshPanels(); render();
 }
