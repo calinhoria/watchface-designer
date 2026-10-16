@@ -3176,9 +3176,9 @@ function fontStyleKey(f) {
   const t = f.fill || 'solid';
   if (t === 'solid') return '';
   const clean = (s) => String(s || '').replace(/[^a-z0-9]/gi, '');
-  // v2: the CSS-angle math changed (was rotated 90 degrees) — bumping the key
-  // forces stale fill-styled glyph sets to regenerate
-  const parts = ['v2', t];
+  // v3: the CSS-angle direction was reversed — bumping the key forces stale
+  // fill-styled glyph sets to regenerate
+  const parts = ['v3', t];
   if (t === 'gradient') parts.push(clean(f.gradFrom || f.color), clean(f.gradTo));
   else if (t === 'css') parts.push(String(f.cssFill || '').replace(/[^a-z0-9%.,#]/gi, '').slice(0, 40));
   else if (t === 'outline') parts.push(clean(f.outlineColor || f.color), String(f.outlineWidth == null ? 2 : f.outlineWidth));
@@ -3202,9 +3202,8 @@ function parseCssGradient(str, w, h, ox, oy) {
   else if (to) { angle = ({ bottom: 180, top: 0, right: 90, left: 270 })[to[1].toLowerCase()]; i0 = 1; }
   const stops = parts.slice(i0);
   if (stops.length < 2) return null;
-  // CSS angles are clockwise from "to top"; canvas y grows downward, so the
-  // canvas direction is (cssAngle - 90).
-  const rad = ((angle - 90) * Math.PI) / 180;
+  // direction reversed on request: first stop sits at the opposite end
+  const rad = ((angle + 90) * Math.PI) / 180;
   const cx = (ox || 0) + w / 2, cy = (oy || 0) + h / 2;
   const len = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
   const dx = Math.cos(rad) * len / 2, dy = Math.sin(rad) * len / 2;
@@ -3283,7 +3282,7 @@ function applyGlyphFill(c, f, cellW, h, ox, oy) {
 function bgFillName(f) {
   const clean = (s) => String(s || '').replace(/[^a-z0-9]/gi, '');
   const t = f.type || 'solid';
-  const parts = [t, clean(f.color), clean(f.from), clean(f.to), String(f.angle == null ? 90 : f.angle), String(f.css || '').replace(/[^a-z0-9%.,#]/gi, '').slice(0, 32)];
+  const parts = ['v3', t, clean(f.color), clean(f.from), clean(f.to), String(f.angle == null ? 90 : f.angle), String(f.css || '').replace(/[^a-z0-9%.,#]/gi, '').slice(0, 32)];
   return `bg_fill_${parts.filter(Boolean).join('-').slice(0, 80)}.png`;
 }
 function regenerateBgFill(w) {
