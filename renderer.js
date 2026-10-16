@@ -3102,15 +3102,18 @@ function drawFill(c, fill, x, y, w, h, alpha) {
   c.globalAlpha = prev;
 }
 // set the glyph canvas fill/stroke for the chosen fill type
-function applyGlyphFill(c, f, cellW, h) {
+// set the glyph canvas fill/stroke for the chosen fill type. ox/oy place the
+// gradient back onto the glyph cell when the context is already translated.
+function applyGlyphFill(c, f, cellW, h, ox, oy) {
   const t = f.fill || 'solid';
   const color = f.color || '#ffffff';
+  const gx = ox || 0, gy = oy || 0;
   const safe = (col, fb) => { try { const p = document.createElement('canvas').getContext('2d'); p.fillStyle = fb; p.fillStyle = col; return p.fillStyle; } catch (e) { return fb; } };
   c.strokeStyle = color;
   if (t === 'gradient') {
     try {
       const ang = ((f.gradAngle == null ? 90 : f.gradAngle) * Math.PI) / 180;
-      const cx = cellW / 2, cy = h / 2;
+      const cx = gx + cellW / 2, cy = gy + h / 2;
       const len = Math.abs(cellW * Math.cos(ang)) + Math.abs(h * Math.sin(ang));
       const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
       const g = c.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
@@ -3121,7 +3124,7 @@ function applyGlyphFill(c, f, cellW, h) {
   } else if (t === 'css') {
     let ok = false;
     try {
-      const parsed = parseCssGradient(f.cssFill, cellW, h);
+      const parsed = parseCssGradient(f.cssFill, cellW, h, gx, gy);
       if (parsed) {
         const g = c.createLinearGradient(parsed.x0, parsed.y0, parsed.x1, parsed.y1);
         parsed.stops.forEach((col, i) => g.addColorStop(parsed.stops.length === 1 ? 0 : i / (parsed.stops.length - 1), safe(col, color)));
@@ -3217,14 +3220,17 @@ async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mo
     const c2 = document.createElement('canvas'); c2.width = cw; c2.height = H;
     const c = c2.getContext('2d');
     setFontOn(c, family, size);
-    applyGlyphFill(c, f, cw, H);
     const fillType = f.fill || 'solid';
     // place the measured INK box inside the cell: origin at pad+left, baseline at
     // pad+ascent, with the italic shear compensated by the added slant width.
     c.textAlign = 'left'; c.textBaseline = 'alphabetic';
     c.save();
-    c.translate(pad + i.left + slant, pad + ascent);
+    const tx = pad + i.left + slant, ty = pad + ascent;
+    c.translate(tx, ty);
     if (italic) c.transform(1, 0, -0.212, 1, 0, 0);
+    // fill AFTER the translate, offsetting the gradient so it still spans the
+    // glyph cell (gradients resolve in the current transform)
+    applyGlyphFill(c, f, cw, H, -tx, -ty);
     if (fillType === 'outline') {
       c.lineWidth = Math.max(1, f.outlineWidth == null ? 2 : f.outlineWidth);
       if (f.color && String(f.color) !== 'none') c.fillText(i.g.char, 0, 0);
