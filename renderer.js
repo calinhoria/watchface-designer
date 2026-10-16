@@ -745,15 +745,26 @@ function enableDragSort(container, opts) {
   container.dataset.sortReady = '1';
   const { rowSel, handleSel } = opts;
   const groupSel = opts.groupSel || null;
-  let from = -1;
-  let level = 0;             // 0 = top level (outside any group), 1 = nested in a group
+  // live drag state — never inferred from CSS classes (a class may be swapped
+  // for the group highlight mid-drag, which used to corrupt the drop position)
+  let from = -1;      // display row being dragged
+  let over = -1;      // display row under the pointer
+  let after = false;  // drop below that row?
+  let level = 0;      // 0 = top level (outside any group), 1 = nested in a group
+  const INDENT = 22;  // px from the list's left edge where "nested" starts
+  const reset = () => { from = -1; over = -1; after = false; level = 0; clearMarks(); };
   const rows = () => [...container.querySelectorAll(rowSel)];
-  const clearMarks = () => container.querySelectorAll('.drop-before,.drop-after,.dragging,.drop-in').forEach((r) => r.classList.remove('drop-before', 'drop-after', 'dragging', 'drop-in'));
+  const clearMarks = () => container.querySelectorAll('.drop-before,.drop-after,.dragging,.drop-in,.indent').forEach((r) => r.classList.remove('drop-before', 'drop-after', 'dragging', 'drop-in', 'indent'));
   const idxOf = (el) => rows().indexOf(el.closest(rowSel));
-  // the group header directly above a drop position (display order)
+  // the group header a layer would nest into: walk up from the drop position,
+  // ignoring rows hidden inside a collapsed group
   const groupAbove = (row) => {
-    let el = row.previousElementSibling;
-    while (el) { if (el.classList.contains('group-row')) return el; if (el.classList.contains('layer')) return null; el = el.previousElementSibling; }
+    let el = row;
+    while (el) {
+      if (el.classList && el.classList.contains('group-row')) return el;
+      if (el.classList && el.classList.contains('layer') && !el.classList.contains('gcollapsed')) return null;
+      el = el.previousElementSibling;
+    }
     return null;
   };
   container.addEventListener('dragstart', (e) => {
@@ -761,35 +772,34 @@ function enableDragSort(container, opts) {
     if (!h) { e.preventDefault(); return; }
     const row = h.closest(rowSel);
     from = idxOf(row);
-    level = 0;
+    over = -1; after = false; level = 0;
     row.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', String(from)); } catch (err) { /* ignore */ }
   });
   container.addEventListener('dragover', (e) => {
     if (from < 0) return;
-    // dropping onto a group row means join/leave that group
+    // hovering a group header = join/leave that group
     if (groupSel) {
       const g = e.target.closest(groupSel);
-      if (g) { e.preventDefault(); clearMarks(); g.classList.add('drop-in'); return; }
+      if (g) { e.preventDefault(); clearMarks(); over = -1; g.classList.add('drop-in'); return; }
     }
     const row = e.target.closest(rowSel);
-    if (!row || idxOf(row) === from) return;
+    if (!row) return;
     e.preventDefault();
     clearMarks();
-    row.classList.add('dragging');
-    // Photoshop-style nesting: drag right to drop the layer INSIDE the group
-    // above, drag left (to the row's own left edge) to drop it outside
+    over = idxOf(row);
     const rect = row.getBoundingClientRect();
-    level = (e.clientX - rect.left) > 10 ? 1 : 0;
-    const after = (e.clientY - rect.top) > row.offsetHeight / 2;
-    row.classList.remove('dragging');
+    after = (e.clientY - rect.top) > row.offsetHeight / 2;
+    // Photoshop-style nesting: right of the indent line = inside the group the
+    // layer lands next to; flush left = top level (leaves any group)
+    level = (e.clientX - container.getBoundingClientRect().left) > INDENT ? 1 : 0;
     row.classList.add(after ? 'drop-after' : 'drop-before');
     if (level === 1) {
-      const g = groupAbove(after ? row.nextElementSibling || row : row);
-      if (g) { row.classList.remove('drop-before', 'drop-after'); g.classList.add('drop-in'); }
+      row.classList.add('indent');
+      const g = groupAbove(after && row.nextElementSibling ? row.nextElementSibling : row);
+      if (g) g.classList.add('drop-in');
     }
-    if (level === 1) row.classList.add('indent');
   });
   container.addEventListener('drop', (e) => {
     if (from < 0) return;
@@ -797,24 +807,20 @@ function enableDragSort(container, opts) {
       const g = e.target.closest(groupSel);
       if (g) {
         e.preventDefault();
-        const f = from; from = -1; clearMarks();
+        const f = from; reset();
         if (opts.onDropGroup) opts.onDropGroup(g, f);
         return;
       }
     }
-    const row = e.target.closest(rowSel);
-    if (!row) return;
+    if (over < 0) return;
     e.preventDefault();
-    const over = idxOf(row);
-    const after = row.classList.contains('drop-after');
-    const lvl = level;
-    clearMarks();
     let to = over + (after ? 1 : 0);
     if (to > from) to -= 1;
-    const f = from; from = -1;
-    if (to !== f && to >= 0) opts.onDrop(f, to, lvl);
+    const f = from, l = level;
+    reset();
+    if (to >= 0) opts.onDrop(f, to, l);
   });
-  container.addEventListener('dragend', () => { from = -1; level = 0; clearMarks(); });
+  container.addEventListener('dragend', reset);
 }
 
 document.querySelectorAll('[data-panel]').forEach((p) => {
