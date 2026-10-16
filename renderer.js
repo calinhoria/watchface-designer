@@ -538,10 +538,13 @@ $('btnCloseProject').onclick = () => {
 };
 
 function slotName(i) {
-  const r = project.slots[i] && project.slots[i].role;
+  const s = project.slots[i] || {};
+  const r = s.role;
   if (r === 'aod') return i === 0 ? 'AOD' : `AOD ${i}`;
-  if (r === 'face') return i === 0 ? 'Face' : `Face ${i + 1}`;
-  return i === 0 ? 'Face' : `AOD ${i}`;
+  // multiple styles: label non-first normal faces as Style N (global-store
+  // packs ship several styles + one AOD, not one AOD per slot)
+  if (r === 'face') return i === 0 ? 'Face' : `Style ${i + 1}`;
+  return i === 0 ? 'Face' : (s.aod ? `AOD ${i}` : `Style ${i + 1}`);
 }
 $('btnAddSlot').onclick = () => { if (project) $('slotModal').hidden = false; };
 function removeSlot(i) {

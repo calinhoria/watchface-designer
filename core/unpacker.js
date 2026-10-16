@@ -239,9 +239,15 @@ function unpackV2(data, watchType) {
   const preview = decodeV2Preview(data, watchType);
   const title = getFaceTitleV2(data);
   let offset = 0xA8 + shiftWords * 4 + shiftWordsUnk * 4;
+  // subVersion >= 32 (global store faces) append a 72-byte per-face "name"
+  // block after the 88-byte header+dir, so each face occupies 160 bytes and
+  // the entry tables start at 168 + count*160. Older faces have no block.
+  const multiBlock = subVersion >= 32;
+  const NAME_BLOCK = 72;
   const slots = [];
   for (let index = 0; index < count; index++) {
     const backImageId = getDWord(data, offset);
+    const previewOffset = getDWord(data, offset + 4);
     offset += 8; // + previewImageOffset skipped
     let lste = [], lsti = [], lstil = [], lsta = [], lstw = [], lstApp = [];
     const sectionCounts = new Array(10).fill(0);
@@ -257,12 +263,13 @@ function unpackV2(data, watchType) {
       offset += 8;
     }
     if (watchType === 362 || watchType === 366) { offset += 0x44; const td = getDWord(data, offset); offset += 4; const sh = (td & 0xFF) >> 2; if (sh > 1) offset += sh * 4; }
+    let nameBlock = null;
+    if (multiBlock) { nameBlock = Buffer.from(data.subarray(offset, offset + NAME_BLOCK)).toString('hex'); offset += NAME_BLOCK; }
     if ([4, 362, 365].includes(watchType)) lste.unshift({ TargetId: backImageId, PosX: 0, PosY: 0 });
-    // AOD slot: the face header carries 0x80000000 in its section-8 field.
-    // sec9 records not referenced by any element (AOD slots have none) are
-    // carried verbatim so an AOD survives a recompile.
-    const aodFlag = sectionCounts[8] >>> 0;
-    const aod = (aodFlag & 0x80000000) !== 0;
+    // AOD face: multi-face packs give the AOD variant no preview of its own
+    // (its second header dword is 0); normal faces carry a preview offset.
+    const aod = count > 1 && previewOffset === 0;
+    const aodFlag = 0;
     const sec9Targets = lste.filter((e) => (e.TargetId >>> 24) === 0x09).map((e) => e.TargetId >>> 0);
     // 76B sec9 containers (EasyFace Widget groups: temp digits+symbol, date
     // month+delim+day, big clock) desugar to plain elements before the main
@@ -281,7 +288,7 @@ function unpackV2(data, watchType) {
     // section 5 = app widgets. Both are unsupported on compile, so flag them.
     slots.push({
       index, subVersion, widgets, rawActions, images, lsti, lstil, lste,
-      sectionCounts, aod, aodFlag, orphanSec9,
+      sectionCounts, aod, aodFlag, previewOffset, orphanSec9, nameBlock,
       animationCount: sectionCounts[4] || 0,
       appCount: sectionCounts[5] || 0,
     });

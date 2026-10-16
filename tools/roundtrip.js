@@ -25,15 +25,19 @@ function faces(buf) {
   const shiftWordsUnk = buf.readUInt8(0x18);
   const count = buf.readUInt8(0x1C) || 1;
   const shiftWords = buf.readUInt8(0x1D);
+  // subVersion >= 32 faces carry a 72-byte name block (160-byte stride)
+  const block = buf.readUInt16LE(0x1E) >= 32 ? 160 : 88;
   let off = 0xA8 + shiftWords * 4 + shiftWordsUnk * 4;
   const out = [];
   for (let f = 0; f < count; f++) {
+    const start = off;
     off += 8;
     const dir = [];
     for (let i = 0; i < 10; i++) {
       dir.push({ n: buf.readUInt32LE(off), o: buf.readUInt32LE(off + 4) });
       off += 8;
     }
+    off = start + block;
     out.push(dir);
   }
   return out;

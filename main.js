@@ -33,7 +33,7 @@ async function handleOpenBin(filePath) {
   const base = path.basename(filePath, path.extname(filePath));
   const slots = res.slots.map((s) => ({
     index: s.index,
-    role: s.aod ? 'aod' : (s.index === 0 ? 'face' : 'aod'),
+    role: s.aod ? 'aod' : 'face',
     aod: Boolean(s.aod),
     aodFlag: s.aodFlag >>> 0,
     orphanSec9: s.orphanSec9 || [],
