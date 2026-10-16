@@ -76,7 +76,7 @@ function enhanceSelect(sel) {
     const render = () => { renderBtn(); renderPop(); };
     let open = false;
     const onDoc = (e) => { if (!wrap.contains(e.target) && !pop.contains(e.target)) close(); };
-    const onScroll = () => close();
+    const onScroll = (e) => { if (!pop.contains(e.target)) close(); };
     const close = () => {
       if (!open) return;
       open = false;
@@ -410,7 +410,7 @@ function testNumeric(code) {
   const map = CODE_FIELD[String(code || '')];
   if (!map) return null;
   let raw = TEST_DATA[map[0]];
-  if (map[0] === 'hour') raw = hour12(raw);
+  if (map[0] === 'hour') raw = hourPreview(raw);
   const n = parseInt(String(raw == null ? '' : raw).replace(/[^0-9-]/g, ''), 10);
   return Number.isFinite(n) ? n : null;
 }
@@ -418,20 +418,24 @@ function testNumeric(code) {
 // encoded by code point so different characters never collide
 function glyphTag(ch) { return /^[0-9]$/.test(ch) ? `sign_u${ch.codePointAt(0).toString(16)}` : `u${ch.codePointAt(0).toString(16)}`; }
 function pad2(v) { return String(v).replace(/[^0-9]/g, '').padStart(2, '0').slice(-2); }
-// 0811-family is 12-hour on the watch: normalize any 24h/edge input so the
-// preview matches firmware (18 -> 6, 0 -> 12). Analog hands already mod 12.
-function hour12(v) {
+// 0811-family hour: the watch shows 24h or 12h per the user's setting, which
+// the Test-data "24-hour mode" toggle mirrors. 24h => 18; 12h => 6 (0 -> 12).
+// Analog hands already mod 12.
+function is24hMode() { return TEST_DATA.is24h != null && String(TEST_DATA.is24h) !== '0'; }
+function hourPreview(v) {
   const h = parseInt(String(v == null ? '' : v).replace(/[^0-9]/g, ''), 10);
   if (!Number.isFinite(h)) return v;
+  if (is24hMode()) return String(h);
   return String(h % 12 === 0 ? 12 : h % 12);
 }
 function nowFields() {
   const d = new Date();
   const h24 = d.getHours();
   return {
-    hour: pad2(h24 % 12 === 0 ? 12 : h24 % 12), minute: pad2(d.getMinutes()), second: pad2(d.getSeconds()),
+    // raw 24h value; hourPreview() applies the 12/24h display mode
+    hour: pad2(h24), minute: pad2(d.getMinutes()), second: pad2(d.getSeconds()),
     centi: pad2(Math.floor(d.getMilliseconds() / 10)),
-    ampm: h24 < 12 ? 'AM' : 'PM', is24h: '1',
+    ampm: h24 < 12 ? 'AM' : 'PM',
     year: String(d.getFullYear()), month: pad2(d.getMonth() + 1), day: pad2(d.getDate()),
     // ImageList weekday convention is Index0 = Sunday (per EasyFace)
     weekday: String(d.getDay()),
@@ -444,7 +448,7 @@ function demoDigits(w) {
   if (!map) return String(TEST_DATA.hour || '12');
   const [field, which] = map;
   let v = pad(field, TEST_DATA[field] != null ? TEST_DATA[field] : TEST_DEFAULTS[field]);
-  if (field === 'hour') v = hour12(v);
+  if (field === 'hour') v = hourPreview(v);
   if (TIME_FIELDS.includes(field) || field === 'ampm') v = field === 'ampm' ? v : pad2(v);
   if (which === 'ones') return v.slice(-1);
   if (which === 'tens') return v.length > 1 ? v.slice(0, v.length - 1) : v;
@@ -2518,6 +2522,17 @@ function renderTestDataPanel() {
       continue;
     }
     const row = mkRow(label);
+    if (key === 'is24h') {
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = TEST_DATA[key] != null && String(TEST_DATA[key]) !== '0';
+      cb.setAttribute('data-td', key);
+      cb.title = '24-hour clock: on = 18, off = 6';
+      cb.onchange = () => { TEST_DATA[key] = cb.checked ? '1' : '0'; render(); };
+      row.appendChild(cb);
+      host.appendChild(row);
+      continue;
+    }
     const inp = document.createElement('input');
     inp.type = 'text';
     inp.value = TEST_DATA[key] != null ? TEST_DATA[key] : '';
@@ -2532,6 +2547,7 @@ function syncTestDataInputs() {
   document.querySelectorAll('#testData input[data-td]').forEach((inp) => {
     const k = inp.getAttribute('data-td');
     const v = TEST_DATA[k] != null ? String(TEST_DATA[k]) : '';
+    if (inp.type === 'checkbox') { inp.checked = v !== '0' && v !== ''; return; }
     if (document.activeElement !== inp && inp.value !== v) inp.value = v;
     inp.disabled = useCurrentTime && TIME_FIELDS.includes(k);
   });
