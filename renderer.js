@@ -746,14 +746,22 @@ function enableDragSort(container, opts) {
   const { rowSel, handleSel } = opts;
   const groupSel = opts.groupSel || null;
   let from = -1;
+  let level = 0;             // 0 = top level (outside any group), 1 = nested in a group
   const rows = () => [...container.querySelectorAll(rowSel)];
   const clearMarks = () => container.querySelectorAll('.drop-before,.drop-after,.dragging,.drop-in').forEach((r) => r.classList.remove('drop-before', 'drop-after', 'dragging', 'drop-in'));
   const idxOf = (el) => rows().indexOf(el.closest(rowSel));
+  // the group header directly above a drop position (display order)
+  const groupAbove = (row) => {
+    let el = row.previousElementSibling;
+    while (el) { if (el.classList.contains('group-row')) return el; if (el.classList.contains('layer')) return null; el = el.previousElementSibling; }
+    return null;
+  };
   container.addEventListener('dragstart', (e) => {
     const h = e.target.closest(handleSel);
     if (!h) { e.preventDefault(); return; }
     const row = h.closest(rowSel);
     from = idxOf(row);
+    level = 0;
     row.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', String(from)); } catch (err) { /* ignore */ }
@@ -770,9 +778,18 @@ function enableDragSort(container, opts) {
     e.preventDefault();
     clearMarks();
     row.classList.add('dragging');
-    const after = (e.clientY - row.getBoundingClientRect().top) > row.offsetHeight / 2;
+    // Photoshop-style nesting: drag right to drop the layer INSIDE the group
+    // above, drag left (to the row's own left edge) to drop it outside
+    const rect = row.getBoundingClientRect();
+    level = (e.clientX - rect.left) > 10 ? 1 : 0;
+    const after = (e.clientY - rect.top) > row.offsetHeight / 2;
     row.classList.remove('dragging');
     row.classList.add(after ? 'drop-after' : 'drop-before');
+    if (level === 1) {
+      const g = groupAbove(after ? row.nextElementSibling || row : row);
+      if (g) { row.classList.remove('drop-before', 'drop-after'); g.classList.add('drop-in'); }
+    }
+    if (level === 1) row.classList.add('indent');
   });
   container.addEventListener('drop', (e) => {
     if (from < 0) return;
@@ -790,13 +807,14 @@ function enableDragSort(container, opts) {
     e.preventDefault();
     const over = idxOf(row);
     const after = row.classList.contains('drop-after');
+    const lvl = level;
     clearMarks();
     let to = over + (after ? 1 : 0);
     if (to > from) to -= 1;
     const f = from; from = -1;
-    if (to !== f && to >= 0) opts.onDrop(f, to);
+    if (to !== f && to >= 0) opts.onDrop(f, to, lvl);
   });
-  container.addEventListener('dragend', () => { from = -1; clearMarks(); });
+  container.addEventListener('dragend', () => { from = -1; level = 0; clearMarks(); });
 }
 
 document.querySelectorAll('[data-panel]').forEach((p) => {
@@ -809,7 +827,9 @@ function hasTap(w) { return Boolean(w && (w._tap || w._action || /\[[^\]]+\]/.te
 function paintLayer(i) {
   const s = slot();
   const w = s.widgets[i];
-  const d = document.querySelectorAll('#layers .layer:not(.zrow)')[i];
+  // find the row by its widget index: the list is shown in Z-ORDER (top-most
+  // layer first), so the DOM position is not the widget index
+  const d = document.querySelector(`#layers .layer[data-wi="${i}"]`);
   if (!d || !w) return;
   const badge = w._group ? ` <span class="grp">G${String(w._group).replace(/^g/, '')}</span>` : '';
   d.className = 'layer'
@@ -1592,27 +1612,29 @@ function refreshPanels() {
     }
     sl.appendChild(wrap);
   });
-  // layers
+  // layers — shown in Z-ORDER: the top-most layer (drawn last, i.e. the last
+  // widget in the file) is the first row, like every other editor
   const L = $('layers'); L.innerHTML = '';
   const seenGroups = new Set();
-  s.widgets.forEach((w, i) => {
+  const order = [];
+  for (let i = s.widgets.length - 1; i >= 0; i--) order.push(i);
+  order.forEach((i) => {
+    const w = s.widgets[i];
     if (w._group && !seenGroups.has(w._group)) {
       seenGroups.add(w._group);
       const members = s.widgets.filter((x) => x._group === w._group);
       const collapsed = collapsedGroups.has(w._group);
+      // a group is a fixed, collapsible header that behaves like one layer: it
+      // cannot be dragged around, but layers can be dropped on it to join/leave
       const head = document.createElement('div');
       head.className = 'group-row' + (collapsed ? ' collapsed' : '');
       head.dataset.gid = w._group;
-      head.title = 'Drag a layer here to add it to this group (drag a member here to remove it)';
+      head.title = 'Group \u2014 click to select every member; drop a layer here to add it';
       head.innerHTML = `<span class="gchev">\u25be</span>`
         + `<span class="gname" title="${escAttr(groupName(w._group))}">${escAttr(groupName(w._group))}</span>`
-        + `<span class="gcount">${members.length} layer${members.length > 1 ? 's' : ''}</span>`
-        + `<span class="flex-1"></span>`
-        + `<button class="lb gsel" title="Select the whole group (click again to deselect)">\u25c9</button>`
-        + `<button class="lb gungroup" title="Ungroup">\u2921</button>`;
-      // Selecting a group selects every member (and the drag moves them as one);
-      // clicking the same group again clears the selection, so a component added
-      // afterwards lands outside the group. The name is edited in Properties.
+        + `<span class="gcount">${members.length} layer${members.length > 1 ? 's' : ''}</span>`;
+      // Selecting a group selects every member (and dragging moves them as one);
+      // clicking the same group again clears the selection.
       const groupIds = () => s.widgets.map((x, k) => (x._group === w._group ? k : -1)).filter((k) => k >= 0);
       const selectGroup = () => {
         const all = groupIds();
@@ -1626,17 +1648,10 @@ function refreshPanels() {
         if (collapsedGroups.has(w._group)) collapsedGroups.delete(w._group); else collapsedGroups.add(w._group);
         refreshPanels();
       };
-      head.querySelector('.gcount').onclick = selectGroup;
       head.addEventListener('click', (ev) => {
-        if (ev.target.closest('button') || ev.target.classList.contains('gchev')) return;
+        if (ev.target.classList.contains('gchev')) return;
         selectGroup();
       });
-      head.querySelector('.gsel').onclick = (ev) => { ev.stopPropagation(); selectGroup(); };
-      head.querySelector('.gungroup').onclick = (ev) => {
-        ev.stopPropagation();
-        groupSel = new Set(s.widgets.map((x, k) => (x._group === w._group ? k : -1)).filter((k) => k >= 0));
-        ungroupSelection();
-      };
       L.appendChild(head);
     }
     const d = document.createElement('div');
@@ -1668,27 +1683,35 @@ function refreshPanels() {
   }
   enableDragSort(L, {
     rowSel: '.layer:not(.zrow)', handleSel: '.grip', groupSel: '.group-row',
-    onDrop: (from, to) => {
+    onDrop: (from, to, level) => {
       const ss = slot();
-      if (from === to) return;
+      // rows are listed top-most first, so a display index maps to the widget
+      // index n-1-i (and the insertion point likewise)
+      const n = ss.widgets.length;
+      const fw = n - 1 - from, tw = n - 1 - to;
+      const arr = ss.widgets.slice();
+      const [w2] = arr.splice(fw, 1);
+      if (!w2) return;
+      arr.splice(tw, 0, w2);
+      // Photoshop-style nesting: dropped indented -> inside the group it lands
+      // next to; dropped flush left -> out of any group
+      const above = arr[tw + 1], below = arr[tw - 1];
+      const gid = level ? ((above && above._group) || (below && below._group) || null) : null;
+      if (fw === tw && (w2._group || null) === gid) return;
       pushHistory();
-      const dragged = ss.widgets[from];
-      const hadGroup = dragged && dragged._group;
-      const [w2] = ss.widgets.splice(from, 1);
-      ss.widgets.splice(to, 0, w2);
-      // groups follow position: land inside a group block (both neighbours in
-      // the same group) -> join it; land between two ungrouped layers -> leave
-      const prev = ss.widgets[to - 1], next = ss.widgets[to + 1];
-      const pg = prev && prev._group, ng = next && next._group;
-      if (pg && pg === ng) w2._group = pg;
-      else if (!pg && !ng) delete w2._group;
-      selected = to;
+      ss.widgets.length = 0;
+      ss.widgets.push(...arr);
+      if (gid) w2._group = gid; else delete w2._group;
+      for (const g of Object.keys(groupNames)) {
+        if (!ss.widgets.some((x) => x._group === g)) delete groupNames[g];
+      }
+      selected = ss.widgets.indexOf(w2);
       refreshPanels(); render();
     },
     onDropGroup: (headEl, from) => {
       const ss = slot();
       const gid = headEl.dataset.gid;
-      const w2 = ss.widgets[from];
+      const w2 = ss.widgets[ss.widgets.length - 1 - from];
       if (!w2 || !gid) return;
       pushHistory();
       if (w2._group === gid) {
@@ -1696,6 +1719,11 @@ function refreshPanels() {
         delete w2._group;
         if (!ss.widgets.some((x) => x._group === gid)) delete groupNames[gid];
       } else {
+        // join, and sit on top of the group's block so members stay contiguous
+        ss.widgets.splice(ss.widgets.indexOf(w2), 1);
+        let at = ss.widgets.length;
+        ss.widgets.forEach((x, k) => { if (x._group === gid) at = k + 1; });
+        ss.widgets.splice(at, 0, w2);
         w2._group = gid;
       }
       selected = ss.widgets.indexOf(w2);

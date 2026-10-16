@@ -93,22 +93,22 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .layer.hid { opacity: .45; }
 .layer.multi { background: rgb(91 140 255 / .07); }
 .layer.locked .grip { opacity: .2; cursor: not-allowed; }
+/* a group is a layer-like, collapsible header: same row metrics as .layer, no
+   grip (it cannot be reordered), no per-row buttons */
 .group-row {
-  display: flex; align-items: center; gap: 6px; margin: 6px 0 2px;
-  padding: 4px 8px; border-radius: 7px; background: #0d0f14; border: 1px solid var(--color-line);
-  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #9fb6ff; cursor: default;
+  display: flex; align-items: center; gap: 8px; margin: 4px 0 2px;
+  padding: 6px 10px; border-radius: 8px; background: #141a2a; border: 1px solid var(--color-line);
+  font-size: 13px; color: var(--color-ink); cursor: pointer;
 }
-.group-row .gchev { cursor: pointer; color: var(--color-mut); width: 12px; display: inline-block; }
+.group-row:hover { background: #182034; border-color: #39415a; }
+.group-row .gchev { cursor: pointer; color: var(--color-mut); width: 12px; flex: none; display: inline-block; transition: transform .15s; }
 .group-row.collapsed .gchev { transform: rotate(-90deg); }
-.group-row .gcount { color: var(--color-mut); text-transform: none; letter-spacing: 0; cursor: pointer; }
-/* group name in the Layers list: a label that selects the group on click
-   (renaming lives in Properties, like any other layer) */
+.group-row .gcount { color: var(--color-mut); font-size: 11px; flex: none; }
+/* group name in the Layers list (renaming lives in Properties, like any layer) */
 .group-row .gname {
-  max-width: 150px; padding: 1px 4px; font-size: 11px; text-transform: none; letter-spacing: 0;
-  border: 1px solid transparent; border-radius: 4px; color: #cdd9ff; cursor: pointer;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 1; min-width: 0; font-size: 13px; font-weight: 600;
+  color: #cdd9ff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.group-row .gname:hover { border-color: var(--color-line); background: #0b0d12; }
 .group-row.drop-in { border-color: var(--color-acc); background: #5b8cff29; }
 /* alignment helper buttons in the group box */
 .aligntools { display: flex; gap: 3px; flex-wrap: wrap; }
@@ -222,6 +222,10 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .layer.dragging, .ilm-row.dragging { opacity: .45; }
 .layer.drop-before, .ilm-row.drop-before { box-shadow: 0 -2px 0 0 var(--color-acc); }
 .layer.drop-after, .ilm-row.drop-after { box-shadow: 0 2px 0 0 var(--color-acc); }
+/* Photoshop-style nesting preview: the drop line steps right to show the layer
+   will land inside the group above */
+.layer.drop-before.indent { box-shadow: 0 -2px 0 0 var(--color-acc), inset 18px 0 0 -16px var(--color-acc); }
+.layer.drop-after.indent { box-shadow: 0 2px 0 0 var(--color-acc), inset 18px 0 0 -16px var(--color-acc); }
 
 /* image-list (BitmapList) dialog */
 .modal.wide { width: 560px; }
