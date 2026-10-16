@@ -9,6 +9,11 @@ project is self-contained.
 |---|---|---|---|---|---|
 | `465700750_comet-twilight.bin` | 465700750 "Comet Twilight" (m0tral) | Redmi Watch 5 (465) | 0 | 1 | **animations** (sec4, 2 entries), tap actions |
 | `120917368850_amber.bin` | 120917368850 "Amber" (Xiaomi) | Redmi Watch 5 (465) | 36 | 2 | raw AOD slot (sec8 flag + sec9 elements) |
+| `120917368855_high-efficiency-1.bin` | 120917368855 "High efficiency 1" (Xiaomi) | Redmi Watch 5 (465) | 36 | 2 | analog clock, tap actions, raw AOD slot |
+| `120917368887_modern-classic.bin` | 120917368887 "Modern classic" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | analog clock, tap zone |
+| `120917368958_neon-night.bin` | 120917368958 "Neon night" (Xiaomi) | Redmi Watch 5 (465) | 38 | 5 | 5 slots, tap zones |
+| `120917368961_number-jumble.bin` | 120917368961 "Number jumble" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | analog clock, tiny (89KB) |
+| `120917368969_tetris.bin` | 120917368969 "Tetris" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | digits + lists |
 
 The `.mwz` files are the original store packages (editor project metadata:
 `capability.json`, `description.xml`, `editor.config.json`, previews). The
@@ -41,7 +46,6 @@ URLs, which work with plain `curl` while fresh.
 
 - Original 5 faces: byte-identical.
 - Comet: differs (sec4 animations need echo — first animation sample).
-- Amber: differs (raw AOD slot, subVersion 36) — newest sample.
-- Removed 2026-10-16: two Chinese-named faces (120917380718, 120917426911,
-  subVersion 4 with the same raw-AOD pattern); to be replaced with English
-  faces. See `tools/roundtrip.js` output; tracked as the next compiler work.
+- Amber + 5 new faces: differ (raw AOD slots, PAL8-on-465 images, subVersion
+  32/36/38) — the next compiler chunk is per-image codec echo + section echo.
+  See `tools/roundtrip.js` output.
