@@ -16,65 +16,271 @@ const cv = $('cv'), ctx = cv.getContext('2d');
 
 // Human-readable DataSrc mapping (XiaomiWatch.Common FaceItemDataSrc).
 // 4-char codes = shape+display hex bytes, shared across all devices.
-const DATASRC = [
-  ['0811', 'Hour'], ['0911', 'Hour (ones)'], ['1000911', 'Hour (tens)'],
-  ['1011', 'Minute'], ['1111', 'Minute (ones)'], ['1211', 'Minute (tens)'],
-  ['1811', 'Second'], ['1911', 'Second (ones)'], ['1001911', 'Second (tens)'],
-  ['0813', 'AM/PM'],
-  ['1012', 'Month'], ['1812', 'Day'], ['1912', 'Day (ones)'], ['1001912', 'Day (tens)'],
-  ['2012', 'Weekday'], ['12818', 'Unknown param'], ['22818', 'Vitality'],
-  ['0821', 'Steps'], ['1021', 'Steps (%)'],
-  ['0822', 'Heart rate'], ['1022', 'Heart-rate interval'],
-  ['0823', 'Calories'], ['1023', 'Calories (%)'],
-  ['0851', 'Distance (m)'], ['0951', 'Distance D1'], ['10951', 'Distance D2'],
-  ['20951', 'Distance D3'], ['1051', 'Distance (km)'],
-  ['0824', 'Activity count'], ['0826', 'Stress'], ['0828', 'Sleep'],
-  ['0841', 'Battery (%)'], ['1041', 'Battery charging'], ['1841', 'Sleep status'],
-  ['2041', 'Bluetooth status'], ['3041', 'Screen lock'],
-  ['2031', 'Weather temp (°C)'], ['40009031', 'Weather temp (°F)'],
-  ['3031', 'Weather type'], ['5031', 'Air quality'],
-  ['0825', 'Unknown (Watch 6 faces)'],
+// Data sources — authoritative list from EasyFace's dataSrc_list.txt (m0tral),
+// which documents the official enum as (display << 8) | shape; our widget code
+// is the same two bytes in "shape+display" order, so 0x1108 (timeHour) -> '0811'.
+// Third value = the Test-data field that drives the preview.
+const DATASRC_RAW = [
+  ['0811', 'Hour', 'hour'],
+  ['0911', 'Hour (ones)', 'hour'],
+  ['0A11', 'Hour (tens)', 'hour'],
+  ['1011', 'Minute', 'minute'],
+  ['1111', 'Minute (ones)', 'minute'],
+  ['1211', 'Minute (tens)', 'minute'],
+  ['1811', 'Second', 'second'],
+  ['1911', 'Second (ones)', 'second'],
+  ['1A11', 'Second (tens)', 'second'],
+  ['2011', 'Centisecond', 'centi'],
+  ['2111', 'Centisecond (ones)'],
+  ['2211', 'Centisecond (tens)'],
+  ['0812', 'Year', 'year'],
+  ['0912', 'Year digit 1'],
+  ['0A12', 'Year digit 2'],
+  ['0B12', 'Year digit 3'],
+  ['0C12', 'Year digit 4'],
+  ['1012', 'Month', 'month'],
+  ['1112', 'Month (ones)', 'month'],
+  ['1212', 'Month (tens)', 'month'],
+  ['1812', 'Day', 'day'],
+  ['1912', 'Day (ones)', 'day'],
+  ['1A12', 'Day (tens)', 'day'],
+  ['2012', 'Weekday', 'weekday'],
+  ['2812', 'Lunar year'],
+  ['3012', 'Lunar month'],
+  ['3812', 'Lunar day'],
+  ['5812', 'Weekday name (short CN)'],
+  ['5912', 'Weekday name (full CN)'],
+  ['5A12', 'Weekday name (Monday)'],
+  ['5B12', 'Weekday name (MONDAY)'],
+  ['5C12', 'Weekday name (monday)'],
+  ['5D12', 'Weekday name (Mon)'],
+  ['5E12', 'Weekday name (MON)'],
+  ['5F12', 'Weekday name (mon)'],
+  ['6012', 'Month name (short CN)'],
+  ['6112', 'Month name (January)'],
+  ['6212', 'Month name (JANUARY)'],
+  ['6312', 'Month name (january)'],
+  ['6412', 'Month name (Jan)'],
+  ['6512', 'Month name (JAN)'],
+  ['6612', 'Month name (jan)'],
+  ['0813', 'AM/PM (is AM)', 'ampm'],
+  ['1013', 'AM/PM (is PM)', 'ampm'],
+  ['1813', '24-hour mode', 'is24h'],
+  ['0821', 'Steps', 'steps'],
+  ['0921', 'Steps digit 1'],
+  ['0A21', 'Steps digit 2'],
+  ['0B21', 'Steps digit 3'],
+  ['0C21', 'Steps digit 4'],
+  ['0D21', 'Steps digit 5'],
+  ['1021', 'Steps (%)', 'stepsPct'],
+  ['1821', 'Distance (km)', 'distanceKm'],
+  ['0822', 'Heart rate', 'hr'],
+  ['1022', 'Heart-rate zone', 'hrZone'],
+  ['1822', 'Heart rate min'],
+  ['2022', 'Heart rate max'],
+  ['0823', 'Calories', 'calories'],
+  ['1023', 'Calories (%)', 'caloriesPct'],
+  ['0824', 'Stand', 'stand'],
+  ['1024', 'Stand (%)', 'standPct'],
+  ['0825', 'Blood oxygen', 'spo2'],
+  ['0826', 'Stress / pressure', 'stress'],
+  ['0827', 'Blood pressure (diastolic)'],
+  ['1027', 'Blood pressure (systolic)'],
+  ['1827', 'Blood pressure (diastolic kPa)'],
+  ['2027', 'Blood pressure (systolic kPa)'],
+  ['2827', 'Blood pressure unit'],
+  ['0828', 'Sleep', 'sleep'],
+  ['0028', 'Sleep (min)', 'sleep'],
+  ['1028', 'Sleep score'],
+  ['2028', 'Sleep quality'],
+  ['1828', 'Sleep goal (%)'],
+  ['0829', 'Exercise (min)'],
+  ['1029', 'Exercise (%)'],
+  ['082A', 'Energy consumed'],
+  ['082B', 'Recovery time'],
+  ['102B', 'Run power index'],
+  ['182B', 'Vitality', 'vitality'],
+  ['202B', 'Vitality (7 days)'],
+  ['B031', 'Sunrise hour'],
+  ['B831', 'Sunrise minute'],
+  ['C031', 'Sunset hour'],
+  ['C831', 'Sunset minute'],
+  ['0831', 'Temperature unit'],
+  ['2031', 'Temperature', 'tempC'],
+  ['D031', 'Temperature (\u00b0F)', 'tempF'],
+  ['1831', 'Feels like', 'tempFeel'],
+  ['2831', 'Humidity', 'humidity'],
+  ['3031', 'Weather icon', 'weatherType'],
+  ['A831', 'Wind direction'],
+  ['3831', 'Wind angle'],
+  ['4031', 'Wind speed', 'windSpeed'],
+  ['4831', 'Wind level'],
+  ['5031', 'Air quality (AQI)', 'air'],
+  ['5831', 'Air quality level'],
+  ['6031', 'Rain chance (%)', 'rain'],
+  ['6831', 'Pressure (weather)', 'airPressure'],
+  ['7031', 'Visibility'],
+  ['7831', 'UV index'],
+  ['8031', 'Dress index'],
+  ['1832', 'Today max', 'todayMax'],
+  ['2032', 'Today min', 'todayMin'],
+  ['6832', 'Today max (\u00b0F)'],
+  ['7032', 'Today min (\u00b0F)'],
+  ['1833', 'Tomorrow max', 'tomorrowMax'],
+  ['2033', 'Tomorrow min', 'tomorrowMin'],
+  ['6833', 'Tomorrow max (\u00b0F)'],
+  ['7033', 'Tomorrow min (\u00b0F)'],
+  ['0841', 'Battery', 'battery'],
+  ['1041', 'Charging', 'charging'],
+  ['1841', 'Do not disturb'],
+  ['2041', 'Bluetooth', 'bt'],
+  ['2841', 'WiFi'],
+  ['3041', 'Screen lock', 'lock'],
+  ['0842', 'Altitude'],
+  ['0851', 'Alarm hour'],
+  ['1051', 'Alarm minute'],
 ];
-const DATASRC_LABEL = Object.fromEntries(DATASRC);
+// Codes seen in the wild that are NOT in the authoritative enum (older or
+// vendor-encoded forms); kept so imported faces still resolve to a label.
+const DATASRC_LEGACY = [
+  ['1000911', 'Hour (tens, legacy)', 'hour', 'tens'],
+  ['1001911', 'Second (tens, legacy)', 'second', 'tens'],
+  ['1001912', 'Day (tens, legacy)', 'day', 'tens'],
+  ['40009031', 'Temperature (\u00b0F, legacy)', 'tempF', 'both'],
+  ['12818', 'Legacy param 0x182A'],
+  ['22818', 'Vitality (legacy)', 'vitality', 'both'],
+  ['0951', 'Legacy distance D1'],
+  ['10951', 'Legacy distance D2'],
+  ['20951', 'Legacy distance D3'],
+];
+function dsWhich(label) {
+  if (/\(ones\)/.test(label)) return 'ones';
+  if (/\(tens\)/.test(label)) return 'tens';
+  return 'both';
+}
+const DATASRC = [
+  ...DATASRC_RAW.map(([code, label]) => [code, label]),
+  ...DATASRC_LEGACY.map(([code, label]) => [code, label]),
+];
+const DATASRC_LABEL = Object.fromEntries(DATASRC);const CODE_FIELD = {};
+for (const [code, label, field] of DATASRC_RAW) if (field) CODE_FIELD[code] = [field, dsWhich(label)];
+for (const [code, , field, which] of DATASRC_LEGACY) if (field) CODE_FIELD[code] = [field, which || 'both'];
 function datasrcLabel(code) { return DATASRC_LABEL[code] || `Unknown (${code})`; }
+
+// ---------- per-device data sources (from EasyFace's DeviceInfo.db) ----------
+// The ids are NOT shared across devices: Gen1-era devices (Mi Color, 70mai
+// Saphir) use plain decimal ids (8 = Hour) while everything newer uses the
+// packed "shape+display" form (0811 = Hour). The device also decides which
+// sources exist at all (Mi Band 8 has 40, Mi Band 8 Pro 80).
+let DEVICE_INFO = null;
+function deviceSourcesFor(type) {
+  const d = DEVICE_INFO && DEVICE_INFO.devices.find((x) => x.type === type);
+  return d ? d.sources : [];
+}
+function dsLabelFor(code, officialName) {
+  if (DATASRC_LABEL[code]) return DATASRC_LABEL[code];
+  const n = officialName && officialName.trim();
+  return n || `Unknown (${code})`;
+}
+// the data-source choices for the current project: the watch's own list first,
+// then anything else we know (so imported faces and deliberate choices keep working)
+function dataSrcOptions() {
+  const list = (project && deviceSourcesFor(project.watchType)) || [];
+  const supported = new Set(list.map((s) => s.id));
+  const onDevice = list.map((s) => [s.id, dsLabelFor(s.id, s.name)]);
+  const others = DATASRC.filter(([code]) => !supported.has(code));
+  return { onDevice, others, supported };
+}
+// legacy / alternate spellings of a source, so a preset built for one watch can
+// be re-pointed at the equivalent source of another
+const SRC_ALIAS = {
+  '0A11': 'Hour High', '1000911': 'Hour High',
+  '1001911': 'Second High', '1001912': 'Day High',
+  '0A12': 'Year 2', '0B12': 'Year 3', '0C12': 'Year 4',
+  '0028': 'Sleep Duration',
+  D031: 'Weather temp (F)', '40009031': 'Weather temp (F)',
+  A831: 'CurrentWindDirection',
+  B031: 'CurrentSunRiseHour', B831: 'CurrentSunRiseMinute',
+  C031: 'CurrentSunSetHour', C831: 'CurrentSunSetMinute',
+};
+let _srcNames = null;
+function refSourceName(code) {
+  if (!_srcNames) {
+    _srcNames = new Map();
+    for (const d of (DEVICE_INFO ? DEVICE_INFO.devices : [])) {
+      for (const s of d.sources) {
+        const n = (s.name || '').trim();
+        if (n && !_srcNames.has(s.id)) _srcNames.set(s.id, n);
+      }
+    }
+  }
+  return SRC_ALIAS[code] || _srcNames.get(code) || null;
+}
+// translate one of our canonical (packed) codes to the id this watch uses;
+// returns the code unchanged when the watch has no such source
+function toDeviceSource(type, code) {
+  const list = deviceSourcesFor(type);
+  if (!list.length || list.some((s) => s.id === code)) return code;
+  let name = refSourceName(code);
+  if (!name) {
+    const l = DATASRC_LABEL[code];
+    name = l ? l.replace(/\s*\(.*?\)\s*$/, '').trim() : null;
+  }
+  if (!name) return code;
+  const want = name.toLowerCase();
+  const hit = list.find((s) => (s.name || '').trim().toLowerCase() === want)
+    || list.find((s) => (s.name || '').trim().toLowerCase().startsWith(want))
+    || list.find((s) => want.startsWith((s.name || '').trim().toLowerCase()) && (s.name || '').trim().length > 2);
+  return hit ? hit.id : code;
+}
 
 // ---------- test data (drives the preview) ----------
 const TEST_FIELDS = [
-  ['hour', 'Hour'], ['minute', 'Minute'], ['second', 'Second'], ['ampm', 'AM/PM'],
-  ['month', 'Month'], ['day', 'Day'], ['weekday', 'Weekday'],
-  ['steps', 'Steps'], ['stepsPct', 'Steps %'], ['hr', 'Heart rate'], ['hrInterval', 'HR interval'],
+  ['__group', 'Time'],
+  ['hour', 'Hour'], ['minute', 'Minute'], ['second', 'Second'], ['centi', 'Centisecond (x10ms)'],
+  ['ampm', 'AM/PM'], ['is24h', '24-hour mode'],
+  ['__group', 'Date'],
+  ['year', 'Year'], ['month', 'Month'], ['day', 'Day'], ['weekday', 'Weekday (0 = Sun)'],
+  ['__group', 'Health'],
+  ['steps', 'Steps'], ['stepsPct', 'Steps %'], ['distanceKm', 'Distance km'],
+  ['hr', 'Heart rate'], ['hrZone', 'HR zone'],
   ['calories', 'Calories'], ['caloriesPct', 'Calories %'],
-  ['distanceM', 'Distance m'], ['distanceKm', 'Distance km'],
-  ['activity', 'Activity'], ['stress', 'Stress'], ['sleep', 'Sleep'],
-  ['battery', 'Battery'], ['charging', 'Charging'],
-  ['tempC', 'Weather \u00b0C'], ['tempF', 'Weather \u00b0F'], ['weatherType', 'Weather type'], ['air', 'Air quality'],
+  ['stand', 'Stand'], ['standPct', 'Stand %'],
+  ['spo2', 'Blood oxygen'], ['stress', 'Stress / pressure'], ['sleep', 'Sleep'], ['vitality', 'Vitality'],
+  ['__group', 'Weather'],
+  ['tempC', 'Weather \u00b0C'], ['tempF', 'Weather \u00b0F'], ['tempFeel', 'Feels like'], ['humidity', 'Humidity'],
+  ['windSpeed', 'Wind speed'], ['rain', 'Rain chance %'], ['air', 'Air quality (AQI)'], ['airPressure', 'Pressure'],
+  ['todayMax', 'Today max'], ['todayMin', 'Today min'], ['tomorrowMax', 'Tomorrow max'], ['tomorrowMin', 'Tomorrow min'],
+  ['__group', 'System'],
+  ['battery', 'Battery'], ['charging', 'Charging'], ['bt', 'Bluetooth'], ['lock', 'Screen lock'],
 ];
 const TEST_DEFAULTS = {
-  hour: '12', minute: '45', second: '28', ampm: 'AM', month: '10', day: '21', weekday: '3',
-  steps: '15652', stepsPct: '50', hr: '174', hrInterval: '60', calories: '12175', caloriesPct: '40',
-  distanceM: '1500', distanceKm: '15', activity: '10', stress: '42', sleep: '60',
-  battery: '100', charging: '100', tempC: '23', tempF: '74', weatherType: '1', air: '2',
+  hour: '12', minute: '45', second: '28', centi: '50', ampm: 'AM', is24h: '1',
+  year: '2026', month: '10', day: '21', weekday: '3',
+  steps: '15652', stepsPct: '50', distanceKm: '11',
+  hr: '174', hrZone: '3', calories: '12175', caloriesPct: '40', stand: '7', standPct: '80',
+  spo2: '97', stress: '42', sleep: '480', vitality: '65',
+  tempC: '23', tempF: '74', tempFeel: '21', humidity: '55', windSpeed: '12', rain: '20',
+  air: '2', airPressure: '1013', todayMax: '26', todayMin: '14', tomorrowMax: '24', tomorrowMin: '13',
+  battery: '100', charging: '100', bt: '1', lock: '0',
 };
-const TIME_FIELDS = ['hour', 'minute', 'second', 'month', 'day'];
+const TIME_FIELDS = ['hour', 'minute', 'second', 'centi', 'month', 'day', 'year'];
+const WEEKDAY_ZERO_SUNDAY = true;
 let TEST_DATA = { ...TEST_DEFAULTS };
 let useCurrentTime = false;
-// DataSrc code -> [test field, which slice]
-const CODE_FIELD = {
-  '0811': ['hour', 'both'], '0911': ['hour', 'ones'], '1000911': ['hour', 'tens'],
-  '1011': ['minute', 'both'], '1111': ['minute', 'ones'], '1211': ['minute', 'tens'],
-  '1811': ['second', 'both'], '1911': ['second', 'ones'], '1001911': ['second', 'tens'],
-  '0813': ['ampm', 'both'],
-  '1012': ['month', 'both'], '1812': ['day', 'both'], '1912': ['day', 'ones'], '1001912': ['day', 'tens'],
-  '2012': ['weekday', 'both'],
-  '0821': ['steps', 'both'], '1021': ['stepsPct', 'both'], '0822': ['hr', 'both'], '1022': ['hrInterval', 'both'],
-  '0823': ['calories', 'both'], '1023': ['caloriesPct', 'both'],
-  '0851': ['distanceM', 'both'], '0951': ['distanceM', 'both'], '10951': ['distanceM', 'both'], '20951': ['distanceM', 'both'],
-  '1051': ['distanceKm', 'both'], '0824': ['activity', 'both'], '0826': ['stress', 'both'], '0828': ['sleep', 'both'],
-  '0841': ['battery', 'both'], '1041': ['charging', 'both'],
-  '1841': ['sleep', 'both'], '2041': ['charging', 'both'], '3041': ['battery', 'both'],
-  '2031': ['tempC', 'both'], '40009031': ['tempF', 'both'], '3031': ['weatherType', 'both'], '5031': ['air', 'both'],
-  '0825': ['activity', 'both'], '18218': ['tempC', 'both'], '22818': ['activity', 'both'],
-};
+// numeric value a value-mapped list should index by: the same as testNumeric but
+// with the (ones)/(tens) sources reduced to the digit they actually carry, so a
+// list keyed on e.g. the seconds digit picks frames 0..9 and not the whole value.
+function testNumericForList(code) {
+  const v = testNumeric(code);
+  if (v == null) return null;
+  const map = CODE_FIELD[String(code || '')];
+  if (!map) return v;
+  const which = map[1];
+  if (which !== 'ones' && which !== 'tens') return v;
+  const str = pad2(Math.abs(v));
+  return parseInt(which === 'ones' ? str.slice(-1) : (str.length > 1 ? str.slice(0, -1) : str), 10);
+}
 // numeric value of the test data behind a data-source code (for value-mapped lists)
 function testNumeric(code) {
   const map = CODE_FIELD[String(code || '')];
@@ -83,14 +289,20 @@ function testNumeric(code) {
   const n = parseInt(String(raw == null ? '' : raw).replace(/[^0-9-]/g, ''), 10);
   return Number.isFinite(n) ? n : null;
 }
+// glyph tag for the image name: digits keep their digit, everything else is
+// encoded by code point so different characters never collide
+function glyphTag(ch) { return /^[0-9]$/.test(ch) ? `sign_u${ch.codePointAt(0).toString(16)}` : `u${ch.codePointAt(0).toString(16)}`; }
 function pad2(v) { return String(v).replace(/[^0-9]/g, '').padStart(2, '0').slice(-2); }
 function nowFields() {
   const d = new Date();
   const h24 = d.getHours();
   return {
     hour: pad2(h24 % 12 === 0 ? 12 : h24 % 12), minute: pad2(d.getMinutes()), second: pad2(d.getSeconds()),
-    ampm: h24 < 12 ? 'AM' : 'PM', month: pad2(d.getMonth() + 1), day: pad2(d.getDate()),
-    weekday: String(d.getDay() === 0 ? 7 : d.getDay()),
+    centi: pad2(Math.floor(d.getMilliseconds() / 10)),
+    ampm: h24 < 12 ? 'AM' : 'PM', is24h: '1',
+    year: String(d.getFullYear()), month: pad2(d.getMonth() + 1), day: pad2(d.getDate()),
+    // ImageList weekday convention is Index0 = Sunday (per EasyFace)
+    weekday: String(d.getDay()),
   };
 }
 // string the preview should show for a widget's data source
@@ -444,11 +656,9 @@ function paintLayer(i) {
       refreshPanels(); render();
       return;
     }
-    // clicking inside an already-selected group keeps the whole group selected
-    if (w._group && groupSel.size > 1 && groupSel.has(i)) {
-      selected = i; refreshPanels(); render();
-      return;
-    }
+    // a plain click selects exactly this layer — including a child of a group,
+    // so it can be moved on its own; the group row (or ◉) selects the whole
+    // group, and Ctrl/Cmd-click selects several layers
     selected = i; groupSel = new Set([i]); refreshPanels(); render();
   };
 }
@@ -505,6 +715,31 @@ async function ensureFont(family) {
   return true;
 }
 function fontFamilies() { return [...BUNDLED_FONTS.map((f) => f.family), ...customFonts.map((f) => f.family)]; }
+// font <select>: import first, then bundled and imported groups
+function fillFontSelect(sel, noneLabel) {
+  sel.innerHTML = '';
+  if (noneLabel) { const o = document.createElement('option'); o.value = ''; o.textContent = noneLabel; sel.appendChild(o); }
+  const imp = document.createElement('option');
+  imp.value = '__import'; imp.textContent = 'Import font…';
+  sel.appendChild(imp);
+  const bundled = document.createElement('optgroup');
+  bundled.label = 'Bundled';
+  for (const f of BUNDLED_FONTS) { const o = document.createElement('option'); o.value = f.family; o.textContent = f.family; bundled.appendChild(o); }
+  sel.appendChild(bundled);
+  if (customFonts.length) {
+    const mine = document.createElement('optgroup');
+    mine.label = 'Imported';
+    for (const c of customFonts) { const o = document.createElement('option'); o.value = c.family; o.textContent = c.family.replace(/^Custom-/, ''); mine.appendChild(o); }
+    sel.appendChild(mine);
+  }
+  return sel;
+}
+function base64ToBuf(b64) {
+  const bin = atob(b64);
+  const u8 = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  return u8.buffer;
+}
 function bufToBase64(buf) {
   const u8 = new Uint8Array(buf);
   let s = '';
@@ -675,6 +910,23 @@ function ilmRender() {
     list.appendChild(row);
   });
   $('ilmCount').textContent = `(${ilmState.entries.length})`;
+  // index-origin hints (EasyFace: weekday Index0 = Sunday, month Index1 = January)
+  const hintEl = $('ilmHint');
+  const src = String(ilmState.widget.DataSrcIndex || ilmState.widget.DataSrcValue || '');
+  const hints = {
+    '2012': 'Weekday: index 0 = Sunday, then Monday … Saturday.',
+    '1012': 'Month: index 1 = January … 12 = December.',
+    '3031': 'Weather icon: index = weather type (0-41).',
+    '1021': 'Percentage: values are the readings, e.g. (0),(10),…,(100).',
+    '0841': 'Percentage: values are the readings, e.g. (0),(10),…,(100).',
+    '0821': 'Distance km workaround: values are step thresholds (0, 500, …).',
+  };
+  let hintText = hints[src] || '';
+  if (src === '3031' || src === '5031') {
+    hintText += ` Icons: ${WEATHER_ICONS.slice(0, 12).map((n, i) => `${i} ${n}`).join(' · ')} … (0-41, see README)`;
+  }
+  hintEl.textContent = hintText;
+  hintEl.hidden = !hintText;
   // picker of project images not already in the list
   const used = new Set(ilmState.entries.map((e) => e.name));
   const pick = $('ilmPick');
@@ -683,6 +935,11 @@ function ilmRender() {
   for (const n of avail) {
     const o = document.createElement('option'); o.value = n; o.textContent = n; pick.appendChild(o);
   }
+  // preset helpers: distance thresholds, sign frame
+  const kmBtn = $('ilmKm');
+  const signBtn = $('ilmSign');
+  kmBtn.hidden = !(ilmState.widget._kmValues || /^0?821$/.test(String(ilmState.widget.DataSrcIndex || '')));
+  signBtn.hidden = !(ilmState.widget.Shape === 31 || ilmState.widget.Shape === 32);
   const single = ilmState.widget.Shape === 30;
   if (single && ilmState.entries.length) {
     // an image layer shows exactly one image: replace via the row's ✕ then Add
@@ -709,6 +966,17 @@ function openImgListDialog(w) {
   $('imgListModal').hidden = false;
 }
 $('ilmCancel').onclick = () => { $('imgListModal').hidden = true; ilmState = null; };
+$('ilmKm').onclick = () => {
+  ilmState.entries.forEach((e, i) => { e.value = KM_THRESHOLDS[Math.min(i, KM_THRESHOLDS.length - 1)]; });
+  ilmRender();
+  $('meta').textContent = 'Distance thresholds filled (0, 500, 1000 … 14000 steps).';
+};
+$('ilmSign').onclick = async () => {
+  const w = ilmState.widget;
+  $('imgListModal').hidden = true; ilmState = null;
+  selected = slot().widgets.indexOf(w);
+  await addSignFrameToSelected();
+};
 $('ilmAdd').onclick = () => {
   const n = $('ilmPick').value;
   if (!n) return;
@@ -765,17 +1033,19 @@ function applyDeviceMask() {
   const dev = document.getElementById('cvDevice');
   const m = maskMeta && maskMeta[project.watchType];
   if (!showMask || !m) {
+    // mask off: hide the placeholder too, leaving only the flat preview
     cv.style.webkitMaskImage = cv.style.maskImage = 'none';
-    dev.classList.add('square');
+    dev.classList.add('plain');
+    dev.style.borderRadius = '0px';
     return;
   }
+  dev.classList.remove('plain');
   const url = `url("assets/masks/${project.watchType}.svg")`;
   cv.style.webkitMaskImage = url; cv.style.maskImage = url;
   cv.style.webkitMaskSize = cv.style.maskSize = '100% 100%';
   cv.style.webkitMaskRepeat = cv.style.maskRepeat = 'no-repeat';
   // bezel radius follows the canvas scale so the frame matches the clip
   const scale = cv.width / (m.w || cv.width);
-  dev.classList.toggle('square', m.kind !== 'circle' && Math.round(m.radius * scale) < 20);
   dev.style.borderRadius = `${Math.round(m.radius * scale)}px`;
 }
 $('btnMask').classList.toggle('on', showMask);
@@ -786,6 +1056,18 @@ $('btnMask').onclick = () => {
 };
 
 // ---------- empty state (no project) ----------
+// fonts imported in earlier sessions (userData/fonts)
+async function loadSavedFonts() {
+  let list = [];
+  try { list = (await window.api.fontsList()) || []; } catch (e) { list = []; }
+  for (const f of list) {
+    if (customFonts.some((c) => c.family === f.family)) continue;
+    customFonts.push({ family: f.family, buf: base64ToBuf(f.dataBase64), fileName: f.fileName });
+  }
+  updateProjFontSelect();
+  return list.length;
+}
+
 function setEmptyState() {
   const empty = !project;
   document.querySelector('main').classList.toggle('empty', empty);
@@ -805,7 +1087,7 @@ async function renderRecents() {
     const d = document.createElement('div');
     d.className = 'recent-item' + (r.exists ? '' : ' missing');
     d.title = r.path;
-    const dev = SUPPORTED_DEVICES.find((x) => x.type === r.device);
+    const dev = deviceByType(r.device);
     const main = document.createElement('div');
     main.className = 'ri-main';
     const nm = document.createElement('div');
@@ -859,7 +1141,7 @@ async function render() {
         // choose the frame whose custom value is the largest one <= the value.
         let pickIdx = Math.min(w.DefaultIndex || 0, entries.length - 1);
         const pairs = entries.map((en, i) => [en.value == null ? null : en.value, i]).filter(([v]) => v != null);
-        const val = testNumeric(w.DataSrcIndex);
+        const val = testNumericForList(w.DataSrcIndex);
         if (pairs.length && val != null) {
           pairs.sort((a, b) => a[0] - b[0]);
           pickIdx = pairs[0][1];
@@ -1081,8 +1363,8 @@ function refreshPanels() {
   const P = $('props'); P.innerHTML = '';
   if (selected < 0 || !s.widgets[selected]) { P.innerHTML = '<p class="muted">Select a layer.</p>'; return; }
   const w = s.widgets[selected];
-  const PROP_LABELS = { Name: 'Name', X: 'X', Y: 'Y', Width: 'Width', Height: 'Height', Alpha: 'Alpha', Bitmap: 'Image', DataSrcValue: 'Shows', DataSrcIndex: 'Shows', Digits: 'Digits', Alignment: 'Alignment', Spacing: 'Spacing', Blanking: 'Hide leading zeros' };
-  const fields = [['Name', 'text'], ['X', 'number'], ['Y', 'number'], ['Width', 'number'], ['Height', 'number'], ['Alpha', 'number'], ['DataSrcValue', 'text'], ['DataSrcIndex', 'text'], ['Digits', 'number'], ['Alignment', 'number'], ['Spacing', 'number'], ['Blanking', 'number']];
+  const PROP_LABELS = { Name: 'Name', X: 'X', Y: 'Y', Width: 'Width', Height: 'Height', Alpha: 'Alpha', imgfmt: 'Image fmt', Bitmap: 'Image', DataSrcValue: 'Shows', DataSrcIndex: 'Shows', Digits: 'Digits', Alignment: 'Alignment', Spacing: 'Spacing', Blanking: 'Hide leading zeros' };
+  const fields = [['Name', 'text'], ['X', 'number'], ['Y', 'number'], ['Width', 'number'], ['Height', 'number'], ['Alpha', 'number'], ['imgfmt', 'select'], ['DataSrcValue', 'text'], ['DataSrcIndex', 'text'], ['Digits', 'number'], ['Alignment', 'number'], ['Spacing', 'number'], ['Blanking', 'number']];
   // read-only summary (moved out of the layer rows)
   const info = document.createElement('div');
   info.className = 'pinfo';
@@ -1107,10 +1389,11 @@ function refreshPanels() {
     const cur = (first._font && first._font.family) || project.font || '';
     const frow = mkRow('Font');
     const fsel = document.createElement('select');
-    for (const fam of fontFamilies()) {
-      const o = document.createElement('option'); o.value = fam; o.textContent = fam; fsel.appendChild(o);
+    fillFontSelect(fsel, '');
+    if (cur && ![...fsel.options].some((o) => o.value === cur)) {
+      const o = document.createElement('option'); o.value = cur; o.textContent = `${cur} (missing)`; fsel.appendChild(o);
     }
-    fsel.value = [...fsel.options].some((o) => o.value === cur) ? cur : '';
+    fsel.value = cur;
     frow.appendChild(fsel);
     gb.appendChild(frow);
     const srow = document.createElement('div'); srow.className = 'row rowcontrols';
@@ -1152,6 +1435,9 @@ function refreshPanels() {
       groupSel = new Set([...keepGroup].filter((i) => s.widgets[i]));
       selected = s.widgets[keepSel] ? keepSel : (groupSel.size ? [...groupSel][0] : keepSel);
       refreshPanels(); render();
+      // keep the group's font controls in view after the panel rebuilds
+      const pb = $('props');
+      if (pb) pb.scrollTop = 0;
       $('meta').textContent = `Font applied to ${ids.length} layers.`;
     };
     srow.appendChild(sizeInp); srow.appendChild(colInp); srow.appendChild(bC.l); srow.appendChild(iC.l); srow.appendChild(apply);
@@ -1256,22 +1542,44 @@ function refreshPanels() {
     grid.appendChild(lrow);
   }
   for (const [k, t] of fields) {
-    if (w[k] === undefined) continue;
+    if (w[k] === undefined && k !== 'imgfmt') continue;
+    if (k === 'imgfmt' && w.Shape !== 30) continue;
     const lab = mkRow(PROP_LABELS[k] || k);
     if (k === 'DataSrcValue' || k === 'DataSrcIndex') {
       const sel = document.createElement('select');
       const cur = String(w[k]);
-      if (!DATASRC_LABEL[cur]) {
-        const o = document.createElement('option');
-        o.value = cur; o.textContent = 'Unknown value'; o.title = cur; sel.appendChild(o);
-      }
-      for (const [code, label] of DATASRC) {
+      const { onDevice, others } = dataSrcOptions();
+      const seen = new Set();
+      const addOpt = (parent, code, label) => {
+        if (seen.has(code)) return;
+        seen.add(code);
         const o = document.createElement('option');
         o.value = code; o.textContent = label; o.title = code;
-        sel.appendChild(o);
+        parent.appendChild(o);
+      };
+      if (onDevice.length) {
+        const g = document.createElement('optgroup');
+        g.label = `On this watch (${onDevice.length})`;
+        for (const [code, label] of onDevice) addOpt(g, code, label);
+        sel.appendChild(g);
+        if (others.length) {
+          const g2 = document.createElement('optgroup');
+          g2.label = 'Not on this watch';
+          for (const [code, label] of others) addOpt(g2, code, label);
+          sel.appendChild(g2);
+        }
+      } else {
+        for (const [code, label] of DATASRC) addOpt(sel, code, label);
+      }
+      if (!seen.has(cur)) {
+        const o = document.createElement('option');
+        o.value = cur;
+        o.textContent = DATASRC_LABEL[cur] ? `${DATASRC_LABEL[cur]} (not on this watch)` : `Unknown value (${cur})`;
+        o.title = cur;
+        sel.insertBefore(o, sel.firstChild);
       }
       sel.value = cur;
-      sel.title = `Source code: ${cur}`;
+      sel.title = `Source code: ${cur}` + (DATASRC_LABEL[cur] ? '' : ' (not in the official table)');
       // light update: no panel rebuild, focus stays in the control
       sel.onchange = () => { w[k] = sel.value; sel.title = `Source code: ${sel.value}`; paintLayer(selected); render(); };
       lab.appendChild(sel);
@@ -1285,6 +1593,15 @@ function refreshPanels() {
       }
       sel.value = String(w.Alignment ?? 0);
       sel.onchange = () => { w.Alignment = parseInt(sel.value, 10) || 0; paintLayer(selected); render(); };
+      lab.appendChild(sel);
+    } else if (k === 'imgfmt') {
+      const sel = document.createElement('select');
+      sel.title = 'EasyFace image-format suffix. Note: the 8Pro family (Redmi Watch 5/6, S3/S4/S5, Mi Band 8/9 Pro) always stores RGBA in the .bin \u2014 the official packer ignores _RGB there. It matters for Mi Band 8 / Redmi Watch 3.';
+      for (const [v, t] of [['', 'Auto (RGBA)'], ['RGBA', '_RGBA (32-bit)'], ['RGB', '_RGB (565, other families)']]) {
+        const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o);
+      }
+      sel.value = w._fmt || '';
+      sel.onchange = () => { if (sel.value) w._fmt = sel.value; else delete w._fmt; paintLayer(selected); render(); };
       lab.appendChild(sel);
     } else if (k === 'Blanking') {
       const cb = document.createElement('input');
@@ -1359,17 +1676,13 @@ function refreshPanels() {
     const f = w._font = w._font || {};
     const frow = mkRow('Font');
     const fsel = document.createElement('select');
-    const none = document.createElement('option'); none.value = ''; none.textContent = '—'; fsel.appendChild(none);
-    for (const fam of fontFamilies()) {
-      const o = document.createElement('option'); o.value = fam; o.textContent = fam; fsel.appendChild(o);
-    }
+    fillFontSelect(fsel, '');
     if (f.family && ![...fsel.options].some((o) => o.value === f.family)) {
       const o = document.createElement('option'); o.value = f.family; o.textContent = `${f.family} (missing)`; fsel.appendChild(o);
     }
-    const imp = document.createElement('option'); imp.value = '__import'; imp.textContent = 'Import custom…'; fsel.appendChild(imp);
     fsel.value = f.family || '';
     fsel.onchange = () => {
-      if (fsel.value === '__import') { fontImportTarget = selected; $('fileFont').click(); fsel.value = f.family || ''; return; }
+      if (fsel.value === '__import') { pickAndImportFont(selected); fsel.value = f.family || ''; return; }
       f.family = fsel.value;
       paintLayer(selected); render();
       if (f.family) queueFontGen(w);
@@ -1415,7 +1728,7 @@ function refreshPanels() {
         grid.appendChild(grow);
       } else if (f.glyphs && f.glyphs.length > 1) {
         const note = document.createElement('div'); note.className = 'muted';
-        const isDigitsPlusSign = f.glyphs.length === 11 && f.glyphs[10].tag === 'minus';
+        const isDigitsPlusSign = f.glyphs.length === 11 && !/^[0-9]$/.test(String(f.glyphs[10].char));
         note.textContent = isDigitsPlusSign
           ? '11 frames: digits 0-9 + minus (frame 10 renders negative values)'
           : `${f.glyphs.length} frames: ${f.glyphs.map((g) => `"${g.char}"`).join(' ')}`;
@@ -1559,10 +1872,13 @@ const PRESETS = [
   { id: 'calories', label: 'Calories', src: '0823', digits: 5 },
   { id: 'battery', label: 'Battery', sub: '%', src: '0841', digits: 3 },
   { id: 'temp', label: 'Temperature', sub: '\u00b0 layer + minus frame', src: '2031', digits: 2, extras: ['deg'], minusFrame: true },
+  { id: 'km', label: 'Distance km (workaround)', sub: 'steps list, 500 km-steps' },
+  { id: 'sign', label: 'Negative-sign frame', sub: 'add a sign image to this set' },
   { group: 'Extras' },
   { id: 'colon', label: 'Colon', sub: 'static', glyphs: [{ tag: 'colon', char: ':' }] },
-  { id: 'colonblink', label: 'Colon (blink)', sub: '2-frame list \u2014 experimental', glyphs: [{ tag: 'colon', char: ':' }, { tag: 'colonOff', char: ' ' }] },
+  { id: 'colonblink', label: 'Colon (blink)', sub: 'blinks 1\u00d7/s', glyphs: [{ tag: 'colon', char: ':' }, { tag: 'colonOff', char: ' ' }] },
   { id: 'text', label: 'Custom text\u2026', sub: 'from the project font' },
+  { id: 'importfont', label: 'Import font\u2026', sub: 'ttf / otf / woff' },
 ];
 let presetMenuOpen = false;
 function buildPresetsMenu() {
@@ -1625,7 +1941,8 @@ async function applyClockPreset(withSeconds) {
   const parts = [];
   const digitLayer = (src, digitCount) => ({
     Shape: 32, Name: '', X: 0, Y: 0, Width: digits.width, Height: digits.height, Alpha: 255,
-    Digits: digitCount, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: src,
+    Digits: digitCount, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: toDeviceSource(project.watchType, src),
+    _srcCanonical: src,
     BitmapList: names.join('|'), _font: fontMeta(),
   });
   const colonLayer = () => ({
@@ -1651,7 +1968,8 @@ async function applyClockPreset(withSeconds) {
     w2.X = Math.round(x);
     // the colon is short: centre it against the digits
     w2.Y = part.kind === 'colon' ? Math.round(cy + (digits.height - w2.Height) / 2) : cy;
-    w2.Name = uniqName(part.kind === 'colon' ? 'clock_colon' : (w2.DataSrcValue === '0811' ? 'clock_hour' : w2.DataSrcValue === '1011' ? 'clock_minute' : 'clock_second'), taken);
+    const canon = w2._srcCanonical || w2.DataSrcValue;
+    w2.Name = uniqName(part.kind === 'colon' ? 'clock_colon' : (canon === '0811' ? 'clock_hour' : canon === '1011' ? 'clock_minute' : 'clock_second'), taken);
     taken.add(w2.Name);
     w2._preset = 'clock';
     w2._group = gid;
@@ -1668,20 +1986,28 @@ async function applyPreset(p) {
   if (!project) return;
   if (p.id === 'text') { openTextDialog(); return; }
   if (p.id === 'clock' || p.id === 'clocksec') { await applyClockPreset(p.id === 'clocksec'); return; }
+  if (p.id === 'importfont') { await pickAndImportFont(selected); return; }
+  if (p.id === 'km') { applyKmPreset(); return; }
+  if (p.id === 'sign') { addSignFrameToSelected(); return; }
   const s = slot();
   const taken = new Set(s.widgets.map((w) => w.Name));
   // glyphs this preset needs
-  const glyphs = p.glyphs || (p.minusFrame ? DIGIT_GLYPHS_MINUS : DIGIT_GLYPHS);
+  // EasyFace FAQ: the negative sign image is mandatory for digit widgets — we
+  // always build 11 frames, using "-" for temperature-ish values and a copy of
+  // "0" elsewhere (what EasyFace's own docs recommend).
+  const signChar = p.signChar || (p.minusFrame ? '-' : '0');
+  const digitSpec = [...DIGIT_GLYPHS, { tag: glyphTag(signChar), char: signChar }];
+  const glyphs = p.glyphs || digitSpec;
   const font = project.font;
   let set = null;
   if (font) {
-    try { set = await ensureGlyphSet(s, font, PRESET_SIZE, '#ffffff', false, false, glyphs, { mono: !p.glyphs }); }
+    try { set = await ensureGlyphSet(s, font, PRESET_SIZE, '#ffffff', false, false, glyphs, { mono: !p.glyphs, uniqueFor: needsUniqueSets() ? p.id : null }); }
     catch (e) { $('meta').textContent = `Preset font failed: ${e.message}`; }
   }
   const gw = set ? set.width : Math.round(PRESET_SIZE * 0.6), gh = set ? set.height : Math.round(PRESET_SIZE * 1.2);
   pushHistory();
   if (p.glyphs) {
-    // glyph-only preset (colon): one image layer, or a 2-frame list for blink
+    // glyph-only preset (colon): one image layer, or a blinking frame list
     const onName = set ? set.names[p.glyphs[0].tag] : null;
     if (!onName) { $('meta').textContent = 'Set a Project font first (Project panel).'; return; }
     const wg = { Shape: 30, Name: uniqName(p.id, taken), X: 0, Y: 0, Width: gw, Height: gh, Alpha: 255, Bitmap: onName,
@@ -1691,9 +2017,13 @@ async function applyPreset(p) {
         .then((r) => r.names.colonOff).catch(() => null);
       if (offName) {
         wg.Shape = 31;
-        wg.DataSrcIndex = '1911';                 // second ones
+        wg.DataSrcIndex = toDeviceSource(project.watchType, '1911');  // second ones
+        wg._srcCanonicalIndex = '1911';
         wg.DefaultIndex = 0;
-        wg.BitmapList = `(0):${onName}|(1):${offName}`;
+        // Ten frames keyed on the seconds digit: even frames show the colon, odd
+        // frames are blank, so it blinks once per second. A 2-frame list would
+        // only show the colon while the ones digit is 0 (i.e. once every 10 s).
+        wg.BitmapList = Array.from({ length: 10 }, (_, k) => `(${k}):${k % 2 === 0 ? onName : offName}`).join('|');
         wg._font = { family: font, size: PRESET_SIZE, color: '#ffffff', files: [onName, offName],
           glyphs: [{ tag: 'colon', char: ':' }, { tag: 'colonOff', char: ' ' }] };
       }
@@ -1705,7 +2035,7 @@ async function applyPreset(p) {
     refreshPanels(); render();
     pushHistory();
     $('meta').textContent = p.id === 'colonblink'
-      ? 'Colon (blink) added as a 2-frame list on seconds \u2014 experimental, verify on the watch.'
+      ? 'Colon (blink) added: 10 frames on the seconds digit \u2014 shows on even seconds, hides on odd (1 Hz).'
       : 'Colon added.';
     return;
   }
@@ -1721,7 +2051,7 @@ async function applyPreset(p) {
   const names = set ? glyphs.map((g) => set.names[g.tag]) : [];
   const wg = {
     Shape: 32, Name: uniqName(p.id, taken), X: 0, Y: 0, Width: gw, Height: gh, Alpha: 255,
-    Digits: p.digits || 2, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: p.src,
+    Digits: p.digits || 2, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: toDeviceSource(project.watchType, p.src), _srcCanonical: p.src,
     BitmapList: names.join('|'),
     _preset: p.id,   // marks the layer as preset-built (re-flow + glyph behaviour)
     _font: font ? { family: font, size: PRESET_SIZE, color: '#ffffff', glyphs: font && glyphs !== DIGIT_GLYPHS ? glyphs.slice() : undefined, files: names.slice() } : null,
@@ -1735,7 +2065,7 @@ async function applyPreset(p) {
   // extras (temperature: \u00b0 and \u2212) become their own layers next to the value
   for (const tag of p.extras || []) {
     let ex = null;
-    try { ex = await ensureGlyphSet(s, font, PRESET_SIZE, '#ffffff', false, false, [{ tag, char: EXTRA_GLYPHS[tag] }], { mono: false }); }
+    try { ex = await ensureGlyphSet(s, font, PRESET_SIZE, '#ffffff', false, false, [{ tag, char: EXTRA_GLYPHS[tag] }], { mono: false, uniqueFor: needsUniqueSets() ? `${p.id}-${tag}` : null }); }
     catch (e) { continue; }
     const name = ex.names[tag];
     const ew = { Shape: 30, Name: uniqName(`${p.id}_${tag}`, taken), X: wg.X + wg.Width * wg.Digits, Y: wg.Y, Width: ex.width, Height: ex.height,
@@ -1753,6 +2083,148 @@ async function applyPreset(p) {
   refreshPanels(); render();
   $('meta').textContent = `${p.label} added${p.minusFrame ? ' (11 frames: 0-9 + minus, so negative values render the sign)' : ''}${p.extras ? ` with ${p.extras.join(' + ')} glyph as its own layer` : ''}.`;
 }
+
+// Add a negative-sign frame to the selected digit layer's set (FAQ #9).
+async function addSignFrameToSelected() {
+  const s = slot();
+  const w = s.widgets[selected];
+  if (!w || (w.Shape !== 32 && w.Shape !== 31)) { $('meta').textContent = 'Select a Digital or ImageList layer first.'; return; }
+  const f = w._font = w._font || {};
+  if (!f.family) { $('meta').textContent = 'Pick a font for that layer first.'; return; }
+  const spec = (f.glyphs && f.glyphs.length > 1) ? f.glyphs.slice() : [...DIGIT_GLYPHS];
+  if (spec.length > 10 && spec[10] && spec[10].tag === 'minus') { $('meta').textContent = 'This set already has a sign frame.'; return; }
+  const signChar = /2031|2032|2033|1831|1821/.test(String(w._srcCanonical || w._srcCanonicalIndex || w.DataSrcValue || w.DataSrcIndex)) ? '-' : '0';
+  spec.push({ tag: glyphTag(signChar), char: signChar });
+  f.glyphs = spec;
+  await regenerateWidgetGlyphs(w, s);
+  $('meta').textContent = 'Sign frame added (frame 10) — negative values now render it.';
+}
+
+// Distance in km is not supported by the watches; EasyFace's workaround is an
+// ImageList driven by the step count with distance thresholds as its values.
+function applyKmPreset() {
+  if (!project) return;
+  const s = slot();
+  const taken = new Set(s.widgets.map((w) => w.Name));
+  const anchor = presetAnchor(120, 30);
+  const km = {
+    Shape: 31, Name: uniqName('distance_km', taken), X: anchor.x, Y: anchor.y,
+    Width: 40, Height: 25, Alpha: 255, DataSrcIndex: toDeviceSource(project.watchType, '0821'), DefaultIndex: 0,
+    BitmapList: '', _preset: 'km', _kmValues: true,
+  };
+  pushHistory();
+  s.widgets.push(km);
+  selected = s.widgets.length - 1;
+  refreshPanels(); render();
+  openImgListDialog(km);   // let the user pick/upload the km images right away
+  $('meta').textContent = 'Distance km: add the km images (one per threshold), then Apply — values are filled automatically.';
+}
+// thresholds from EasyFace's distance_km example
+const KM_THRESHOLDS = [0, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000];
+
+// ---------- project lint (EasyFace-derived rules) ----------
+// Weather icon index reference (EasyFace wiki, WeatherTableIT): 0-41.
+const WEATHER_ICONS = ['Clear','Cloudy','Overcast','Showers','Thunderstorm','Hail','Sleet','Light rain','Moderate rain','Heavy rain','Thundery rain','Downpour','Severe storm','Snow','Light snow','Moderate snow','Heavy snow','Snowstorm','Mist','Freezing rain','Sandstorm','Light/moderate rain','Moderate/heavy rain','Heavy rain/thunder','Rainstorm/flood','Cloudburst','Light/moderate snow','Moderate/heavy snow','Heavy snow/blizzard','Dust','Windy','Sandstorm','Fog','Dense fog','Light haze','Moderate haze','Heavy haze','Severe haze','Fog','Severe fog','Not reported','Rain'];
+// Devices whose watches cannot render the km data source (use the workaround).
+const KM_UNSUPPORTED = [11, 362, 365, 367, 462, 465, 562, 565, 466, 567];
+function lintProject() {
+  const out = [];
+  if (!project) return out;
+  const push = (sev, msg) => out.push({ sev, msg });
+  const dev = deviceByType(project.watchType);
+  if (dev && dev.compilable === false) {
+    push('warn', `${dev.name} is design/export only — the compiler has no writer for device ${dev.type}. Export and compile it with EasyFace.`);
+  }
+  project.slots.forEach((s, si) => {
+    const where = project.slots.length > 1 ? `slot ${si}: ` : '';
+    // referenced but missing images
+    const used = new Set();
+    for (const w of s.widgets) for (const n of widgetImageRefs(w)) used.add(n);
+    for (const n of used) if (!s.images.some((im) => im.name === n)) push('error', `${where}image "${n}" is referenced by a layer but missing from the project.`);
+    const unused = unusedImages(s);
+    if (unused.length) push('info', `${where}${unused.length} unused image(s) — removed automatically on save/compile.`);
+    // per-layer rules
+    s.widgets.forEach((w) => {
+      const nm = w.Name || '(unnamed)';
+      if (w.Shape === 30 && /^btn_/i.test(nm) && !/\[[^\]]+\]/.test(nm) && !w._action) {
+        push('error', `${where}"${nm}" looks like a tap button but has no [app] suffix and no action data.`);
+      }
+      if ((w.Shape === 32 || w.Shape === 31) && w.BitmapList) {
+        const frames = listEntries(w);
+        const f0 = s.images.find((im) => im.name === frames[0] && frames[0]);
+        for (const e of frames) {
+          const im = s.images.find((x) => x.name === e.name);
+          if (im && f0 && (im.width !== f0.width || im.height !== f0.height)) {
+            push('error', `${where}"${nm}": frames must share dimensions (${frames[0].name} is ${f0.width}×${f0.height}, ${e.name} is ${im.width}×${im.height}).`);
+            break;
+          }
+        }
+        if (w.Shape === 32 && frames.length === 10) {
+          push('warn', `${where}"${nm}": no negative-sign frame — EasyFace requires one (usually a copy of "0"; "-" for temperature).`);
+        }
+        // a list keyed on a single digit ((ones)/(tens)) needs all 10 frames: the
+        // watch shows frame = digit, falling back to the last frame for the rest
+        const which = (CODE_FIELD[String(w.DataSrcIndex || '')] || [])[1];
+        if (w.Shape === 31 && (which === 'ones' || which === 'tens') && frames.length < 10) {
+          push('warn', `${where}"${nm}" is a list on a single digit but has only ${frames.length} frame(s) — digits above ${frames.length - 1} fall back to the last frame (a 2-frame "blink" colon this way only shows once every 10 s). Use 10 frames.`);
+        }
+        if (needsUniqueSets() && frames.length) {
+          const shared = s.widgets.some((o) => o !== w && String(o.BitmapList || '') === String(w.BitmapList || ''));
+          if (shared) push('warn', `${where}"${nm}": ${dev ? dev.name : 'this watch'} needs unique images per digit widget — two layers share the same set.`);
+        }
+      }
+      const kmSrc = String(w.DataSrcValue || '') === '1821' || ['1051', '0851'].includes(String(w.DataSrcValue || ''));
+      if (kmSrc && KM_UNSUPPORTED.includes(project.watchType)) {
+        push('warn', `${where}"${nm}" uses a distance-km source; the watches don't render km — use the Distance km workaround preset (step thresholds).`);
+      }
+      if (String(w.DataSrcIndex || '') === '3031' || String(w.DataSrcIndex || '') === '5031') {
+        const n = listEntries(w).length;
+        if (n > 40) push('warn', `${where}"${nm}": ${n} weather icons — Mi Band 7 Pro supports at most 40 (20 on the global firmware).`);
+      }
+      // the source must exist on this watch (ids differ per device; see EasyFace's DeviceInfo.db)
+      {
+        const list = deviceSourcesFor(project.watchType);
+        const code = String(w.DataSrcValue || '');
+        if (list.length && code && !list.some((s) => s.id === code)) {
+          push('warn', `${where}"${nm}": source ${code}${DATASRC_LABEL[code] ? ` (${DATASRC_LABEL[code]})` : ''} is not in ${dev ? dev.name : 'this watch'}'s data-source list — use the device-aware preset or pick "On this watch".`);
+        }
+      }
+      if (w._fmt === 'RGB' && dev && dev.compilable) {
+        push('info', `${where}"${nm}" is marked _RGB, but the ${dev.name} family always stores RGBA — the official packer ignores _RGB there.`);
+      }
+      if (w.X + w.Width <= 0 || w.Y + w.Height <= 0 || w.X >= project.screenW || w.Y >= project.screenH) {
+        push('warn', `${where}"${nm}" is fully outside the ${project.screenW}×${project.screenH} screen.`);
+      }
+    });
+    if (s.widgets.length && s.images.some((im) => im.name.startsWith('preview'))) push('info', `${where}an image named like the preview is part of the slot images.`);
+  });
+  if (project.slots.length > 1) push('warn', `${project.slots.length} slots: the compiler flattens AOD-ness (both are written as plain faces).`);
+  if (!project.slots.some((s) => s.widgets.length)) push('warn', 'the project has no layers yet.');
+  return out;
+}
+function showLint() {
+  const items = lintProject();
+  const host = $('lintList');
+  host.innerHTML = '';
+  const icon = { error: '\u2715', warn: '\u26a0', info: '\u2139' };
+  if (!items.length) {
+    const d = document.createElement('div');
+    d.className = 'lint-item info';
+    d.textContent = 'No issues found.';
+    host.appendChild(d);
+  }
+  for (const it of items.sort((a, b) => ({ error: 0, warn: 1, info: 2 })[a.sev] - ({ error: 0, warn: 1, info: 2 })[b.sev])) {
+    const d = document.createElement('div');
+    d.className = 'lint-item ' + it.sev;
+    d.textContent = `${icon[it.sev]}  ${it.msg}`;
+    host.appendChild(d);
+  }
+  $('lintCount').textContent = items.length ? `(${items.length})` : '';
+  $('lintModal').hidden = false;
+}
+$('btnLint').onclick = showLint;
+$('lintClose').onclick = () => { $('lintModal').hidden = true; };
+$('lintModal').addEventListener('mousedown', (e) => { if (e.target === $('lintModal')) $('lintModal').hidden = true; });
 
 // ---------- custom text ----------
 let textTargets = [];
@@ -1809,6 +2281,13 @@ function renderTestDataPanel() {
   if (!host) return;
   host.innerHTML = '';
   for (const [key, label] of TEST_FIELDS) {
+    if (key === '__group') {
+      const g = document.createElement('div');
+      g.className = 'td-group';
+      g.textContent = label;
+      host.appendChild(g);
+      continue;
+    }
     const row = mkRow(label);
     const inp = document.createElement('input');
     inp.type = 'text';
@@ -1938,8 +2417,8 @@ function addWidget(kind) {
   const cx = Math.round(W / 2), cy = Math.round(H / 2);
   let w;
   if (kind === 'img') w = { Shape: 30, Name: uniqName('image_new', taken), X: cx - 50, Y: cy - 50, Width: 100, Height: 100, Alpha: 255, Bitmap: firstImg };
-  else if (kind === 'num') w = { Shape: 32, Name: uniqName('widget_new', taken), X: cx - 40, Y: cy - 30, Width: 40, Height: 60, Alpha: 255, Digits: 2, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: '0811', BitmapList: '' };
-  else if (kind === 'list') w = { Shape: 31, Name: uniqName('widget_new', taken), X: cx - 30, Y: cy - 20, Width: 60, Height: 40, Alpha: 255, DataSrcIndex: '2012', DefaultIndex: 0, BitmapList: '' };
+  else if (kind === 'num') w = { Shape: 32, Name: uniqName('widget_new', taken), X: cx - 40, Y: cy - 30, Width: 40, Height: 60, Alpha: 255, Digits: 2, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: toDeviceSource(project.watchType, '0811'), _srcCanonical: '0811', BitmapList: '' };
+  else if (kind === 'list') w = { Shape: 31, Name: uniqName('widget_new', taken), X: cx - 30, Y: cy - 20, Width: 60, Height: 40, Alpha: 255, DataSrcIndex: toDeviceSource(project.watchType, '2012'), DefaultIndex: 0, BitmapList: '' };
   else if (kind === 'clock') w = { Shape: 27, Name: uniqName('analogClock_new', taken), X: 0, Y: 0, Width: W, Height: H, Alpha: 255, HourHandImage: '', HourImageRotateX: 0, HourImageRotateY: 0, MinuteHandImage: '', MinuteImageRotateX: 0, MinuteImageRotateY: 0, SecondHandImage: '', SecondImageRotateX: 0, SecondImageRotateY: 0 };
   else if (kind === 'btn') w = { Shape: 30, Name: uniqName('btn_new', taken) + '_[alarm]', X: cx - 30, Y: cy - 30, Width: 60, Height: 60, Alpha: 255, Bitmap: firstImg };
   else return;
@@ -1955,10 +2434,11 @@ function addWidget(kind) {
 }
 // Shared digit sets: identical font parameters reuse the same PNGs across
 // layers, so a project font is generated once and every layer points at it.
-function fontSetBase(family, size, color, bold, italic) {
+function fontSetBase(family, size, color, bold, italic, uniqueFor) {
   const fam = String(family).replace(/[^\w]+/g, '-');
   const col = String(color || '#ffffff').replace('#', '');
-  return `font_${fam}_${size}${bold ? 'b' : ''}${italic ? 'i' : ''}_${col}`;
+  const uniq = uniqueFor ? `${String(uniqueFor).replace(/[^\w]+/g, '-')}_` : '';
+  return `font_${uniq}${fam}_${size}${bold ? 'b' : ''}${italic ? 'i' : ''}_${col}`;
 }
 function fontSetNames(f, i) {
   const b = f._base || fontSetBase(f.family, f.size, f.color, f.bold, f.italic);
@@ -1974,8 +2454,8 @@ function fontImageUsedElsewhere(s, name, exceptWidget) {
 // Draw a set of glyphs from one font into transparent PNGs.
 // mono=true shares one cell width (needed for even digit spacing); otherwise each
 // glyph gets its natural width (used for °, -, : and custom text).
-async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mono = true } = {}) {
-  const base = fontSetBase(family, size, color, bold, italic);
+async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mono = true, uniqueFor = null } = {}) {
+  const base = fontSetBase(family, size, color, bold, italic, uniqueFor);
   const names = {};
   const missing = glyphs.filter((g) => !s.images.some((im) => im.name === `${base}_${g.tag}.png`));
   const first = s.images.find((im) => im.name === `${base}_${glyphs[0].tag}.png`);
@@ -2040,6 +2520,10 @@ const EXTRA_GLYPHS = { deg: '\u00b0', minus: '-', plus: '+', colon: ':', percent
 const MINUS_GLYPH = { tag: 'minus', char: '-' };
 const DIGIT_GLYPHS_MINUS = [...DIGIT_GLYPHS, MINUS_GLYPH];
 const SIGN_FRAME = 10;
+// Mi Band 7 Pro / Mi Band 8 need unique images per digit widget (EasyFace):
+// sharing one set makes the readings render wrong on those watches.
+const UNIQUE_SET_DEVICES = [6, 9];
+function needsUniqueSets() { return Boolean(project && UNIQUE_SET_DEVICES.includes(project.watchType)); }
 
 async function generateFontBitmaps(w, s) {
   const f = w._font = w._font || {};
@@ -2072,7 +2556,9 @@ async function generateFontBitmaps(w, s) {
   refreshPanels(); render();
   if (replacedForeign) showUndoToast(`BitmapList replaced with ${f.family} digits (${current.length} image(s))`, undo);
   const si = document.querySelector('[data-font-size]');
-  if (si) { si.focus(); si.select(); }
+  // focus without scrolling: focusing normally jumps the panel down and hides
+  // the group font box at the top
+  if (si) { si.focus({ preventScroll: true }); si.select(); }
 }
 // Regenerate whatever glyphs a layer actually uses. Digit layers produce 0-9;
 // glyph layers (presets like Colon, or the °/- extras) regenerate exactly their
@@ -2080,6 +2566,7 @@ async function generateFontBitmaps(w, s) {
 async function regenerateWidgetGlyphs(w, s) {
   const f = w._font = w._font || {};
   const spec = f.glyphs;
+  const uniq = needsUniqueSets() ? w.Name : null;
   if (!spec || !spec.length) return generateFontBitmaps(w, s);
   if (!f.family) { $('meta').textContent = 'Pick a font first.'; return; }
   const size = Math.max(8, f.size || w.Height || 60);
@@ -2088,7 +2575,7 @@ async function regenerateWidgetGlyphs(w, s) {
   let set;
   try {
     // multi-frame sets must share dimensions (the packer requires it)
-    set = await ensureGlyphSet(s, f.family, size, color, !!f.bold, !!f.italic, spec, { mono: spec.length > 1 });
+    set = await ensureGlyphSet(s, f.family, size, color, !!f.bold, !!f.italic, spec, { mono: spec.length > 1, uniqueFor: uniq });
   } catch (err) { $('meta').textContent = String(err.message || err); return; }
   const names = spec.map((g) => set.names[g.tag]);
   pushHistory();
@@ -2114,7 +2601,9 @@ async function regenerateWidgetGlyphs(w, s) {
   $('meta').textContent = `Rendered ${f.family} ${spec.map((g) => `"${g.char}"`).join(' ')}\u2009(${set.width}\u00d7${set.height}).`;
   refreshPanels(); render();
   const si = document.querySelector('[data-font-size]');
-  if (si) { si.focus(); si.select(); }
+  // focus without scrolling: focusing normally jumps the panel down and hides
+  // the group font box at the top
+  if (si) { si.focus({ preventScroll: true }); si.select(); }
 }
 
 // Debounced auto-regenerate: every font/size/color/style change re-renders
@@ -2126,42 +2615,60 @@ function queueFontGen(w) {
   fontGenTimer = setTimeout(() => { if (project && s.widgets.includes(w)) regenerateWidgetGlyphs(w, s); }, 450);
 }
 
-// Devices the compiler supports (core/packer.js SUPPORTED + screen sizes).
-// pv is the preview size written on compile: full face size everywhere
-// except 565, whose 0.6x thumbnail is what disambiguates it from 465
-// (both are 432x514; see core/watch.js PreviewSizes).
-const SUPPORTED_DEVICES = [
-  { type: 11, name: 'Mi Band 8 Pro', w: 336, h: 480, pvW: 336, pvH: 480 },
-  { type: 362, name: 'Mi Watch S3', w: 466, h: 466, pvW: 464, pvH: 464 },
-  { type: 365, name: 'Redmi Watch 4', w: 390, h: 450, pvW: 390, pvH: 450 },
-  { type: 367, name: 'Mi Band 9 Pro', w: 336, h: 480, pvW: 336, pvH: 480 },
-  { type: 462, name: 'Mi Watch S4', w: 466, h: 466, pvW: 464, pvH: 464 },
-  { type: 465, name: 'Redmi Watch 5', w: 432, h: 514, pvW: 432, pvH: 514 },
-  { type: 562, name: 'Mi Watch S5', w: 480, h: 480, pvW: 480, pvH: 480 },
-  { type: 565, name: 'Redmi Watch 6', w: 432, h: 514, pvW: 259, pvH: 308 },
-];
-function openNewFaceDialog() {
+// Full device catalog (core/watch.js via IPC) — the New-project dialog shows
+// compilable families first, then the rest for design/unpack work.
+let DEVICES = [];
+async function loadDevices() {
+  if (DEVICES.length) return DEVICES;
+  try { DEVICES = await window.api.deviceCatalog(); } catch (e) { DEVICES = []; }
+  try { DEVICE_INFO = await window.api.deviceInfo(); } catch (e) { DEVICE_INFO = null; }
+  if (!DEVICES.length) {
+    DEVICES = [{ type: 565, name: 'Redmi Watch 6', screen: [432, 514], preview: [259, 308], shape: 'rounded', compilable: true }];
+  }
+  return DEVICES;
+}
+function deviceByType(t) { return DEVICES.find((d) => d.type === t) || null; }
+// preview size written on compile (full face, except the 565 thumbnail)
+function devicePreview(t) {
+  const d = deviceByType(t);
+  return d ? { w: d.preview[0], h: d.preview[1] } : { w: project ? project.screenW : 432, h: project ? project.screenH : 514 };
+}
+function deviceSlot(d) {
+  const o = document.createElement('option');
+  o.value = String(d.type);
+  const pv = d.preview.join('\u00d7');
+  o.textContent = `${d.name} \u00b7 ${d.screen[0]}\u00d7${d.screen[1]}` + (pv !== `${d.screen[0]}\u00d7${d.screen[1]}` ? ` (${pv} preview)` : '');
+  return o;
+}
+async function openNewFaceDialog() {
+  await loadDevices();
   const sel = $('newFaceDevice');
   sel.innerHTML = '';
-  for (const d of SUPPORTED_DEVICES) {
-    const o = document.createElement('option');
-    o.value = d.type;
-    o.textContent = `${d.name} · ${d.w}×${d.h}`;
-    sel.appendChild(o);
-  }
-  sel.value = '565';
+  // Both groups are selectable: for the non-compilable families you can still
+  // import, design and export (then compile with EasyFace) — only the built-in
+  // Compile button is unavailable and says so.
+  const addGroup = (label, list) => {
+    if (!list.length) return;
+    const g = document.createElement('optgroup');
+    g.label = label;
+    for (const d of list) g.appendChild(deviceSlot(d));
+    sel.appendChild(g);
+  };
+  addGroup('Compilable', DEVICES.filter((d) => d.compilable));
+  addGroup('Other watches (design + export — compile with EasyFace)', DEVICES.filter((d) => !d.compilable));
+  sel.value = DEVICES.some((d) => d.type === 565 && d.compilable) ? '565' : String((DEVICES.find((d) => d.compilable) || DEVICES[0]).type);
   $('newFaceName').value = 'My face';
   $('newFaceModal').hidden = false;
   setTimeout(() => $('newFaceName').select(), 0);
 }
 function createNewFace() {
-  const dev = SUPPORTED_DEVICES.find((d) => d.type === parseInt($('newFaceDevice').value, 10)) || SUPPORTED_DEVICES[0];
+  const dev = deviceByType(parseInt($('newFaceDevice').value, 10)) || DEVICES.find((d) => d.compilable) || DEVICES[0];
   const title = $('newFaceName').value.trim() || 'My face';
   $('newFaceModal').hidden = true;
   project = {
     base: title.replace(/[^\w\-]+/g, '_'), filePath: null,
     version: 2, watchType: dev.type, watchName: dev.name,
-    screenW: dev.w, screenH: dev.h, title, faceId: '',
+    screenW: dev.screen[0], screenH: dev.screen[1], title, faceId: '', compilable: dev.compilable !== false,
     previewUrl: null,
     slots: [{ index: 0, role: 'face', widgets: [], rawActions: [], images: [] }],
   };
@@ -2174,9 +2681,12 @@ function createNewFace() {
   updateHistoryButtons();
   $('inpTitle').value = title;
   for (const id of ['btnExport', 'btnCompile', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
+  const dc = deviceByType(project.watchType);
+  if (dc && dc.compilable === false) $('btnCompile').disabled = true;
   refreshPanels(); render();
+  if (dev.compilable === false) $('meta').textContent = `${dev.name} is design/export only — the compiler does not support that family yet.`;
 }
-$('btnNew').onclick = openNewFaceDialog;
+$('btnNew').onclick = () => { openNewFaceDialog(); };
 $('newFaceCancel').onclick = () => { $('newFaceModal').hidden = true; };
 $('newFaceCreate').onclick = createNewFace;
 $('newFaceModal').addEventListener('mousedown', (e) => { if (e.target === $('newFaceModal')) $('newFaceModal').hidden = true; });
@@ -2224,6 +2734,8 @@ async function loadProject(res) {
     + (res.animationCount ? ` · ⚠ ${res.animationCount} animation entr${res.animationCount === 1 ? 'y' : 'ies'} (not supported — compile would drop them)` : '')
     + (res.appCount ? ` · ⚠ ${res.appCount} app widget(s)` : '');
   for (const id of ['btnExport', 'btnCompile', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
+  const dc = deviceByType(project.watchType);
+  if (dc && dc.compilable === false) $('btnCompile').disabled = true;
   if (res.version !== 2) $('btnCompile').disabled = true;
   refreshPanels(); render();
 }
@@ -2250,32 +2762,61 @@ $('fileUpload').onchange = async () => {
   $('fileUpload').value = '';
   refreshPanels(); render();
 };
-let fontImportTarget = -1;
-let projFontImport = false;
-$('fileFont').onchange = async () => {
-  const file = $('fileFont').files[0];
-  $('fileFont').value = '';
-  if (!file || !project || fontImportTarget < 0) return;
+// font import goes through pickAndImportFont() now
+// Import a .ttf/.otf/.woff as a project font and/or the selected layer's font.
+// Returns the registered family name, or null on failure.
+async function importFontFile(file, { projectWide = false, layerIndex = -1 } = {}) {
+  if (!file || !project) return null;
   const buf = await file.arrayBuffer();
-  const family = 'Custom-' + file.name.replace(/\.[^.]+$/, '').replace(/[^\w\-]+/g, '_');
+  const family = 'Custom-' + String(file.name || 'font').replace(/\.[^.]+$/, '').replace(/[^\w\-]+/g, '_');
   try {
     const ff = new FontFace(family, buf);
     await ff.load();
     document.fonts.add(ff);
     await document.fonts.ready;
-  } catch (e) { alert(`Could not load font: ${e.message}`); return; }
-  customFonts.push({ family, buf, fileName: file.name });
-  if (projFontImport) {
-    projFontImport = false;
-    if (project) { project.font = family; pushHistory(); }
-    updateProjFontSelect();
-    refreshPanels(); render();
-    return;
+  } catch (e) {
+    $('meta').textContent = `Could not load ${file.name}: ${e.message}`;
+    return null;
   }
-  const w = project && slot().widgets[fontImportTarget];
-  if (w) { w._font = w._font || {}; w._font.family = family; w._font.kind = 'custom'; }
+  if (!customFonts.some((c) => c.family === family)) customFonts.push({ family, buf, fileName: file.name });
+  // persist app-wide so the font survives restarts and is available in any project
+  try { await window.api.fontSave({ family, fileName: file.name, dataBase64: bufToBase64(buf) }); } catch (e) { /* non-fatal */ }
+  // sanity: the generator needs digits
+  const meas = document.createElement('canvas').getContext('2d');
+  setFontOn(meas, family, 100);
+  const hasDigits = '0123456789'.split('').every((d) => meas.measureText(d).width > 1);
+
+  pushHistory();
+  let target = null;
+  if (layerIndex >= 0) {
+    const w = slot().widgets[layerIndex];
+    if (w) {
+      w._font = w._font || {};
+      w._font.family = family;
+      w._font.kind = 'custom';
+      target = w;
+    }
+  }
+  if (projectWide || !target) project.font = family;
+  updateProjFontSelect();
   refreshPanels(); render();
-};
+  $('meta').textContent = `Imported "${family}"` + (hasDigits ? '' : ' — warning: no 0-9 glyphs, digit tiles will be empty')
+    + (target ? ` and applied it to ${target.Name}` : ' as the project font');
+  if (target && (target.Shape === 31 || target.Shape === 32)) await regenerateWidgetGlyphs(target, slot());
+  return family;
+}
+
+// pick a font with the native dialog (no <input accept> filtering issues)
+async function pickAndImportFont(layerIndex) {
+  if (!project) return null;
+  $('meta').textContent = 'Choose a font file…';
+  let picked = null;
+  try { picked = await window.api.pickFont(); } catch (e) { picked = null; }
+  if (!picked) { $('meta').textContent = 'Font import cancelled.'; return null; }
+  const buf = base64ToBuf(picked.dataBase64);
+  const file = new File([buf], picked.name, { type: 'font/ttf' });
+  return importFontFile(file, { projectWide: true, layerIndex: typeof layerIndex === 'number' ? layerIndex : -1 });
+}
 $('inpTitle').onchange = (e) => { if (project) project.title = e.target.value; };
 $('inpTitle').addEventListener('focus', pushHistory);
 $('inpTitle').addEventListener('pointerdown', pushHistory);
@@ -2311,6 +2852,11 @@ window.addEventListener('keydown', (e) => {
 $('btnAddSlot').disabled = true;
 $('btnCompile').onclick = async () => {
   if (!project) return;
+  const cd = deviceByType(project.watchType);
+  if (project.compilable === false || (cd && cd.compilable === false)) {
+    $('meta').textContent = `${project.watchName} is design/export only \u2014 the compiler has no writer for that family yet (${deviceByType(project.watchType) ? '[11,362,365,367,462,465,562,565]' : ''}). Use Export/Save and compile with EasyFace.`;
+    return;
+  }
   // save first so the .bin always matches an on-disk project
   $('meta').textContent = 'Saving…';
   const saved = await saveProject();
@@ -2319,8 +2865,8 @@ $('btnCompile').onclick = async () => {
   $('meta').textContent = 'Compiling…';
   // new faces/slots have no decoded preview: compose each from the canvas at
   // the device's preview size (full face, except the 565 thumbnail)
-  const dev = SUPPORTED_DEVICES.find((d) => d.type === project.watchType);
-  const pvW = dev ? dev.pvW : project.screenW, pvH = dev ? dev.pvH : project.screenH;
+  const pv = devicePreview(project.watchType);
+  const pvW = pv.w, pvH = pv.h;
   const slots = [];
   for (let i = 0; i < project.slots.length; i++) {
     const s = project.slots[i];
@@ -2419,9 +2965,16 @@ cv.addEventListener('mousedown', (e) => {
     if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) {
       if (s.widgets[i]._locked) continue; // locked layers are not draggable
       pushHistory();
-      selected = i; groupSel = new Set([i]); refreshPanels(); render();
+      // Dragging follows the selection. Clicking a layer that is not selected
+      // selects just it, so it moves on its own; clicking one that is already
+      // selected keeps the selection — select a group (its row or ◉), or
+      // Ctrl/Cmd-click several layers, to move them together.
+      if (!(selected === i || groupSel.has(i))) { selected = i; groupSel = new Set([i]); }
+      refreshPanels(); render();
       const primary = s.widgets[i];
-      const mates = membersOf(primary, s).filter((o) => o !== primary && !o._locked);
+      const mates = [...groupSel]
+        .filter((k) => k !== i && s.widgets[k] && !s.widgets[k]._locked)
+        .map((k) => s.widgets[k]);
       drag = {
         dx: mx - x, dy: my - y, primary, ox: primary.X || 0, oy: primary.Y || 0,
         mates: mates.map((o) => ({ o, x: o.X || 0, y: o.Y || 0 })),
@@ -2440,7 +2993,7 @@ window.addEventListener('mousemove', (e) => {
   if (showGrid) { const sn = snapMove(w, nx, ny, slot().widgets.indexOf(w)); nx = sn.x; ny = sn.y; }
   else guides = { v: [], h: [] };
   w.X = Math.round(nx); w.Y = Math.round(ny);
-  // grouped layers keep their offsets: move the whole group by the same delta
+  // the rest of the selection keeps its offsets: move it by the same delta
   const ddx = w.X - drag.ox, ddy = w.Y - drag.oy;
   for (const m of drag.mates || []) { m.o.X = Math.round(m.x + ddx); m.o.Y = Math.round(m.y + ddy); }
   render();
@@ -2448,6 +3001,7 @@ window.addEventListener('mousemove', (e) => {
 });
 setEmptyState();
 loadMaskMeta();
-buildPresetsMenu();
+loadDevices();
+loadSavedFonts().then(() => { buildPresetsMenu(); });
 
 window.addEventListener('mouseup', () => { if (drag) { drag = null; guides = { v: [], h: [] }; if (project) { refreshPanels(); render(); } } });

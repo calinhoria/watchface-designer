@@ -210,6 +210,10 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
   width: 22px; height: 22px; border-radius: 6px; flex: none;
 }
 .ilm-row .rm:hover { background: #7f2b32; color: #fff; }
+.ilm-hint {
+  font-size: 11px; color: #9fb6ff; background: rgb(91 140 255 / .10);
+  border: 1px solid rgb(91 140 255 / .25); border-radius: 7px; padding: 6px 8px; margin-bottom: 8px;
+}
 .ilm-add { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
 .ilm-add select { flex: 1; }
 .ilm-add button, .ilm-add + button {
@@ -225,7 +229,8 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
   border-radius: 110px;
   box-shadow: 0 0 0 1px #00000080 inset, 0 0 0 2px #2f3542, 0 22px 60px -24px rgb(0 0 0 / .9);
 }
-.cv-device.square { border-radius: 14px; }
+/* mask disabled: no placeholder at all, just the flat preview */
+.cv-device.plain { padding: 0; background: none; box-shadow: none; border-radius: 0; }
 
 /* empty state (no project) */
 main.empty { grid-template-columns: minmax(0, 1fr); align-content: center; }
@@ -291,6 +296,21 @@ main.empty .hint, main.empty .watch-head { display: none; }
 .group-box .gb-head {
   font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #9fb6ff; margin-bottom: 6px;
 }
+
+.td-group {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--color-mut);
+  margin: 12px 0 4px; padding-top: 8px; border-top: 1px solid var(--color-line);
+}
+.td-group:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+
+.lint-list { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.lint-item {
+  font-size: 12px; line-height: 1.45; padding: 7px 9px; border-radius: 8px;
+  background: #0d0f14; border: 1px solid var(--color-line); border-left-width: 3px;
+}
+.lint-item.error { border-left-color: #e5484d; color: #ffb4b4; }
+.lint-item.warn { border-left-color: #ffc16b; color: #ffd79b; }
+.lint-item.info { border-left-color: #5b8cff; color: #b9c9ff; }
 
 /* generic dynamic buttons */
 .grow-btn { flex: 1; }
