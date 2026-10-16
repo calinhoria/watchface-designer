@@ -129,7 +129,8 @@ function compileFaceProject(proj) {
     throw new Error('Internal error: bad header templates.');
   if (!SUPPORTED.has(deviceType)) throw new Error(`Compiler v1 supports watches ${[...SUPPORTED].join(', ')}; got ${deviceType}.`);
   if (!slots || !slots.length) throw new Error('No slots to compile.');
-  if (slots.length > 1) warnings.push(`${slots.length} slots compiled as plain faces (AOD-ness not preserved).`);
+  if (slots.length > 1 && !slots.some((s) => s.aod))
+    warnings.push(`${slots.length} faces compiled, none flagged AOD — slot 2+ will show as normal faces.`);
 
   const header = Buffer.from(HEADER_HEX, 'hex');
   setDWord(header, 28, slots.length);
@@ -264,7 +265,9 @@ function compileFaceProject(proj) {
     const fh = Buffer.from(FACE_HEADER_HEX, 'hex');
     f.fh = fh;
     for (let k = 0; k < 10; k++) {
-      setDWord(fh, 8 + k * 8, f.counts[k]);
+      // section 8 count field doubles as the AOD marker (0x80000000); the
+      // real count is always 0, so it never contributes a table
+      setDWord(fh, 8 + k * 8, k === 8 ? (f.aodFlag || 0) : f.counts[k]);
       if (k === 1) setDWord(fh, 12 + k * 8, f.secTable[2]);
       else if (k === 6) { /* count stays template 0 */ setDWord(fh, 12 + k * 8, f.secTable[7]); }
       else setDWord(fh, 12 + k * 8, f.secTable[k]);
@@ -369,12 +372,22 @@ function compileFaceProject(proj) {
         blobParts.push({ off: ebo, buf: eb, el: { widget: { X: r.x, Y: r.y }, face: f, tidOverride: id } });
       });
     };
+    // orphan sec9 records (AOD slots): verbatim, no element, after raw zones
+    const allocOrphans = () => {
+      const base = f.actions.length + f.rawActions.length;
+      f.orphanSec9.forEach((hex, j) => {
+        const blob = Buffer.from(hex, 'hex');
+        const bo = alloc(blob.length);
+        wEntry(f, 9, base + j, 9, bo, blob.length);
+        blobParts.push({ off: bo, buf: blob });
+      });
+    };
     if (newOrder) {
-      allocElements(); allocWidgets(); allocActions(); allocRaw();
+      allocElements(); allocWidgets(); allocActions(); allocRaw(); allocOrphans();
       if (fi === 0) allocPreview();
       allocSingles(); allocLists();
     } else {
-      allocElements(); allocWidgets(); allocSingles(); allocLists(); allocActions(); allocRaw();
+      allocElements(); allocWidgets(); allocSingles(); allocLists(); allocActions(); allocRaw(); allocOrphans();
     }
     for (const bp of blobParts) if (bp.el && bp.el.face === f) fillElement(bp.buf, bp.el);
     for (const bp of blobParts) if (bp.w7 && bp.w7.face === f) fillWidget(bp.buf, bp.w7);
@@ -471,10 +484,12 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   }
   // orphan tap zones (raw sec9 blobs + their sec0 elements) round-trip verbatim
   const rawActions = (slot.rawActions || []).filter(r => r && r.blob);
+  // sec9 records with no element (AOD slots): verbatim, no element
+  const orphanSec9 = (slot.orphanSec9 || []).filter(h => typeof h === 'string' && h.length);
   nElem += rawActions.length;
-  nAction += rawActions.length;
+  nAction += rawActions.length + orphanSec9.length;
   const counts = [nElem, 0, nSingle, listOrder.length, 0, 0, 0, nWidget, 0, nAction];
-  const f = { counts, secTable: new Array(10).fill(0), elements: [], singles: [], lists: [], widgets7: [], actions: [], widgets, preview: null, rawActions };
+  const f = { counts, aod: Boolean(slot.aod), aodFlag: slot.aodFlag >>> 0, orphanSec9, secTable: new Array(10).fill(0), elements: [], singles: [], lists: [], widgets7: [], actions: [], widgets, preview: null, rawActions };
   // elements (widget order; clocks expand to hands)
   widgets.forEach((w) => {
     if (w.Shape === 27) {

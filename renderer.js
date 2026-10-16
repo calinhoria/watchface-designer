@@ -565,7 +565,8 @@ $('slotCreate').onclick = () => {
   pushHistory();
   const role = $('slotRole').value;
   const n = project.slots.length;
-  project.slots.push({ index: n, role, widgets: [], rawActions: [], images: [] });
+  const aod = role === 'aod';
+  project.slots.push({ index: n, role, aod, aodFlag: aod ? 0x80000000 : 0, orphanSec9: [], widgets: [], rawActions: [], images: [] });
   slotIndex = n; selected = -1;
   refreshPanels(); render();
 };
@@ -575,7 +576,7 @@ $('slotModal').addEventListener('mousedown', (e) => { if (e.target === $('slotMo
 let past = [], future = [];
 let dirty = false; // project edited since load -> regenerate previews
 function snap() {
-  return JSON.stringify({ t: project.title, s: project.slots.map((s) => ({ i: s.index, role: s.role || null, w: s.widgets, r: s.rawActions || [], im: s.images })) });
+  return JSON.stringify({ t: project.title, s: project.slots.map((s) => ({ i: s.index, role: s.role || null, aod: Boolean(s.aod), af: s.aodFlag >>> 0, o9: s.orphanSec9 || [], w: s.widgets, r: s.rawActions || [], im: s.images })) });
 }
 function updateHistoryButtons() {
   $('btnUndo').disabled = !past.length;
@@ -594,7 +595,7 @@ function pushHistory() {
 function restoreHistory(json) {
   const st = JSON.parse(json);
   project.title = st.t;
-  project.slots = st.s.map((s, i) => ({ ...(project.slots[i] || {}), index: s.i, role: s.role, widgets: s.w, rawActions: s.r, images: s.im }));
+  project.slots = st.s.map((s, i) => ({ ...(project.slots[i] || {}), index: s.i, role: s.role, aod: s.aod, aodFlag: s.af >>> 0, orphanSec9: s.o9 || [], widgets: s.w, rawActions: s.r, images: s.im }));
   if (slotIndex >= project.slots.length) slotIndex = 0;
   if (selected >= slot().widgets.length) selected = -1;
   $('inpTitle').value = project.title || '';
@@ -2461,7 +2462,7 @@ function lintProject() {
     });
     if (s.widgets.length && s.images.some((im) => im.name.startsWith('preview'))) push('info', `${where}an image named like the preview is part of the slot images.`);
   });
-  if (project.slots.length > 1) push('warn', `${project.slots.length} slots: the compiler flattens AOD-ness (both are written as plain faces).`);
+  if (project.slots.length > 1 && !project.slots.some((s) => s.aod)) push('warn', `${project.slots.length} slots: none flagged as AOD — slot 2+ compiles as a normal face (set the AOD slot to get an always-on variant).`);
   if (!project.slots.some((s) => s.widgets.length)) push('warn', 'the project has no layers yet.');
   return out;
 }

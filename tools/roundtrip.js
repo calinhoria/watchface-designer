@@ -96,6 +96,9 @@ for (const file of process.argv.slice(2)) {
   const slots = u.slots.map((s) => ({
     widgets: s.widgets,
     rawActions: s.rawActions || [],
+    aod: Boolean(s.aod),
+    aodFlag: s.aodFlag >>> 0,
+    orphanSec9: s.orphanSec9 || [],
     images: Object.fromEntries([...s.images].map(([n, im]) => [n, { width: im.width, height: im.height, data: im.rgba }])),
     preview: u.preview ? { width: u.preview.width, height: u.preview.height, data: u.preview.rgba } : null,
   }));

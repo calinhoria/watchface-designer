@@ -33,7 +33,10 @@ async function handleOpenBin(filePath) {
   const base = path.basename(filePath, path.extname(filePath));
   const slots = res.slots.map((s) => ({
     index: s.index,
-    role: s.index === 0 ? 'face' : 'aod',
+    role: s.aod ? 'aod' : (s.index === 0 ? 'face' : 'aod'),
+    aod: Boolean(s.aod),
+    aodFlag: s.aodFlag >>> 0,
+    orphanSec9: s.orphanSec9 || [],
     widgets: s.widgets,
     rawActions: s.rawActions || [],
     images: [...s.images.entries()]
@@ -124,7 +127,7 @@ function openProjectDir(root) {
     let previewUrl = null;
     const pv = path.join(dir, 'preview.png');
     if (fs.existsSync(pv)) previewUrl = 'data:image/png;base64,' + fs.readFileSync(pv).toString('base64');
-    return { index, role, widgets: index === 0 ? xface.Screen.Widgets : [], rawActions: [], images, previewUrl };
+    return { index, role, aod: role === 'aod', aodFlag: role === 'aod' ? 0x80000000 : 0, orphanSec9: [], widgets: index === 0 ? xface.Screen.Widgets : [], rawActions: [], images, previewUrl };
   };
 
   // designer-only metadata: font settings + hidden layers (designer.json)
@@ -136,6 +139,9 @@ function openProjectDir(root) {
     const meta = slotMeta(slot.index);
     if (!meta) return slot;
     if (meta.role) slot.role = meta.role;
+    if (meta.aod != null) slot.aod = !!meta.aod;
+    if (meta.aodFlag != null) slot.aodFlag = meta.aodFlag >>> 0;
+    if (Array.isArray(meta.orphanSec9)) slot.orphanSec9 = meta.orphanSec9.slice();
     const hidden = new Set(meta.hidden || []);
     const taps = meta.taps || {};
     const presets = meta.presets || {};
@@ -396,7 +402,7 @@ ipcMain.handle('export-project', async (_e, payload) => {
         };
       }
     }
-    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), fonts, hidden, taps, presets, groups, locked });
+    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), aod: !!s.aod, aodFlag: s.aodFlag >>> 0, orphanSec9: s.orphanSec9 || [], fonts, hidden, taps, presets, groups, locked });
     for (const g of Object.values(groups)) {
       const n = parseInt(String(g).replace(/\D/g, ''), 10) || 0;
       if (n >= designer.groupSeq) designer.groupSeq = n + 1;

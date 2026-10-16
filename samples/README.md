@@ -57,3 +57,5 @@ URLs, which work with plain `curl` while fresh.
   equivalent. Still open: 56B-new nested taps (neon weather/nested groups),
   52B-new image holders, slot-3 big sec9 records, temp sign-variant overlap
   semantics.
+- AOD preserved: AOD slots keep the header `0x80000000` flag and their
+  unreferenced sec9 records round-trip byte-for-byte.

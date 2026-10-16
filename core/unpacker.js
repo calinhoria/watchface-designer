@@ -258,12 +258,21 @@ function unpackV2(data, watchType) {
     }
     if (watchType === 362 || watchType === 366) { offset += 0x44; const td = getDWord(data, offset); offset += 4; const sh = (td & 0xFF) >> 2; if (sh > 1) offset += sh * 4; }
     if ([4, 362, 365].includes(watchType)) lste.unshift({ TargetId: backImageId, PosX: 0, PosY: 0 });
+    // AOD slot: the face header carries 0x80000000 in its section-8 field.
+    // sec9 records not referenced by any element (AOD slots have none) are
+    // carried verbatim so an AOD survives a recompile.
+    const aodFlag = sectionCounts[8] >>> 0;
+    const aod = (aodFlag & 0x80000000) !== 0;
+    const sec9Targets = lste.filter((e) => (e.TargetId >>> 24) === 0x09).map((e) => e.TargetId >>> 0);
     // 76B sec9 containers (EasyFace Widget groups: temp digits+symbol, date
     // month+delim+day, big clock) desugar to plain elements before the main
     // loop, so children decode with the existing widget paths. Consumed group
     // blobs are dropped (flat equivalent on recompile); unresolvable ones
     // stay raw (today's behaviour).
     ({ lste, lsta } = desugarGroups(lste, lsti, lstil, lstw, lsta));
+    const orphanSec9 = lsta
+      .filter((a) => a.RawData && !sec9Targets.includes(a.Id >>> 0))
+      .map((a) => Buffer.from(a.RawData).toString('hex'));
     const { widgets, rawActions } = buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta);
     const images = new Map();
     for (const im of lsti) images.set(im.Name, { width: im.Width, height: im.Height, rgba: im.Rgba });
@@ -272,7 +281,7 @@ function unpackV2(data, watchType) {
     // section 5 = app widgets. Both are unsupported on compile, so flag them.
     slots.push({
       index, subVersion, widgets, rawActions, images, lsti, lstil, lste,
-      sectionCounts,
+      sectionCounts, aod, aodFlag, orphanSec9,
       animationCount: sectionCounts[4] || 0,
       appCount: sectionCounts[5] || 0,
     });
