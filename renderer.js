@@ -1991,6 +1991,42 @@ async function applyPreset(p) {
   if (p.id === 'sign') { addSignFrameToSelected(); return; }
   const s = slot();
   const taken = new Set(s.widgets.map((w) => w.Name));
+  const font = project.font;
+  // Colon (blink): a 10-frame list on the seconds digit. Even frames show the
+  // colon, odd frames are blank, so it blinks at 1 Hz. Every frame gets its own
+  // image (like a stock digit list, and like our own import which names one
+  // image per frame); generating all ten glyphs in one call also guarantees they
+  // share one box, which a list requires.
+  if (p.id === 'colonblink') {
+    if (!font) { $('meta').textContent = 'Set a Project font first (Project panel).'; return; }
+    pushHistory();
+    const specs = Array.from({ length: 10 }, (_, k) => ({ tag: `colonBlink${k}`, char: k % 2 === 0 ? ':' : ' ' }));
+    let set10;
+    try {
+      set10 = await ensureGlyphSet(s, font, PRESET_SIZE, '#ffffff', false, false, specs, {});
+    } catch (e) {
+      $('meta').textContent = `Colon (blink): ${e.message}`;
+      return;
+    }
+    const wg = {
+      Shape: 31, Name: uniqName('colon_blink', taken), X: 0, Y: 0,
+      Width: set10.width, Height: set10.height, Alpha: 255,
+      DataSrcIndex: toDeviceSource(project.watchType, '1911'),   // second digit
+      _srcCanonicalIndex: '1911', DefaultIndex: 0,
+      BitmapList: specs.map((sp, k) => `(${k}):${set10.names[sp.tag]}`).join('|'),
+      _preset: 'colonblink',
+      _font: { family: font, size: PRESET_SIZE, color: '#ffffff', glyphs: specs.slice(), files: specs.map((sp) => set10.names[sp.tag]) },
+    };
+    const a = presetAnchor(wg.Width, wg.Height);
+    wg.X = a.x; wg.Y = a.y;
+    s.widgets.push(wg);
+    selected = s.widgets.length - 1;
+    groupSel = new Set([selected]);
+    refreshPanels(); render();
+    pushHistory();
+    $('meta').textContent = 'Colon (blink) added: 10 frames on the seconds digit (one image per frame) \u2014 shows on even seconds, hides on odd (1 Hz).';
+    return;
+  }
   // glyphs this preset needs
   // EasyFace FAQ: the negative sign image is mandatory for digit widgets — we
   // always build 11 frames, using "-" for temperature-ish values and a copy of
@@ -1998,7 +2034,6 @@ async function applyPreset(p) {
   const signChar = p.signChar || (p.minusFrame ? '-' : '0');
   const digitSpec = [...DIGIT_GLYPHS, { tag: glyphTag(signChar), char: signChar }];
   const glyphs = p.glyphs || digitSpec;
-  const font = project.font;
   let set = null;
   if (font) {
     try { set = await ensureGlyphSet(s, font, PRESET_SIZE, '#ffffff', false, false, glyphs, { mono: !p.glyphs, uniqueFor: needsUniqueSets() ? p.id : null }); }
@@ -2007,36 +2042,18 @@ async function applyPreset(p) {
   const gw = set ? set.width : Math.round(PRESET_SIZE * 0.6), gh = set ? set.height : Math.round(PRESET_SIZE * 1.2);
   pushHistory();
   if (p.glyphs) {
-    // glyph-only preset (colon): one image layer, or a blinking frame list
+    // glyph-only preset (colon): a single image layer
     const onName = set ? set.names[p.glyphs[0].tag] : null;
     if (!onName) { $('meta').textContent = 'Set a Project font first (Project panel).'; return; }
     const wg = { Shape: 30, Name: uniqName(p.id, taken), X: 0, Y: 0, Width: gw, Height: gh, Alpha: 255, Bitmap: onName,
       _preset: p.id, _font: { family: font, size: PRESET_SIZE, color: '#ffffff', glyphs: p.glyphs.slice(), files: Object.values(set.names) } };
-    if (p.id === 'colonblink') {
-      const offName = await ensureGlyphSet(s, font, 60, '#ffffff', false, false, [{ tag: 'colonOff', char: ' ' }], { mono: false })
-        .then((r) => r.names.colonOff).catch(() => null);
-      if (offName) {
-        wg.Shape = 31;
-        wg.DataSrcIndex = toDeviceSource(project.watchType, '1911');  // second ones
-        wg._srcCanonicalIndex = '1911';
-        wg.DefaultIndex = 0;
-        // Ten frames keyed on the seconds digit: even frames show the colon, odd
-        // frames are blank, so it blinks once per second. A 2-frame list would
-        // only show the colon while the ones digit is 0 (i.e. once every 10 s).
-        wg.BitmapList = Array.from({ length: 10 }, (_, k) => `(${k}):${k % 2 === 0 ? onName : offName}`).join('|');
-        wg._font = { family: font, size: PRESET_SIZE, color: '#ffffff', files: [onName, offName],
-          glyphs: [{ tag: 'colon', char: ':' }, { tag: 'colonOff', char: ' ' }] };
-      }
-    }
     const anchor = presetAnchor(wg.Width, wg.Height);
     wg.X = anchor.x; wg.Y = anchor.y;
     s.widgets.push(wg);
     selected = s.widgets.length - 1;
     refreshPanels(); render();
     pushHistory();
-    $('meta').textContent = p.id === 'colonblink'
-      ? 'Colon (blink) added: 10 frames on the seconds digit \u2014 shows on even seconds, hides on odd (1 Hz).'
-      : 'Colon added.';
+    $('meta').textContent = 'Colon added.';
     return;
   }
   if (p.id === 'ampm' || (p.text && !font)) {
