@@ -3207,14 +3207,15 @@ async function generateFontBitmaps(w, s) {
     set = await ensureGlyphSet(s, f.family, size, color, bold, italic, DIGIT_GLYPHS, { style: f });
   } catch (err) { $('meta').textContent = String(err.message || err); return; }
   pushHistory();
+  const names = DIGIT_GLYPHS.map((g) => set.names[g.tag]);
   // drop this layer's previous set, but keep images shared with other layers
+  // AND keep any name the new set still uses (re-runs reuse the same files)
   if (f.files) for (const n of f.files) {
-    if (fontImageUsedElsewhere(s, n, w)) continue;
+    if (names.includes(n) || fontImageUsedElsewhere(s, n, w)) continue;
     const i = s.images.findIndex((im) => im.name === n);
     if (i >= 0) s.images.splice(i, 1);
     imgCache.delete(n);
   }
-  const names = DIGIT_GLYPHS.map((g) => set.names[g.tag]);
   f.files = names.slice(); f._base = set.base;
   w.BitmapList = names.join('|');
   w.Width = set.width; w.Height = set.height;
