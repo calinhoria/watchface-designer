@@ -340,6 +340,14 @@ function readWidgets(data, blkCount, blkOff) {
   }
   return lst;
 }
+// App/menu jump codes used by the new-format (e7-head) 56B actions, decoded
+// at +0x28 from stock faces (matches their EasyFace jumpApp). These are menu
+// jumps, not the 37 classic button apps.
+const JUMP_APP_CODE = {
+  '01001312': 'weather',
+  '01003311': 'activities',
+  '01005310': 'heartrate',
+};
 function readActions(data, blkCount, blkOff) {
   const lst = [];
   let o = blkOff;
@@ -378,10 +386,16 @@ function readActions(data, blkCount, blkOff) {
           const nm = Buffer.from(bin.subarray(0, 16)).toString('ascii').replace(/\0.*$/, '');
           if (/^[a-z0-9_]{2,15}$/i.test(nm)) label = nm;
         } catch (e) { }
-        lst.push({ RawData: bin, Id: id, ImageName: null, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex'), Label: label });
+        // new-format 56B zone: app/jump code at +0x28 (0100xxxx)
+        let jump = null;
+        if (bin.length === 56 && bin[0] === 0xE7 && bin[1] === 0xBB) jump = JUMP_APP_CODE[Buffer.from(bin.subarray(0x28, 0x2C)).toString('hex')] || null;
+        lst.push({ RawData: bin, Id: id, ImageName: null, JumpApp: jump, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex'), Label: jump || label });
         o += 0x10; continue;
       }
-      lst.push({ RawData: bin, Id: id, ImageName: `img_${String(imageId).padStart(4, '0')}.png`, ChildRef: childRef, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex') });
+      // new-format 56B button: app/jump code at +0x28
+      let jumpApp = null;
+      if (bin.length === 56 && bin[0] === 0xE7 && bin[1] === 0xBB) jumpApp = JUMP_APP_CODE[Buffer.from(bin.subarray(0x28, 0x2C)).toString('hex')] || null;
+      lst.push({ RawData: bin, Id: id, ImageName: `img_${String(imageId).padStart(4, '0')}.png`, ChildRef: childRef, JumpApp: jumpApp, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex') });
     } catch (e) { }
     o += 0x10;
   }
@@ -712,10 +726,12 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
         const im = action && action.ImageName ? lsti.find(c => c.Name === action.ImageName) : null;
         if (action && im) {
           let suffix = '';
-          let appName = null;
+          let appName = action.JumpApp || null;
           if (action.ActionId === 0x23721400) {
             const app = lstApp.find(c => c.Id === action.AppId);
             if (app) { suffix = `_[${app.Name}]`; appName = app.Name; }
+          } else if (appName) {
+            suffix = `_[${appName}]`;
           }
           widgets.push({
             Shape: 30, Name: `btn_${String(idx).padStart(2, '0')}${suffix}`, X: e.PosX, Y: e.PosY, Alpha: 255,

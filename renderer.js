@@ -3,6 +3,7 @@
 let project = null;      // {version, watchType, watchName, screenW, screenH, title, slots, base,...}
 let slotIndex = 0;
 let selected = -1;
+let selZone = -1;           // selected orphan tap zone (rawActions index)
 let groupSel = new Set();   // multi-select for grouping
 let groupSeq = 1;
 const collapsedGroups = new Set();   // group ids collapsed in the Layers list
@@ -832,6 +833,9 @@ function paintLayer(i) {
 // Apps with byte-verified stock tap-ZONE templates (non-image layers).
 const ZONE_TAP_APPS = ['alarm', 'timer', 'music', 'flashlight', 'steps', 'calories', 'hrm', 'spo2', 'weather'];
 const TAP_APPS = ['steps', 'calories', 'standing', 'moving', 'hrm', 'spo2', 'stress', 'sleep', 'weather', 'alarm', 'timer', 'stopwatch', 'cards', 'music', 'compass', 'scheduler', 'flashlight', 'photo', 'findphone', 'breath', 'contact', 'egg', 'todo', 'tomato', 'worldclock', 'phone', 'voice', 'mihome', 'women', 'pressure', 'vitality', 'settings', 'launcher', 'wechat', 'alipay', 'checktool', 'calendar'];
+// menu-jump apps that only come from file (new-format actions); shown when
+// present, compiled by echoing the original blob
+const JUMP_APPS = ['weather', 'activities', 'heartrate'];
 
 // Bundled OFL digit fonts (assets/fonts, all verified to contain 0-9).
 // Names are the FontFace families we register, so they can be friendlier than
@@ -1480,20 +1484,25 @@ async function render() {
   if (exportRender) return; // grid, guides and tap markers are editor-only
   drawGuides(scale);
   // orphan tap zones from the file (preserved on compile): dashed markers
-  for (const t of (s.rawActions || [])) {
-    ctx.strokeStyle = 'rgba(255,180,0,0.85)'; ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
+  for (let ti = 0; ti < (s.rawActions || []).length; ti++) {
+    const t = s.rawActions[ti];
+    const sel = ti === selZone;
+    ctx.strokeStyle = sel ? '#ffcf4d' : 'rgba(255,180,0,0.85)';
+    ctx.lineWidth = sel ? 2.5 : 1.5;
+    ctx.setLineDash(sel ? [] : [4, 3]);
     ctx.beginPath();
     ctx.arc(((t.x || 0)) * scale, ((t.y || 0)) * scale, 16, 0, Math.PI * 2);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(255,180,0,0.9)';
+    if (sel) { ctx.fillStyle = 'rgba(255,207,77,0.18)'; ctx.fill(); }
+    ctx.fillStyle = sel ? '#ffcf4d' : 'rgba(255,180,0,0.9)';
     ctx.font = '11px sans-serif';
     ctx.fillText('⚡' + (t.label || ''), ((t.x || 0)) * scale + 18, ((t.y || 0)) * scale + 4);
   }
 }
 function refreshPanels() {
   if (!project) { setEmptyState(); return; }
+  if (selected >= 0) selZone = -1; // a widget selection clears the zone selection
   const s = slot();
   $('wcount').textContent = `(${s.widgets.length})`;
   $('icount').textContent = `(${s.images.length})`;
@@ -1511,7 +1520,7 @@ function refreshPanels() {
     b.className = 'slot-btn';
     b.textContent = slotName(i);
     b.title = (x.role || (i === 0 ? 'face' : 'aod')) === 'face' ? 'Main watchface' : 'Always-on display variant';
-    b.onclick = () => { slotIndex = i; selected = -1; groupSel.clear(); imgCache.clear(); refreshPanels(); render(); };
+    b.onclick = () => { slotIndex = i; selected = -1; selZone = -1; groupSel.clear(); imgCache.clear(); refreshPanels(); render(); };
     wrap.appendChild(b);
     if (project.slots.length > 1) {
       const x2 = document.createElement('button');
@@ -1576,10 +1585,24 @@ function refreshPanels() {
     L.appendChild(d); paintLayer(i);
   });
   if ((s.rawActions || []).length) {
-    const t = document.createElement('div');
-    t.className = 'muted';
-    t.textContent = `${s.rawActions.length} tap zone(s) from file (⚡ markers, preserved on compile)`;
-    L.appendChild(t);
+    const h = document.createElement('div');
+    h.className = 'muted';
+    h.textContent = `${s.rawActions.length} tap zone(s) from file`;
+    L.appendChild(h);
+    s.rawActions.forEach((z, zi) => {
+      const d = document.createElement('div');
+      d.className = 'layer' + (zi === selZone ? ' sel' : '');
+      const lname = document.createElement('span');
+      lname.className = 'lname';
+      const ic = document.createElement('span');
+      ic.textContent = '\u26a1'; ic.style.color = '#ffcf4d';
+      const nm = document.createElement('span');
+      nm.className = 'nname'; nm.textContent = `${z.label || 'tap'} @ ${z.x || 0},${z.y || 0}`;
+      lname.appendChild(ic); lname.appendChild(nm);
+      d.appendChild(lname);
+      d.onclick = () => { selected = -1; selZone = zi; refreshPanels(); render(); };
+      L.appendChild(d);
+    });
   }
   enableDragSort(L, {
     rowSel: '.layer', handleSel: '.grip',
@@ -1616,6 +1639,37 @@ function refreshPanels() {
   updatePruneButton();
   // props
   const P = $('props'); P.innerHTML = '';
+  // orphan tap zone selected: small editor (drag on canvas to move)
+  if (selZone >= 0 && (s.rawActions || [])[selZone]) {
+    const z = s.rawActions[selZone];
+    P.innerHTML = '';
+    const info = document.createElement('div');
+    info.className = 'pinfo';
+    info.innerHTML = '<div class="k">Type</div><div class="v">Tap zone (from file)</div>'
+      + `<div class="k">App</div><div class="v">${z.label || 'unknown'}</div>`
+      + '<div class="k">Hint</div><div class="v">drag the \u26a1 marker</div>';
+    P.appendChild(info);
+    for (const ax of ['x', 'y']) {
+      const row = mkRow(ax.toUpperCase());
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.value = z[ax] || 0;
+      inp.title = `Zone ${ax.toUpperCase()} (scroll to step)`;
+      inp.oninput = () => { z[ax] = parseInt(inp.value, 10) || 0; render(); };
+      row.appendChild(inp);
+      P.appendChild(row);
+    }
+    const del = document.createElement('button');
+    del.textContent = 'Delete tap zone';
+    del.title = 'Remove this tap zone (undoable)';
+    del.onclick = () => {
+      pushHistory();
+      s.rawActions.splice(selZone, 1);
+      selZone = -1;
+      refreshPanels(); render();
+    };
+    P.appendChild(del);
+    return;
+  }
   if (selected < 0 || !s.widgets[selected]) { P.innerHTML = '<p class="muted">Select a layer.</p>'; return; }
   const w = s.widgets[selected];
   const PROP_LABELS = { Name: 'Name', X: 'X', Y: 'Y', Width: 'Width', Height: 'Height', Alpha: 'Alpha', imgfmt: 'Image fmt', Bitmap: 'Image', DataSrcValue: 'Shows', DataSrcIndex: 'Shows', Digits: 'Digits', Alignment: 'Alignment', Spacing: 'Spacing', Blanking: 'Hide leading zeros' };
@@ -1938,14 +1992,20 @@ function refreshPanels() {
     }
     if (curApp && !apps.includes(curApp)) {
       const o = document.createElement('option');
-      o.value = curApp; o.textContent = `${curApp} (unknown — compile will fail)`;
+      o.value = curApp;
+      o.textContent = JUMP_APPS.includes(curApp)
+        ? `${curApp} (from file)`
+        : `${curApp} (unknown — compile will fail)`;
       sel.appendChild(o);
     }
     sel.value = curApp || '';
+    const prevApp = curApp || '';
     sel.onchange = () => {
-      if (sel.value) { w._tap = sel.value; delete w._action; }
+      // picking the same value is a no-op (keeps the original file blob)
+      if (sel.value === prevApp) { paintLayer(selected); render(); return; }
+      if (sel.value) { w._tap = sel.value; delete w._action; delete w._actionRaw; }
       else {
-        delete w._tap;
+        delete w._tap; delete w._action; delete w._actionRaw;
         // drop a stale [app] suffix so the layer is no longer a button
         w.Name = (w.Name || '').replace(/_?\[[^\]]+\]\s*$/, '');
       }
@@ -3196,7 +3256,7 @@ function createNewFace() {
     slots: [{ index: 0, role: 'face', widgets: [], rawActions: [], images: [] }],
   };
   setEmptyState();
-  slotIndex = 0; selected = -1; imgCache.clear();
+  slotIndex = 0; selected = -1; selZone = -1; imgCache.clear();
   $('imagesPanel').classList.add('collapsed');
   past = []; future = [];
   pushHistory();
@@ -3240,7 +3300,7 @@ async function loadProject(res) {
   if (res.groupNames) Object.assign(groupNames, res.groupNames);
   if (res.testData) TEST_DATA = { ...TEST_DEFAULTS, ...res.testData };
   setUseCurrentTime(res.useCurrentTime == null ? true : !!res.useCurrentTime);
-  project = res; slotIndex = 0; selected = -1; imgCache.clear();
+  project = res; slotIndex = 0; selected = -1; selZone = -1; imgCache.clear();
   setEmptyState();
   $('imagesPanel').classList.add('collapsed'); // Images always opens collapsed
   // custom fonts saved with the project (fonts/<file>) -> re-register
@@ -3564,7 +3624,21 @@ cv.addEventListener('mousedown', (e) => {
     const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
     if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) { hit = i; break; }
   }
-  if (hit < 0) return;
+  if (hit < 0) {
+    // no widget under the cursor: check orphan tap-zone markers (⚡)
+    const zones = s.rawActions || [];
+    for (let zi = zones.length - 1; zi >= 0; zi--) {
+      const zx = (zones[zi].x || 0) * sc, zy = (zones[zi].y || 0) * sc;
+      if (Math.hypot(mx - zx, my - zy) <= 16) {
+        selected = -1; selZone = zi;
+        pushHistory();
+        drag = { primary: null, zone: zones[zi], ox: zones[zi].x || 0, oy: zones[zi].y || 0, dx: mx - zx, dy: my - zy, mates: [] };
+        refreshPanels(); render();
+        return;
+      }
+    }
+    return;
+  }
   if (s.widgets[hit]._locked) return;
   // Ctrl/Cmd-click on the canvas toggles multi-selection (like the layer list)
   if (e.ctrlKey || e.metaKey) {
@@ -3600,6 +3674,12 @@ window.addEventListener('mousemove', (e) => {
   const r = cv.getBoundingClientRect();
   const sc = cv.width / (project.screenW || 240);
   const mx = (e.clientX - r.left) * (cv.width / r.width), my = (e.clientY - r.top) * (cv.height / r.height);
+  if (drag.zone) {
+    drag.zone.x = Math.round((mx - drag.dx) / sc);
+    drag.zone.y = Math.round((my - drag.dy) / sc);
+    render();
+    return;
+  }
   const w = drag.primary || slot().widgets[selected];
   let nx = (mx - drag.dx) / sc, ny = (my - drag.dy) / sc;
   if (showGrid) { const sn = snapMove(w, nx, ny, slot().widgets.indexOf(w)); nx = sn.x; ny = sn.y; }
