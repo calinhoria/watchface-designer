@@ -2218,7 +2218,13 @@ function refreshPanels() {
           if (f.outlineWidth == null) f.outlineWidth = 2;
         }
         refreshPanels();
-        await regenerateWidgetGlyphs(w, slot());
+        $('meta').textContent = `Applying effect "${f.fill}"\u2026`;
+        try {
+          await regenerateWidgetGlyphs(w, slot());
+          $('meta').textContent = `Effect "${f.fill}" applied to ${w.Name || 'layer'} (${(w.BitmapList || '').split('|').filter(Boolean).length} frames).`;
+        } catch (e) {
+          $('meta').textContent = `Effect "${f.fill}" failed: ${e.message}`;
+        }
       };
       fRow.appendChild(fSel);
       grid.appendChild(fRow);
