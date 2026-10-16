@@ -138,6 +138,26 @@ const selObserver = new MutationObserver((muts) => {
 selObserver.observe(document.documentElement, { childList: true, subtree: true });
 enhanceAllSelects(document); // selects present at load (observer only sees new ones)
 
+// ---------- number inputs: wheel to step ----------
+// Hovering a numeric field and scrolling increments/decrements it (1 or its
+// step), clamped to min/max, and fires input+change so existing handlers run.
+document.addEventListener('wheel', (e) => {
+  const t = e.target;
+  if (!t || t.tagName !== 'INPUT' || t.type !== 'number' || t.disabled || t.readOnly) return;
+  if (t.dataset.noWheel === '1') return;
+  e.preventDefault();
+  const step = parseFloat(t.step) || 1;
+  let v = parseFloat(t.value);
+  if (!Number.isFinite(v)) v = 0;
+  v += e.deltaY < 0 ? step : -step;
+  const mn = parseFloat(t.min), mx = parseFloat(t.max);
+  if (t.min !== '' && Number.isFinite(mn)) v = Math.max(v, mn);
+  if (t.max !== '' && Number.isFinite(mx)) v = Math.min(v, mx);
+  t.value = String(Math.round(v * 1e6) / 1e6);
+  t.dispatchEvent(new Event('input', { bubbles: true }));
+  t.dispatchEvent(new Event('change', { bubbles: true }));
+}, { passive: false });
+
 // Human-readable DataSrc mapping (XiaomiWatch.Common FaceItemDataSrc).
 // 4-char codes = shape+display hex bytes, shared across all devices.
 // Data sources — authoritative list from EasyFace's dataSrc_list.txt (m0tral),
@@ -1739,32 +1759,31 @@ function refreshPanels() {
     for (const [imgKey, pxKey, pyKey] of CLOCK_HANDS) {
       const name = imgKey.replace('HandImage', '').replace('Image', '');
       grid.appendChild(imgRow(`${name} hand`, imgKey, 'Hand image; it rotates about its pivot'));
-      const prow = document.createElement('div');
-      prow.className = 'row rowcontrols';
-      const mkNum = (key, label) => {
-        const wrap = document.createElement('label');
-        wrap.className = 'mini';
-        wrap.textContent = label;
+      // one row per axis so the value and its Centre button are never cramped
+      const mkAxis = (key, label, axis) => {
+        const row = mkRow(label);
+        const wrap = document.createElement('div');
+        wrap.className = 'rowctl';
         const inp = document.createElement('input');
-        inp.type = 'number'; inp.value = w[key] || 0; inp.title = 'Pivot (rotation centre) inside the hand image';
+        inp.type = 'number'; inp.value = w[key] || 0;
+        inp.title = `Pivot ${axis} inside the hand image (${label})`;
         inp.oninput = () => { w[key] = parseInt(inp.value, 10) || 0; render(); };
-        wrap.appendChild(inp);
-        return wrap;
+        const centre = document.createElement('button');
+        centre.textContent = 'Centre';
+        centre.title = `Set pivot ${axis} to the middle of the hand image`;
+        centre.onclick = () => {
+          const im = s.images.find((x) => x.name === w[imgKey]);
+          if (!im) return;
+          pushHistory();
+          w[key] = Math.round((axis === 'X' ? im.width : im.height) / 2);
+          refreshPanels(); render();
+        };
+        wrap.appendChild(inp); wrap.appendChild(centre);
+        row.appendChild(wrap);
+        return row;
       };
-      prow.appendChild(mkNum(pxKey, 'pivot X'));
-      prow.appendChild(mkNum(pyKey, 'pivot Y'));
-      const centre = document.createElement('button');
-      centre.textContent = 'Centre';
-      centre.title = 'Set the pivot to the middle of the hand image';
-      centre.onclick = () => {
-        const im = s.images.find((x) => x.name === w[imgKey]);
-        if (!im) return;
-        pushHistory();
-        w[pxKey] = Math.round(im.width / 2); w[pyKey] = Math.round(im.height / 2);
-        refreshPanels(); render();
-      };
-      prow.appendChild(centre);
-      grid.appendChild(prow);
+      grid.appendChild(mkAxis(pxKey, 'Pivot X', 'X'));
+      grid.appendChild(mkAxis(pyKey, 'Pivot Y', 'Y'));
     }
   }
   if (w.Shape === 30 || w.BitmapList !== undefined) {
@@ -3517,29 +3536,42 @@ cv.addEventListener('mousedown', (e) => {
   const sc = cv.width / (project.screenW || 240);
   const mx = (e.clientX - r.left) * (cv.width / r.width), my = (e.clientY - r.top) * (cv.height / r.height);
   const s = slot();
+  let hit = -1;
   for (let i = s.widgets.length - 1; i >= 0; i--) {
     if (s.widgets[i]._hidden) continue;
     const vb = visualBox(s.widgets[i]);
     const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
-    if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) {
-      if (s.widgets[i]._locked) continue; // locked layers are not draggable
-      pushHistory();
-      // Dragging follows the selection. Clicking a layer that is not selected
-      // selects just it, so it moves on its own; clicking one that is already
-      // selected keeps the selection — select a group (its row or ◉), or
-      // Ctrl/Cmd-click several layers, to move them together.
-      if (!(selected === i || groupSel.has(i))) { selected = i; groupSel = new Set([i]); }
-      refreshPanels(); render();
-      const primary = s.widgets[i];
-      const mates = [...groupSel]
-        .filter((k) => k !== i && s.widgets[k] && !s.widgets[k]._locked)
-        .map((k) => s.widgets[k]);
-      drag = {
-        dx: mx - x, dy: my - y, primary, ox: primary.X || 0, oy: primary.Y || 0,
-        mates: mates.map((o) => ({ o, x: o.X || 0, y: o.Y || 0 })),
-      };
-      break;
-    }
+    if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) { hit = i; break; }
+  }
+  if (hit < 0) return;
+  if (s.widgets[hit]._locked) return;
+  // Ctrl/Cmd-click on the canvas toggles multi-selection (like the layer list)
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    if (groupSel.has(hit)) groupSel.delete(hit); else groupSel.add(hit);
+    selected = hit;
+    refreshPanels(); render();
+    return;
+  }
+  {
+    const i = hit;
+    const vb = visualBox(s.widgets[i]);
+    const x = vb.x * sc, y = vb.y * sc;
+    pushHistory();
+    // Dragging follows the selection. Clicking a layer that is not selected
+    // selects just it, so it moves on its own; clicking one that is already
+    // selected keeps the selection — select a group (its row or ◉), or
+    // Ctrl/Cmd-click several layers, to move them together.
+    if (!(selected === i || groupSel.has(i))) { selected = i; groupSel = new Set([i]); }
+    refreshPanels(); render();
+    const primary = s.widgets[i];
+    const mates = [...groupSel]
+      .filter((k) => k !== i && s.widgets[k] && !s.widgets[k]._locked)
+      .map((k) => s.widgets[k]);
+    drag = {
+      dx: mx - x, dy: my - y, primary, ox: primary.X || 0, oy: primary.Y || 0,
+      mates: mates.map((o) => ({ o, x: o.X || 0, y: o.Y || 0 })),
+    };
   }
 });
 window.addEventListener('mousemove', (e) => {

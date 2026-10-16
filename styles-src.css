@@ -224,6 +224,14 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 }
 /* thin divider grouping property rows (analog dial vs hands) */
 .prop-sep { height: 1px; background: var(--color-line); margin: 10px 0 2px; }
+/* value + action on one row (e.g. pivot value + Centre) */
+.rowctl { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rowctl input { width: 100%; min-width: 0; }
+.rowctl button {
+  flex: none; border: 1px solid var(--color-line); background: #0d0f14; color: var(--color-ink);
+  border-radius: 7px; padding: 5px 10px; font-size: 11px; cursor: pointer;
+}
+.rowctl button:hover { border-color: #39415a; background: #171b23; }
 /* ---------- custom select (native <select> enhanced with thumbnails) ---------- */
 .nsel { position: relative; width: 100%; min-width: 0; }
 .nsel-native { display: none !important; }
