@@ -52,7 +52,8 @@ URLs, which work with plain `curl` while fresh.
 - Comet: differs (sec4 animations need echo — first animation sample).
 - Amber + 5 new faces: differ (raw AOD slots, PAL8-on-465 images, subVersion
   32/36/38) — the next compiler chunk is per-image codec echo + section echo.
-- Known gap: Widget groups (76B sec9 containers, e.g. temp digits+symbol on
-  high-efficiency-1/amber) decode as imageless tap zones; children not yet
-  materialized. Ground truth in `editor.config.json` of downloaded faces.
-  See `tools/roundtrip.js` output.
+- 76B group containers (temp digits+symbol, date, big clock) explode to flat
+  layers on import (WYSIWYG x-pack, y-centred); recompile emits the flat
+  equivalent. Still open: 56B-new nested taps (neon weather/nested groups),
+  52B-new image holders, slot-3 big sec9 records, temp sign-variant overlap
+  semantics.

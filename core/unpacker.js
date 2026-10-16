@@ -258,6 +258,12 @@ function unpackV2(data, watchType) {
     }
     if (watchType === 362 || watchType === 366) { offset += 0x44; const td = getDWord(data, offset); offset += 4; const sh = (td & 0xFF) >> 2; if (sh > 1) offset += sh * 4; }
     if ([4, 362, 365].includes(watchType)) lste.unshift({ TargetId: backImageId, PosX: 0, PosY: 0 });
+    // 76B sec9 containers (EasyFace Widget groups: temp digits+symbol, date
+    // month+delim+day, big clock) desugar to plain elements before the main
+    // loop, so children decode with the existing widget paths. Consumed group
+    // blobs are dropped (flat equivalent on recompile); unresolvable ones
+    // stay raw (today's behaviour).
+    ({ lste, lsta } = desugarGroups(lste, lsti, lstil, lstw, lsta));
     const { widgets, rawActions } = buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta);
     const images = new Map();
     for (const im of lsti) images.set(im.Name, { width: im.Width, height: im.Height, rgba: im.Rgba });
@@ -327,10 +333,22 @@ function readActions(data, blkCount, blkOff) {
       // paint phantom images (e.g. a calories flame over the temp group).
       // Anything else (76B group containers, 16B records, ...) is opaque:
       // keep raw so it re-emits verbatim and never renders a phantom image.
-      let imageId = 0;
+      // New-format 56B tap records (e7-head: tap + child ref at +0x30) only
+      // render as buttons when the child is a single image; a sec7/sec9 child
+      // (nested content) stays raw until taps desugar too.
+      let imageId = 0, childRef = null;
       if (bin.length === 56) {
-        imageId = getDWord(bin, 0x20) & 0xFF;
-        if (imageId === 0) imageId = getDWord(bin, 48) & 0xFF;
+        if (bin[0] === 0xE7 && bin[1] === 0xBB) childRef = getDWord(bin, 48) >>> 0;
+        else {
+          imageId = getDWord(bin, 0x20) & 0xFF;
+          if (imageId === 0) imageId = getDWord(bin, 48) & 0xFF;
+        }
+      }
+      if (imageId === 0 && childRef != null) {
+        // new-format tap: child ref at +0x30; a single-image child renders
+        // like a button, anything else (sec7/sec9 nested content) stays raw
+        if ((childRef >>> 24) === 0x02) imageId = childRef & 0xFF;
+        else { imageId = 0; childRef = null; }
       }
       if (imageId === 0) {
         // position-only tap zone (old 52B format): no image, keep raw
@@ -342,7 +360,7 @@ function readActions(data, blkCount, blkOff) {
         lst.push({ RawData: bin, Id: id, ImageName: null, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex'), Label: label });
         o += 0x10; continue;
       }
-      lst.push({ RawData: bin, Id: id, ImageName: `img_${String(imageId).padStart(4, '0')}.png`, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex') });
+      lst.push({ RawData: bin, Id: id, ImageName: `img_${String(imageId).padStart(4, '0')}.png`, ChildRef: childRef, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex') });
     } catch (e) { }
     o += 0x10;
   }
@@ -467,6 +485,103 @@ function readLists(data, blkCount, blkOff, watchType) {
     o += 0x10;
   }
   return lst;
+}
+
+// 76-byte sec9 group container (stock subVersion 32/36/38 faces: temp
+// digits+symbol, date month+delim+day, big clock). Layout from 5 blobs ×
+// ground-truth editor.config.json:
+//   +0x30: child-A sec7 widget id | +0x38: child-B single image id or sec7
+//   widget id | +0x40: child-C single image id or sec7 widget id
+//   +0x44: words (groupH, groupW). (+0x34/+0x3C are zero.)
+// All observed groups are tapless (taps use 56B/52B records). The blob stores
+// no child offsets — firmware flex-rows them — so single children are
+// x-packed left-to-right at demo widths (WYSIWYG) and y-centred in the group
+// box; a widget middle child (temp sign variant) overlaps child A the way
+// stock does (shared origin — the group box is narrower than both). Digit
+// children are forced left-aligned so the packing matches the canvas.
+function parseGroup76(bin) {
+  if (!bin || bin.length !== 76) throw new Error('not a group blob');
+  return {
+    a: bin.readUInt32LE(0x30) >>> 0, b: bin.readUInt32LE(0x38) >>> 0,
+    c: bin.readUInt32LE(0x40) >>> 0,
+    h: bin.readUInt16LE(0x44), w: bin.readUInt16LE(0x46),
+  };
+}
+// Replace group elements with synthetic child elements (positions computed),
+// dropping the consumed group blobs. Anything unresolvable stays untouched
+// (raw zone path, today's behaviour) — never duplicate, never drop.
+function desugarGroups(lste, lsti, lstil, lstw, lsta) {
+  const wById = new Map(lstw.map((w) => [w.Id >>> 0, w]));
+  const sById = new Map(lsti.map((im) => [im.Id >>> 0, im]));
+  const listById = new Map(lstil.map((l) => [l.Id >>> 0, l]));
+  const claimedSec7 = new Set(lste.map((e) => e.TargetId >>> 0));
+  const claimedSingle = new Set();
+  for (const e of lste) if ((e.TargetId >>> 24) === 0x02) claimedSingle.add(e.TargetId >>> 0);
+  // render width of a sec7 widget's content (digits demo string or single)
+  const contentOfSec7 = (w) => {
+    const li = listById.get(w.TargetId >>> 0);
+    if (li) {
+      const src = lookupDataSrc(w.Shape, w.DataSrcDisplay);
+      const demo = getStringSource(src);
+      return { w: Math.max(demo.length, 1) * li.Width, h: li.Height };
+    }
+    const si = sById.get(w.TargetId >>> 0);
+    if (si) return { w: si.Width, h: si.Height };
+    return null;
+  };
+  // NOTE: the canvas draws digits left from the widget X regardless of
+  // Alignment, so children pack left at demo widths; raw Align bytes stay
+  // untouched (they round-trip through the model exactly).
+  const outE = [];
+  const dropActions = new Set();
+  for (const e of lste) {
+    const keep = () => outE.push(e);
+    if ((e.TargetId >>> 24) !== 0x09) { keep(); continue; }
+    const act = lsta.find((a) => (a.Id >>> 0) === (e.TargetId >>> 0));
+    if (!act || !act.RawData || act.RawData.length !== 76) { keep(); continue; }
+    let g;
+    try { g = parseGroup76(act.RawData); } catch (err) { keep(); continue; }
+    const A = wById.get(g.a);
+    if (!A || claimedSec7.has(g.a)) { keep(); continue; }
+    // middle child: single image (date delim, clock colon) packs after A;
+    // a widget (temp sign variant) overlaps A at the shared origin.
+    let Bs = null, Bw = null;
+    if ((g.b >>> 24) === 0x02) {
+      Bs = sById.get(g.b);
+      if (!Bs || claimedSingle.has(g.b)) { keep(); continue; }
+    } else if ((g.b >>> 24) === 0x07) {
+      Bw = wById.get(g.b);
+      if (!Bw || claimedSec7.has(g.b)) { keep(); continue; }
+    } else { keep(); continue; }
+    let Cw = null, Cs = null;
+    if ((g.c >>> 24) === 0x07) {
+      Cw = wById.get(g.c);
+      if (!Cw || claimedSec7.has(g.c)) { keep(); continue; }
+    } else if ((g.c >>> 24) === 0x02) {
+      Cs = sById.get(g.c);
+      if (!Cs || claimedSingle.has(g.c)) { keep(); continue; }
+    } else { keep(); continue; }
+    const dA = contentOfSec7(A);
+    if (!dA) { keep(); continue; }
+    const dBs = Bs ? { w: Bs.Width, h: Bs.Height } : null;
+    const dBw = Bw ? contentOfSec7(Bw) : null;
+    if (Bw && !dBw) { keep(); continue; }
+    const dC = Cw ? contentOfSec7(Cw) : { w: Cs.Width, h: Cs.Height };
+    if (!dC) { keep(); continue; }
+    const yOf = (h) => e.PosY + (g.h > 0 && h > 0 ? Math.round((g.h - h) / 2) : 0);
+    let x = e.PosX;
+    outE.push({ TargetId: g.a, PosX: x, PosY: yOf(dA.h) }); x += dA.w;
+    if (Bs) { outE.push({ TargetId: g.b, PosX: x, PosY: yOf(dBs.h) }); x += dBs.w; }
+    if (Bw) outE.push({ TargetId: g.b, PosX: e.PosX, PosY: yOf(dBw.h) });
+    outE.push({ TargetId: g.c, PosX: x, PosY: yOf(dC.h) });
+    claimedSec7.add(g.a);
+    if (Bw) claimedSec7.add(g.b);
+    if (Cw) claimedSec7.add(g.c);
+    if (Bs) claimedSingle.add(g.b);
+    if (Cs) claimedSingle.add(g.c);
+    dropActions.add(act.Id >>> 0);
+  }
+  return { lste: outE, lsta: lsta.filter((a) => !dropActions.has(a.Id >>> 0)) };
 }
 
 function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
