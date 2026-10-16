@@ -798,7 +798,7 @@ function hasTap(w) { return Boolean(w && (w._tap || w._action || /\[[^\]]+\]/.te
 function paintLayer(i) {
   const s = slot();
   const w = s.widgets[i];
-  const d = document.querySelectorAll('#layers .layer')[i];
+  const d = document.querySelectorAll('#layers .layer:not(.zrow)')[i];
   if (!d || !w) return;
   const badge = w._group ? ` <span class="grp">G${String(w._group).replace(/^g/, '')}</span>` : '';
   d.className = 'layer'
@@ -1640,7 +1640,7 @@ function refreshPanels() {
     L.appendChild(h);
     s.rawActions.forEach((z, zi) => {
       const d = document.createElement('div');
-      d.className = 'layer' + (zi === selZone ? ' sel' : '');
+      d.className = 'layer zrow' + (zi === selZone ? ' sel' : '');
       const lname = document.createElement('span');
       lname.className = 'lname';
       const ic = document.createElement('span');
@@ -1654,7 +1654,7 @@ function refreshPanels() {
     });
   }
   enableDragSort(L, {
-    rowSel: '.layer', handleSel: '.grip', groupSel: '.group-row',
+    rowSel: '.layer:not(.zrow)', handleSel: '.grip', groupSel: '.group-row',
     onDrop: (from, to) => {
       const ss = slot();
       if (from === to) return;
