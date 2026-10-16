@@ -317,8 +317,12 @@ function readActions(data, blkCount, blkOff) {
       const dataOfs = getDWord(data, o + 8), dataLen = getDWord(data, o + 0x0C);
       const bin = getByteArray(data, dataOfs, dataLen);
       let imageId = getDWord(bin, 0x20) & 0xFF;
-      if (imageId === 0 && dataLen === 56) {
-        // new-format (RedmiWatch4ActionPacker, 56B template): image id at +48
+      if (imageId === 0) {
+        // Offset 0x30 holds the button image id in BOTH action layouts: the
+        // 56-byte RedmiWatch4ActionPacker template and the 52-byte name-based
+        // zone blob (where it reads as the ordinal). Only used when the caller
+        // finds that single image, so a real position-only zone (no image for
+        // that id) still falls through to the raw-blob path below.
         imageId = getDWord(bin, 48) & 0xFF;
       }
       if (imageId === 0) {
