@@ -16,7 +16,7 @@ const crypto = require('crypto');
 function bgraHash(bgra) { return crypto.createHash('sha1').update(bgraToRgba(Buffer.from(bgra))).digest('hex'); }
 function framesHash(frames) { return crypto.createHash('sha1').update(Buffer.concat(frames.map((f) => bgraToRgba(Buffer.from(f.bgra))))).digest('hex'); }
 
-const SUPPORTED = new Set([11, 362, 365, 367, 462, 465, 562, 565]);
+const SUPPORTED = new Set([11, 362, 365, 366, 367, 462, 465, 562, 565]);
 // Devices whose stock faces store images palettized (PAL8 + LVGL, selector
 // 0x10) whenever they fit in 256 colors: Watch 6 verified byte-for-byte;
 // S3 / Mi Band 9 decode the same way (see unpacker) but have no stock sample

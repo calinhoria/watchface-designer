@@ -14,6 +14,8 @@ project is self-contained.
 | `120917368958_neon-night.bin` | 120917368958 "Neon night" (Xiaomi) | Redmi Watch 5 (465) | 38 | 5 | 5 slots, tap zones |
 | `120917368961_number-jumble.bin` | 120917368961 "Number jumble" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | analog clock, tiny (89KB) |
 | `120917368969_tetris.bin` | 120917368969 "Tetris" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | digits + lists |
+| `266211405_shark-doodle.bin` | 266211405 (Xiaomi, model `miwear.watch.m66`) | Mi Band 9 (366) | 4 | 2 | **first Mi Band 9 face** (192×490, PAL8/LVGL) |
+| `266269338_eco-neon.bin` | 266269338 "ECO NEON" (conversmod) | Mi Band 9 (366) | 4 | 2 | Mi Band 9, 22 widgets |
 
 The `.mwz` files are the original store packages (editor project metadata:
 `capability.json`, `description.xml`, `editor.config.json`, previews). The
@@ -62,3 +64,9 @@ URLs, which work with plain `curl` while fresh.
   packs (subVersion >= 32) use a 160-byte face block (88-byte header+dir +
   72-byte style-name block); tables start at `168 + count*160`. Global packs
   ship N styles + 1 AOD, so only one slot is AOD.
+- Mi Band 9 (366): the m66 faces store images as LVGL/PAL8 like Mi Band 8, so
+  366 now uses the generic path (the 362-only per-face extra block and the
+  external-palette special-cases were removed for 366 — they hung the
+  unpacker). 366 is also in the compiler's supported set again. `266211405`
+  compiles; remaining DIFF is the usual sec0/2/7 (group flattening + single
+  re-encode).

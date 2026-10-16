@@ -127,12 +127,12 @@ function decodeV2Preview(data, watchType) {
   else if ([5, 8, 6].includes(watchType)) { type = bin[0] & 0xF; if (type === 4) type = 2; }
   let clut = null;
   let pxls = getByteArray(bin, 0x0C, bin.length - 0x0C);
-  if (watchType === 362 || (watchType === 366 && rle === 0x10)) {
+  if (watchType === 362) {
     type = 1; clut = getByteArray(pxls, 0, 0x400); pxls = getByteArray(pxls, 0x400, pxls.length - 0x400);
   }
   const magic = getDWord(bin, 0x0C);
   if (magic !== 0x5AA521E0) {
-    if (type === 1 && watchType !== 362 && watchType !== 366) {
+    if (type === 1 && watchType !== 362) {
       const pxlsLen = 0x15 + width * height;
       clut = getByteArray(bin, pxlsLen + 4, bin.length - pxlsLen - 4);
       pxls = getByteArray(bin, 0x0C, pxlsLen - 0x0C);
@@ -179,11 +179,11 @@ function decodeV2Single(bin, watchType, version) {
     alfa = getByteArray(pxls, pxlLen, width * height);
     pxls = getByteArray(pxls, 0, pxlLen);
   }
-  if (watchType === 362 || (watchType === 366 && rle === 0x10)) {
+  if (watchType === 362) {
     pxls = convertToRGBA(pxls); type = 4;
   }
   if (magic !== 0x5AA521E0) {
-    if (type === 1 && watchType !== 362 && watchType !== 366) {
+    if (type === 1 && watchType !== 362) {
       const pxlsLen = 0x15 + width * height;
       clut = getByteArray(bin, pxlsLen + 4, bin.length - pxlsLen - 4);
       pxls = getByteArray(bin, 0x0C, pxlsLen - 0x0C);
@@ -264,7 +264,7 @@ function unpackV2(data, watchType) {
       if (i === 9) lsta = readActions(data, blkCount, blkOff);
       offset += 8;
     }
-    if (watchType === 362 || watchType === 366) { offset += 0x44; const td = getDWord(data, offset); offset += 4; const sh = (td & 0xFF) >> 2; if (sh > 1) offset += sh * 4; }
+    if (watchType === 362) { offset += 0x44; const td = getDWord(data, offset); offset += 4; const sh = (td & 0xFF) >> 2; if (sh > 1) offset += sh * 4; }
     let nameBlock = null;
     if (multiBlock) { nameBlock = Buffer.from(data.subarray(offset, offset + NAME_BLOCK)).toString('hex'); offset += NAME_BLOCK; }
     if ([4, 362, 365].includes(watchType)) lste.unshift({ TargetId: backImageId, PosX: 0, PosY: 0 });
@@ -481,7 +481,7 @@ function readLists(data, blkCount, blkOff, watchType) {
       if ([5, 8, 7, 365, 11, 362, 366, 6, 367, 462, 465, 466, 562, 565, 567, 3651, 3652].includes(watchType)) {
         if ((rle & 0x0F) === 0x04) { type = 2; imgSize = width * 2 * height; alfSize = width * height; }
         if ([7, 365, 11, 465, 565].includes(watchType) && (rle & 0x0F) === 0x03) { type = 2; imgSize = width * 2 * height; alfSize = 0; }
-        if (type === 0 && [362, 366].includes(watchType) && (rle & 0xFF) === 0x10) { type = 1; imgSize = width * height + 0x400; alfSize = 0; }
+        if (type === 0 && watchType === 362 && (rle & 0xFF) === 0x10) { type = 1; imgSize = width * height + 0x400; alfSize = 0; }
       }
       const arrCount = bin[1];
       const maxSize = getDWord(bin, 8) + 0x0C;
@@ -508,7 +508,7 @@ function readLists(data, blkCount, blkOff, watchType) {
         } else {
           pxls = getByteArray(bin, startOffset, leftSize);
           pxlsFull = Buffer.alloc(imgSize); pxls.copy(pxlsFull, 0, 0, Math.min(pxls.length, imgSize));
-          if (curType === 1 && [362, 366].includes(watchType)) {
+          if (curType === 1 && watchType === 362) {
             const conv = convertToRGBA(pxlsFull);
             const { rgba, width: w2 } = decodeGTR(conv, width, height, 4, { blackTransparent: false });
             const nm = `img_arr_${String(idx).padStart(4, '0')}_${String(j).padStart(2, '0')}.png`;
