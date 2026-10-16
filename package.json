@@ -20,6 +20,7 @@
     "@tailwindcss/cli": "^4.3.3",
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
+    "sortablejs": "^1.15.7",
     "tailwindcss": "^4.3.3"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
       "preload.js",
       "index.html",
       "styles.css",
+      "vendor/**/*",
       "renderer.js",
       "assets/fonts/**/*",
       "assets/masks/**/*",

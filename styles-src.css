@@ -141,8 +141,14 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .tgl.on { background: #5b8cff2e !important; color: #cdd9ff; }
 .group-row .lb { width: 20px; height: 20px; border-radius: 5px; background: transparent; border: 0; color: var(--color-mut); cursor: pointer; }
 .group-row .lb:hover { background: #ffffff12; color: var(--color-ink); }
-.layer.ingroup { margin-left: 14px; }
-.layer.gcollapsed { display: none; }
+/* a group is a block: header + its own drop container (nested Sortable list) */
+.group-block { border-radius: 9px; margin: 4px 0 2px; }
+.group-block.collapsed .group-body { display: none; }
+.group-block.drop-in { box-shadow: 0 0 0 1px var(--color-acc); }
+.group-body { display: flex; flex-direction: column; gap: 2px; margin-left: 14px; padding-left: 4px; border-left: 1px solid var(--color-line); min-height: 6px; }
+/* an empty group still needs a target you can drop onto */
+.group-body:empty { min-height: 26px; border-left-style: dashed; }
+.group-body:empty::after { content: "drop layers here"; color: var(--color-mut); font-size: 11px; padding: 5px 0 0 8px; }
 .layer .grp {
   display: inline-block; margin: 0 4px; padding: 0 4px; border-radius: 4px;
   background: #2a3550; color: #9fb6ff; font-size: 9px; letter-spacing: .03em; vertical-align: 1px;
@@ -219,13 +225,13 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .grip:active { cursor: grabbing; }
 .grip:hover { opacity: 1; }
 .grip svg { width: 12px; height: 12px; }
+/* SortableJS drag. The fallback clone follows the cursor, so it MUST NOT be a
+   hit target — otherwise elementFromPoint() returns the clone and the drop has
+   no list under it to resolve against (the drag then silently does nothing). */
+.sortable-fallback { pointer-events: none !important; opacity: .9; }
+.sortable-ghost { opacity: .3; }
+.sortable-chosen { background: #5b8cff1a; }
 .layer.dragging, .ilm-row.dragging { opacity: .45; }
-.layer.drop-before, .ilm-row.drop-before { box-shadow: 0 -2px 0 0 var(--color-acc); }
-.layer.drop-after, .ilm-row.drop-after { box-shadow: 0 2px 0 0 var(--color-acc); }
-/* Photoshop-style nesting preview: the drop line steps right to show the layer
-   will land inside the group above */
-.layer.drop-before.indent { box-shadow: 0 -2px 0 0 var(--color-acc), inset 18px 0 0 -16px var(--color-acc); }
-.layer.drop-after.indent { box-shadow: 0 2px 0 0 var(--color-acc), inset 18px 0 0 -16px var(--color-acc); }
 
 /* image-list (BitmapList) dialog */
 .modal.wide { width: 560px; }
