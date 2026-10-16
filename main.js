@@ -37,7 +37,7 @@ async function handleOpenBin(filePath) {
     aod: Boolean(s.aod),
     aodFlag: s.aodFlag >>> 0,
     previewOffset: s.previewOffset >>> 0,
-    nameBlock: s.nameBlock || null,
+    tail: s.tail || null,
     orphanSec9: s.orphanSec9 || [],
     widgets: s.widgets,
     rawActions: s.rawActions || [],
@@ -145,6 +145,8 @@ function openProjectDir(root) {
     if (meta.aod != null) slot.aod = !!meta.aod;
     if (meta.aodFlag != null) slot.aodFlag = meta.aodFlag >>> 0;
     if (Array.isArray(meta.orphanSec9)) slot.orphanSec9 = meta.orphanSec9.slice();
+    if (meta.previewOffset != null) slot.previewOffset = meta.previewOffset >>> 0;
+    if (typeof meta.tail === 'string') slot.tail = meta.tail;
     const hidden = new Set(meta.hidden || []);
     const taps = meta.taps || {};
     const presets = meta.presets || {};
@@ -274,7 +276,7 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
     widgets: s.widgets,
     rawActions: s.rawActions || [],
     aod: Boolean(s.aod), aodFlag: s.aodFlag >>> 0,
-    previewOffset: s.previewOffset >>> 0, nameBlock: s.nameBlock || null,
+    previewOffset: s.previewOffset >>> 0, tail: s.tail || null,
     orphanSec9: s.orphanSec9 || [],
     images: Object.fromEntries(s.images.map((im) => {
       const png = PNG.sync.read(Buffer.from(im.dataBase64, 'base64'));
@@ -408,7 +410,7 @@ ipcMain.handle('export-project', async (_e, payload) => {
         };
       }
     }
-    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), aod: !!s.aod, aodFlag: s.aodFlag >>> 0, orphanSec9: s.orphanSec9 || [], fonts, hidden, taps, presets, groups, locked });
+    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), aod: !!s.aod, aodFlag: s.aodFlag >>> 0, previewOffset: s.previewOffset >>> 0, tail: s.tail || null, orphanSec9: s.orphanSec9 || [], fonts, hidden, taps, presets, groups, locked });
     for (const g of Object.values(groups)) {
       const n = parseInt(String(g).replace(/\D/g, ''), 10) || 0;
       if (n >= designer.groupSeq) designer.groupSeq = n + 1;

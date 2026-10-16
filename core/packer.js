@@ -146,12 +146,10 @@ function compileFaceProject(proj) {
   let subVer = proj.subVersion;
   if (subVer == null) subVer = slots.length > 1 ? 2 : (PAL8_DEVICES.has(deviceType) ? 1 : 0);
   setWord(header, 30, subVer);
-  // subVersion >= 32 faces (global store multi-style packs) carry a 72-byte
-  // per-face name block: each face occupies 160 bytes and the tables start
-  // at 168 + count*160.
-  const multiBlock = subVer >= 32;
-  const FACE_BLOCK = multiBlock ? 160 : 88;
-  const NAME_BLOCK = 72;
+  // Faces can carry a per-face tail after the 88-byte header+dir (a 72-byte
+  // name block, sometimes with an extra record) — the unpacker records it.
+  const FACE_BLOCK = 88 + Math.max(0, ...slots.map((s) => (s.tail ? s.tail.length / 2 : 0)));
+  const multiBlock = FACE_BLOCK > 88;
   const titleBuf = Buffer.from(String(title || ''), 'utf8');
   if (titleBuf.length > 64) throw new Error(`Title too long (${titleBuf.length}B, max 64).`);
   titleBuf.copy(header, 104);
@@ -283,14 +281,12 @@ function compileFaceProject(proj) {
     const fh = Buffer.from(FACE_HEADER_HEX, 'hex');
     if (multiBlock) {
       // global-store faces: header dword0 = 0x80000000, dword1 = own preview
-      // offset (0 for the AOD variant); a 72-byte name block follows the dir
+      // offset (0 for the AOD variant)
       setDWord(fh, 0, 0x80000000);
       setDWord(fh, 4, fi === 0 ? 0 : (f.aod ? 0 : (f.previewOffset || 0)));
     }
-    const nameBlk = Buffer.alloc(NAME_BLOCK, 0);
-    if (multiBlock && f.nameBlock) {
-      try { Buffer.from(f.nameBlock, 'hex').copy(nameBlk, 0, 0, NAME_BLOCK); } catch (e) { }
-    }
+    const tailBuf = Buffer.alloc(FACE_BLOCK - 88, 0);
+    if (f.tail) { try { Buffer.from(f.tail, 'hex').copy(tailBuf, 0, 0, FACE_BLOCK - 88); } catch (e) { } }
     for (let k = 0; k < 10; k++) {
       setDWord(fh, 8 + k * 8, f.counts[k]);
       if (k === 1) setDWord(fh, 12 + k * 8, f.secTable[2]);
@@ -298,7 +294,7 @@ function compileFaceProject(proj) {
       else setDWord(fh, 12 + k * 8, f.secTable[k]);
     }
     // concat after the counts are written into fh
-    f.fh = multiBlock ? Buffer.concat([fh, nameBlk]) : fh;
+    f.fh = multiBlock ? Buffer.concat([fh, tailBuf]) : fh;
     // ordinals for this face: sec 2/3/7 continue the file-wide counters so a
     // second slot's images/lists/widgets keep stock numbering
     const ord2 = f.ordBase[2], ord3 = f.ordBase[3], ord7 = f.ordBase[7];
@@ -526,7 +522,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   nElem += rawActions.length;
   nAction += rawActions.length + orphanSec9.length;
   const counts = [nElem, 0, nSingle, listOrder.length, 0, 0, 0, nWidget, 0, nAction];
-  const f = { counts, aod: Boolean(slot.aod), aodFlag: slot.aodFlag >>> 0, previewOffset: slot.previewOffset >>> 0, nameBlock: slot.nameBlock || null, orphanSec9, secTable: new Array(10).fill(0), elements: [], singles: [], lists: [], widgets7: [], actions: [], widgets, preview: null, rawActions };
+  const f = { counts, aod: Boolean(slot.aod), aodFlag: slot.aodFlag >>> 0, previewOffset: slot.previewOffset >>> 0, tail: slot.tail || null, orphanSec9, secTable: new Array(10).fill(0), elements: [], singles: [], lists: [], widgets7: [], actions: [], widgets, preview: null, rawActions };
   // elements (widget order; clocks expand to hands)
   widgets.forEach((w) => {
     if (w.Shape === 27) {

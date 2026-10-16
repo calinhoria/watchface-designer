@@ -241,11 +241,14 @@ function unpackV2(data, watchType) {
   const preview = decodeV2Preview(data, watchType);
   const title = getFaceTitleV2(data);
   let offset = 0xA8 + shiftWords * 4 + shiftWordsUnk * 4;
-  // subVersion >= 32 (global store faces) append a 72-byte per-face "name"
-  // block after the 88-byte header+dir, so each face occupies 160 bytes and
-  // the entry tables start at 168 + count*160. Older faces have no block.
-  const multiBlock = subVersion >= 32;
+  // Faces either are 88 bytes (header + section dir) or 160 (an extra 72-byte
+  // "name" block after the dir, used by some store packs). subVersion hints at
+  // it but is not reliable (Mi Watch S5 faces ship subVersion 38 with no name
+  // block), so validate both layouts and keep the one whose section directory
+  // is sane.
   const NAME_BLOCK = 72;
+  const faceBlock = chooseFaceBlock(data, offset, count);
+  const multiBlock = faceBlock > 88;
   const slots = [];
   for (let index = 0; index < count; index++) {
     const backImageId = getDWord(data, offset);
@@ -254,7 +257,10 @@ function unpackV2(data, watchType) {
     let lste = [], lsti = [], lstil = [], lsta = [], lstw = [], lstApp = [];
     const sectionCounts = new Array(10).fill(0);
     for (let i = 0; i < 10; i++) {
-      const blkCount = getDWord(data, offset), blkOff = getDWord(data, offset + 4);
+      let blkCount = getDWord(data, offset), blkOff = getDWord(data, offset + 4);
+      // safety: a mis-parsed directory must never spin the readers billions of
+      // times — treat an implausible count as empty
+      if (blkCount > 50000 || (blkCount > 0 && (blkOff < 168 || blkOff + 16 > data.length))) { blkCount = 0; blkOff = 0; }
       sectionCounts[i] = blkCount;
       if (i === 0) lste = readElements(data, blkCount, blkOff);
       if (i === 2) lsti = readSingles(data, blkCount, blkOff, watchType, version);
@@ -265,8 +271,13 @@ function unpackV2(data, watchType) {
       offset += 8;
     }
     if (watchType === 362) { offset += 0x44; const td = getDWord(data, offset); offset += 4; const sh = (td & 0xFF) >> 2; if (sh > 1) offset += sh * 4; }
-    let nameBlock = null;
-    if (multiBlock) { nameBlock = Buffer.from(data.subarray(offset, offset + NAME_BLOCK)).toString('hex'); offset += NAME_BLOCK; }
+    // per-face tail after the 88-byte header+dir (a name block and, on some
+    // packs, an extra record). Echoed verbatim so the layout round-trips.
+    let tail = null;
+    if (faceBlock > 88) {
+      tail = Buffer.from(data.subarray(offset, offset + (faceBlock - 88))).toString('hex');
+      offset += faceBlock - 88;
+    }
     if ([4, 362, 365].includes(watchType)) lste.unshift({ TargetId: backImageId, PosX: 0, PosY: 0 });
     // AOD face: multi-face packs give the AOD variant no preview of its own
     // (its second header dword is 0); normal faces carry a preview offset.
@@ -293,7 +304,7 @@ function unpackV2(data, watchType) {
     // section 5 = app widgets. Both are unsupported on compile, so flag them.
     slots.push({
       index, subVersion, widgets, rawActions, images, lsti, lstil, lste,
-      sectionCounts, aod, aodFlag, previewOffset, orphanSec9, nameBlock,
+      sectionCounts, aod, aodFlag, previewOffset, orphanSec9, tail, faceBlock,
       animationCount: sectionCounts[4] || 0,
       appCount: sectionCounts[5] || 0,
     });
@@ -340,6 +351,36 @@ function readWidgets(data, blkCount, blkOff) {
   }
   return lst;
 }
+// Validate a candidate face stride (88 or 160): every face's section
+// directory must have plausible counts and in-file offsets.
+function dirsSane(data, start, count, stride) {
+  for (let f = 0; f < count; f++) {
+    const base = start + f * stride;
+    for (let i = 0; i < 10; i++) {
+      const n = getDWord(data, base + 8 + i * 8);
+      const o = getDWord(data, base + 12 + i * 8);
+      if (n > 0 && (n > 100000 || o < 168 || o + 16 > data.length)) return false;
+    }
+  }
+  return true;
+}
+// Face block size: the section tables start right after `header + count*block`,
+// so face 0's first section offset reveals the block size (88, 160, 176, …).
+function chooseFaceBlock(data, start, count) {
+  const off0 = getDWord(data, start + 12);
+  if (off0 > 168) {
+    const block = (off0 - 168) / count;
+    if (Number.isInteger(block) && block >= 88 && block <= 4096) return block;
+  }
+  // fallback: validate 88 vs 160
+  const a = dirsSane(data, start, count, 88);
+  const b = count > 1 && dirsSane(data, start, count, 160);
+  if (b && !a) return 160;
+  if (a && !b) return 88;
+  return getWord(data, 0x1E) >= 32 ? 160 : 88;
+}
+function subVersionHint(data) { return getWord(data, 0x1E) >= 32; }
+
 // App/menu jump codes used by the new-format (e7-head) 56B actions, decoded
 // at +0x28 from stock faces (matches their EasyFace jumpApp). These are menu
 // jumps, not the 37 classic button apps.

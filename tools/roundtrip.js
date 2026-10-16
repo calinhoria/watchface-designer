@@ -103,7 +103,7 @@ for (const file of process.argv.slice(2)) {
     aod: Boolean(s.aod),
     aodFlag: s.aodFlag >>> 0,
     previewOffset: s.previewOffset >>> 0,
-    nameBlock: s.nameBlock || null,
+    tail: s.tail || null,
     orphanSec9: s.orphanSec9 || [],
     images: Object.fromEntries([...s.images].map(([n, im]) => [n, { width: im.width, height: im.height, data: im.rgba, origBlob: im.origBlob, rgbaHash: im.rgbaHash, listEnc: im.listEnc }])),
     preview: u.preview ? { width: u.preview.width, height: u.preview.height, data: u.preview.rgba, origBlob: u.preview.OrigBlob, rgbaHash: u.preview.RgbaHash } : null,

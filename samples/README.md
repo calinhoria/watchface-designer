@@ -5,28 +5,39 @@ and design reference. The five original regression faces live in
 `/Users/calinbelut/Downloads/*.bin` (not committed); these are committed so the
 project is self-contained.
 
-| file | store id | device | subVersion | slots | notable |
-|---|---|---|---|---|---|
-| `465700750_comet-twilight.bin` | 465700750 "Comet Twilight" (m0tral) | Redmi Watch 5 (465) | 0 | 1 | **animations** (sec4, 2 entries), tap actions |
-| `120917368850_amber.bin` | 120917368850 "Amber" (Xiaomi) | Redmi Watch 5 (465) | 36 | 2 | raw AOD slot (sec8 flag + sec9 elements) |
-| `120917368855_high-efficiency-1.bin` | 120917368855 "High efficiency 1" (Xiaomi) | Redmi Watch 5 (465) | 36 | 2 | analog clock, tap actions, raw AOD slot |
-| `120917368887_modern-classic.bin` | 120917368887 "Modern classic" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | analog clock, tap zone |
-| `120917368958_neon-night.bin` | 120917368958 "Neon night" (Xiaomi) | Redmi Watch 5 (465) | 38 | 5 | 5 slots, tap zones |
-| `120917368961_number-jumble.bin` | 120917368961 "Number jumble" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | analog clock, tiny (89KB) |
-| `120917368969_tetris.bin` | 120917368969 "Tetris" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | digits + lists |
-| `266211405_shark-doodle.bin` | 266211405 (Xiaomi, model `miwear.watch.m66`) | Mi Band 9 (366) | 4 | 2 | **first Mi Band 9 face** (192×490, PAL8/LVGL) |
-| `266269338_eco-neon.bin` | 266269338 "ECO NEON" (conversmod) | Mi Band 9 (366) | 4 | 2 | Mi Band 9, 22 widgets |
-| `366150013_colordynamics.bin` | 366150013 "Colordynamics" (Xiaomi, `n66cn`) | Mi Band 9 (366) | 4 | 5 | Mi Band 9, 5 variants |
-| `367701406_strava-8-ru.bin` | 367701406 "Strava 8 RU" (m0tral, `n67cn`) | Mi Band 9 Pro (367) | 4 | 6 | **first Mi Band 9 Pro face** (336×480) |
-| `120917383973_explorer.bin` | 120917383973 "Explorer" (Xiaomi, `p62`) | Mi Watch S5 (562) | 4 | 5 | **first Mi Watch S5 face** (480×480 round) |
+| file | store id | device | notable |
+|---|---|---|---|
+| `465700750_redmi-watch-5_comet-twilight.bin` | 465700750 (m0tral) | Redmi Watch 5 (465) | animations (sec4), tap actions |
+| `120917368850_redmi-watch-5_amber.bin` | 120917368850 (Xiaomi) | Redmi Watch 5 (465) | raw AOD slot, group containers |
+| `120917368855_redmi-watch-5_high-efficiency-1.bin` | 120917368855 | Redmi Watch 5 (465) | analog clock, groups, tap actions |
+| `120917368887_redmi-watch-5_modern-classic.bin` | 120917368887 | Redmi Watch 5 (465) | analog clock, tap zone |
+| `120917368958_redmi-watch-5_neon-night.bin` | 120917368958 | Redmi Watch 5 (465) | 5 slots (4 styles + AOD), nested taps |
+| `120917368961_redmi-watch-5_number-jumble.bin` | 120917368961 | Redmi Watch 5 (465) | tiny (89 KB) |
+| `120917368969_redmi-watch-5_tetris.bin` | 120917368969 | Redmi Watch 5 (465) | digits + lists |
+| `266211405_mi-band-9_shark-doodle.bin` | 266211405 (`m66`) | Mi Band 9 (366) | first MB9 face, PAL8/LVGL, 88-byte blocks |
+| `266211553_mi-band-9_big-eyes.bin` | 266211553 | Mi Band 9 (366) | PAL8/LVGL |
+| `266213066_mi-band-9_starry-fishing.bin` | 266213066 | Mi Band 9 (366) | PAL8/LVGL |
+| `266269338_mi-band-9_eco-neon.bin` | 266269338 (conversmod) | Mi Band 9 (366) | 28 widgets |
+| `366110010_mi-band-9_racetrack.bin` | 366110010 (`n66cn`) | Mi Band 9 (366) | 3 slots, 160-byte blocks |
+| `366150013_mi-band-9_colordynamics.bin` | 366150013 | Mi Band 9 (366) | 5 slots |
+| `366150014_mi-band-9_vibrantdigits.bin` | 366150014 | Mi Band 9 (366) | 6 slots, 3.9 MB |
+| `367701406_mi-band-9-pro_strava-8-ru.bin` | 367701406 (`n67cn`) | Mi Band 9 Pro (367) | 336×480, 6 slots, 88-byte blocks |
+| `367701407_mi-band-9-pro_strava-8-en.bin` | 367701407 | Mi Band 9 Pro (367) | 336×480, 6 slots |
+| `120917378817_mi-watch-s5_text-display-1.bin` | 120917378817 (`p62`) | Mi Watch S5 (562) | 480×480, 176-byte face blocks |
+| `120917380249_mi-watch-s5_moonbeam.bin` | 120917380249 | Mi Watch S5 (562) | 10 slots (5 styles + 5 AOD), hung the unpacker before the block-size fix |
+| `120917381519_mi-watch-s5_text-display-4.bin` | 120917381519 | Mi Watch S5 (562) | 176-byte blocks |
+| `120917383973_mi-watch-s5_explorer.bin` | 120917383973 | Mi Watch S5 (562) | 5 slots, 160-byte blocks |
 
 The `.mwz` files are the original store packages (editor project metadata:
 `capability.json`, `description.xml`, `editor.config.json`, previews). The
 `.bin` files are the compiled faces extracted from them.
 
-Sources: Xiaomi watchface store (`face.miwatch.de`, model `miwear.watch.p65gl`)
-and the m0tral community store (`cmod.miwatch.de`), captured Oct 2026 via the
-Mi Fitness mod app's own log files — no proxy needed, see below.
+Sources: Xiaomi watchface store (`face.miwatch.de`, models `miwear.watch.m66`
+Mi Band 9, `n67cn` Mi Band 9 Pro, `p62` Mi Watch S5) and the m0tral/community
+host (`cmod.miwatch.de`, `miwatch.conversmod.ru`). Captured Oct 2026; the global
+`config_file` URLs are permanent (`Expires=9223372036854775807`) and download
+with plain `curl`. Families with **no** downloadable URL (S3 `o63`, Redmi
+Watch 4 `o65`, Redmi Watch 5 `p65`) need an authenticated session.
 
 ## Getting more samples
 
@@ -78,7 +89,14 @@ URLs, which work with plain `curl` while fresh.
   (`367701406` → 367) now win over the size table when they resolve to a device
   with a matching preview/screen. Global ids (`120917383973`) have no device
   code and still resolve by size.
-- New families import + compile: Mi Band 9 Pro (367) and Mi Watch S5 (562)
-  round-trip through the compiler without error; their DIFF is structural
-  (sec0/2/7 — group flattening and re-encoded singles/lists), not a codec
-  failure.
+- New families import + compile: Mi Band 9 (366), Mi Band 9 Pro (367) and
+  Mi Watch S5 (562) round-trip through the compiler without error; their DIFF
+  is structural (sec0/2/7 — group flattening and re-encoded singles/lists),
+  not a codec failure.
+- Face block size is now **derived**, not guessed from subVersion: the first
+  section table offset gives `block = (off0 - 168) / count`. Seen in the wild:
+  88 (Mi Band 9 / 9 Pro), 160 (Redmi Watch 5, some S5) and 176 (20 S5 faces —
+  an extra 16-byte record before the 72-byte name block). The whole tail is
+  echoed verbatim on compile. Guessing 160 for subVersion ≥ 32 mis-parsed the
+  S5 packs and produced a 3.8-billion entry count that hung the unpacker; the
+  readers also now clamp implausible counts.
