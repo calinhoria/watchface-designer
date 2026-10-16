@@ -414,6 +414,10 @@ function readSingles(data, blkCount, blkOff, watchType, version) {
         })());
       }
       const name = `img_${String(idx).padStart(4, '0')}.png`;
+      // guard: skip entries with nonsense geometry (some slots carry
+      // non-image records that decode to width/height 0) so they never reach
+      // the PNG encoder and break the import
+      if (!w2 || !height || !rgba || rgba.length < w2 * height * 4) throw new Error('skip');
       lst.push({ Id: id, Width: w2, Height: height, Name: name, Rgba: rgba,
         // verbatim echo: original encoded blob + hash of decoded pixels.
         // Packer reuses OrigBlob when pixels unchanged (PAL8 palette order
@@ -434,6 +438,7 @@ function readLists(data, blkCount, blkOff, watchType) {
       const dataOfs = getDWord(data, o + 8), dataLen = getDWord(data, o + 0x0C);
       const bin = getByteArray(data, dataOfs, dataLen);
       const width = getWord(bin, 4), height = getWord(bin, 6);
+      if (!width || !height) throw new Error('skip list');
       const rle = bin[0];
       let type = bin[2];
       if (rle === 0 && type === 0) type = 4;
@@ -568,12 +573,27 @@ function desugarGroups(lste, lsti, lstil, lstw, lsta) {
     if (Bw && !dBw) { keep(); continue; }
     const dC = Cw ? contentOfSec7(Cw) : { w: Cs.Width, h: Cs.Height };
     if (!dC) { keep(); continue; }
+    // metric key for the unit-alternate rule (temp C/F share a list + a slot)
+    const metricOf = (w) => {
+      const c = lookupDataSrc(w.Shape, w.DataSrcDisplay);
+      return (c === '2031' || c === 'd031' || c === 'd032') ? 'temp' : c;
+    };
+    // a widget child that reuses an earlier widget's list AND metric is an
+    // inactive unit variant (e.g. °C vs °F digits) the editor shows once —
+    // rendering both overlaps the numbers
+    const usedTarget = new Map(); // list id -> metric
+    usedTarget.set(A.TargetId >>> 0, metricOf(A));
+    let skipB = false, skipC = false;
+    if (Bw && usedTarget.get(Bw.TargetId >>> 0) === metricOf(Bw)) skipB = true;
+    if (Bw && !skipB) usedTarget.set(Bw.TargetId >>> 0, metricOf(Bw));
+    if (Cw && usedTarget.get(Cw.TargetId >>> 0) === metricOf(Cw)) skipC = true;
     const yOf = (h) => e.PosY + (g.h > 0 && h > 0 ? Math.round((g.h - h) / 2) : 0);
     let x = e.PosX;
     outE.push({ TargetId: g.a, PosX: x, PosY: yOf(dA.h) }); x += dA.w;
     if (Bs) { outE.push({ TargetId: g.b, PosX: x, PosY: yOf(dBs.h) }); x += dBs.w; }
-    if (Bw) outE.push({ TargetId: g.b, PosX: e.PosX, PosY: yOf(dBw.h) });
-    outE.push({ TargetId: g.c, PosX: x, PosY: yOf(dC.h) });
+    if (Bw && !skipB) outE.push({ TargetId: g.b, PosX: e.PosX, PosY: yOf(dBw.h) });
+    if (Cw && !skipC) outE.push({ TargetId: g.c, PosX: x, PosY: yOf(dC.h) });
+    else if (Cs) outE.push({ TargetId: g.c, PosX: x, PosY: yOf(dC.h) });
     claimedSec7.add(g.a);
     if (Bw) claimedSec7.add(g.b);
     if (Cw) claimedSec7.add(g.c);

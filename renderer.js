@@ -286,9 +286,14 @@ const DATASRC = [
   ...DATASRC_RAW.map(([code, label]) => [code, label]),
   ...DATASRC_LEGACY.map(([code, label]) => [code, label]),
 ];
-const DATASRC_LABEL = Object.fromEntries(DATASRC);const CODE_FIELD = {};
+const DATASRC_LABEL = Object.fromEntries(DATASRC);
+// codes are 4 hex bytes and case-insensitive (EasyFace writes D031, the
+// unpacker yields d031): alias the lowercase form so lookups never miss
+for (const [code, label] of DATASRC) { const lc = String(code).toLowerCase(); if (!(lc in DATASRC_LABEL)) DATASRC_LABEL[lc] = label; }
+const CODE_FIELD = {};
 for (const [code, label, field] of DATASRC_RAW) if (field) CODE_FIELD[code] = [field, dsWhich(label)];
 for (const [code, , field, which] of DATASRC_LEGACY) if (field) CODE_FIELD[code] = [field, which || 'both'];
+for (const code of Object.keys(CODE_FIELD)) { const lc = code.toLowerCase(); if (!(lc in CODE_FIELD)) CODE_FIELD[lc] = CODE_FIELD[code]; }
 function datasrcLabel(code) { return DATASRC_LABEL[code] || `Unknown (${code})`; }
 
 // ---------- per-device data sources (from EasyFace's DeviceInfo.db) ----------

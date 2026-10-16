@@ -36,10 +36,12 @@ async function handleOpenBin(filePath) {
     role: s.index === 0 ? 'face' : 'aod',
     widgets: s.widgets,
     rawActions: s.rawActions || [],
-    images: [...s.images.entries()].map(([name, im]) => ({
-      name, width: im.width, height: im.height,
-      url: 'data:image/png;base64,' + rgbaToPngBuffer(im.width, im.height, im.rgba).toString('base64'),
-    })),
+    images: [...s.images.entries()]
+      .filter(([, im]) => im && im.width > 0 && im.height > 0 && im.rgba && im.rgba.length >= im.width * im.height * 4)
+      .map(([name, im]) => ({
+        name, width: im.width, height: im.height,
+        url: 'data:image/png;base64,' + rgbaToPngBuffer(im.width, im.height, im.rgba).toString('base64'),
+      })),
   }));
   let previewUrl = null;
   if (res.preview) previewUrl = 'data:image/png;base64,' + rgbaToPngBuffer(res.preview.width, res.preview.height, res.preview.rgba).toString('base64');
