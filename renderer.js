@@ -285,7 +285,8 @@ function testNumericForList(code) {
 function testNumeric(code) {
   const map = CODE_FIELD[String(code || '')];
   if (!map) return null;
-  const raw = TEST_DATA[map[0]];
+  let raw = TEST_DATA[map[0]];
+  if (map[0] === 'hour') raw = hour12(raw);
   const n = parseInt(String(raw == null ? '' : raw).replace(/[^0-9-]/g, ''), 10);
   return Number.isFinite(n) ? n : null;
 }
@@ -293,6 +294,13 @@ function testNumeric(code) {
 // encoded by code point so different characters never collide
 function glyphTag(ch) { return /^[0-9]$/.test(ch) ? `sign_u${ch.codePointAt(0).toString(16)}` : `u${ch.codePointAt(0).toString(16)}`; }
 function pad2(v) { return String(v).replace(/[^0-9]/g, '').padStart(2, '0').slice(-2); }
+// 0811-family is 12-hour on the watch: normalize any 24h/edge input so the
+// preview matches firmware (18 -> 6, 0 -> 12). Analog hands already mod 12.
+function hour12(v) {
+  const h = parseInt(String(v == null ? '' : v).replace(/[^0-9]/g, ''), 10);
+  if (!Number.isFinite(h)) return v;
+  return String(h % 12 === 0 ? 12 : h % 12);
+}
 function nowFields() {
   const d = new Date();
   const h24 = d.getHours();
@@ -312,6 +320,7 @@ function demoDigits(w) {
   if (!map) return String(TEST_DATA.hour || '12');
   const [field, which] = map;
   let v = pad(field, TEST_DATA[field] != null ? TEST_DATA[field] : TEST_DEFAULTS[field]);
+  if (field === 'hour') v = hour12(v);
   if (TIME_FIELDS.includes(field) || field === 'ampm') v = field === 'ampm' ? v : pad2(v);
   if (which === 'ones') return v.slice(-1);
   if (which === 'tens') return v.length > 1 ? v.slice(0, v.length - 1) : v;
