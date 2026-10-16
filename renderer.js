@@ -3232,8 +3232,8 @@ async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mo
     // glyph cell (gradients resolve in the current transform)
     applyGlyphFill(c, f, cw, H, -tx, -ty);
     if (fillType === 'outline') {
+      // hollow glyph: stroke only (the outline colour drives it)
       c.lineWidth = Math.max(1, f.outlineWidth == null ? 2 : f.outlineWidth);
-      if (f.color && String(f.color) !== 'none') c.fillText(i.g.char, 0, 0);
       c.strokeText(i.g.char, 0, 0);
     } else {
       if (bold) { c.lineWidth = stroke; c.strokeText(i.g.char, 0, 0); }
