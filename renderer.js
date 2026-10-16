@@ -1931,20 +1931,20 @@ function refreshPanels() {
       gb.appendChild(row);
     };
     alignRow('Align X', [
-      ['Align left edges (device)', '<path d="M3.5 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="6.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('left')],
-      ['Centre horizontally on the device', '<path d="M12 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="8.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('hcenter')],
-      ['Align right edges (device)', '<path d="M20.5 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="10.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('right')],
+      ['Align left edges (selection box)', '<path d="M3.5 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="6.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('left')],
+      ['Centre horizontally in the selection box', '<path d="M12 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="8.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('hcenter')],
+      ['Align right edges (selection box)', '<path d="M20.5 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="10.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('right')],
     ]);
     alignRow('Align Y', [
-      ['Align top edges (device)', '<path d="M4 3.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="6.5" width="4.5" height="7" rx="1"/>', () => alignSelection('top')],
-      ['Centre vertically on the device', '<path d="M4 12h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="8.5" width="4.5" height="7" rx="1"/>', () => alignSelection('vcenter')],
-      ['Align bottom edges (device)', '<path d="M4 20.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="10.5" width="4.5" height="7" rx="1"/>', () => alignSelection('bottom')],
+      ['Align top edges (selection box)', '<path d="M4 3.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="6.5" width="4.5" height="7" rx="1"/>', () => alignSelection('top')],
+      ['Centre vertically in the selection box', '<path d="M4 12h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="8.5" width="4.5" height="7" rx="1"/>', () => alignSelection('vcenter')],
+      ['Align bottom edges (selection box)', '<path d="M4 20.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="10.5" width="4.5" height="7" rx="1"/>', () => alignSelection('bottom')],
     ]);
     alignRow('Distribute', [
-      ['Equal gaps between the selected layers (outermost stay put)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/><path d="M7.6 12h2.2M14.4 12h2.2"/>', () => distributeSelection('evenly')],
+      ['Space evenly across the device (equal gaps, equal margins)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/><path d="M7.6 12h2.2M14.4 12h2.2"/>', () => distributeSelection('evenly')],
       ['Spread across the device (first at the left edge, last at the right)', '<path d="M3 4v16M21 4v16"/><rect x="5" y="6.5" width="3.5" height="11" rx="1"/><rect x="10.2" y="9.5" width="3.5" height="5" rx="1"/><rect x="15.5" y="6.5" width="3.5" height="11" rx="1"/>', () => distributeSelection('between')],
-      ['Pack to the left edge', '<path d="M3 4v16"/><rect x="6" y="6" width="3.5" height="12" rx="1"/><rect x="10.5" y="6" width="3.5" height="12" rx="1"/><rect x="15" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('left')],
-      ['Pack to the right edge', '<path d="M21 4v16"/><rect x="5.5" y="6" width="3.5" height="12" rx="1"/><rect x="10" y="6" width="3.5" height="12" rx="1"/><rect x="14.5" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('right')],
+      ['Pack to the left device edge', '<path d="M3 4v16"/><rect x="6" y="6" width="3.5" height="12" rx="1"/><rect x="10.5" y="6" width="3.5" height="12" rx="1"/><rect x="15" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('left')],
+      ['Pack to the right device edge', '<path d="M21 4v16"/><rect x="5.5" y="6" width="3.5" height="12" rx="1"/><rect x="10" y="6" width="3.5" height="12" rx="1"/><rect x="14.5" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('right')],
     ]);
     // Apply sits at the bottom of the box (full width)
     const applyRow = document.createElement('div');
@@ -2426,24 +2426,37 @@ function tglBtn(label, title, get, set) {
   sync();
   return b;
 }
+// Align the current multi-selection inside its OWN bounding box (the blue box),
+// not the device — matching how the selection is drawn.
+// mode: left|hcenter|right|top|vcenter|bottom
 function alignSelection(mode) {
   if (!project) return;
   const s = slot();
   const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._locked);
-  if (ids.length < 2) return;
-  const W = project.screenW || 0, H = project.screenH || 0;
-  pushHistory();
-  for (const i of ids) {
-    const w = s.widgets[i];
-    const b = visualBox(w);
-    if (mode === 'left') w.X = 0;
-    else if (mode === 'right') w.X = Math.round(W - b.w);
-    else if (mode === 'hcenter') w.X = Math.round((W - b.w) / 2);
-    else if (mode === 'top') w.Y = 0;
-    else if (mode === 'bottom') w.Y = Math.round(H - b.h);
-    else if (mode === 'vcenter') w.Y = Math.round((H - b.h) / 2);
+  if (ids.length < 2) {
+    $('meta').textContent = 'Select 2+ layers (Ctrl/Cmd+click, or click a group) to align.';
+    return;
   }
+  const boxes = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) }));
+  const left = Math.min(...boxes.map((o) => o.b.x));
+  const right = Math.max(...boxes.map((o) => o.b.x + o.b.w));
+  const top = Math.min(...boxes.map((o) => o.b.y));
+  const bottom = Math.max(...boxes.map((o) => o.b.y + o.b.h));
+  const axis = (mode === 'left' || mode === 'right' || mode === 'hcenter') ? 'X' : 'Y';
+  const target = (o) => {
+    if (mode === 'left') return left;
+    if (mode === 'right') return right - o.b.w;
+    if (mode === 'hcenter') return (left + right) / 2 - o.b.w / 2;
+    if (mode === 'top') return top;
+    if (mode === 'bottom') return bottom - o.b.h;
+    return (top + bottom) / 2 - o.b.h / 2; // vcenter
+  };
+  const moved = boxes.filter((o) => (o.w[axis] || 0) !== Math.round(target(o))).length;
+  if (!moved) { $('meta').textContent = 'Nothing to do \u2014 already aligned.'; return; }
+  pushHistory();
+  for (const o of boxes) o.w[axis] = Math.round(target(o));
   refreshPanels(); render();
+  $('meta').textContent = `Aligned ${moved} of ${boxes.length} layers to the selection box.`;
 }
 // Distribute the selection horizontally.
 // mode: evenly | between | left | right
@@ -2482,11 +2495,10 @@ function distributeSelection(mode) {
     let x = 0;
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   } else {
-    // evenly: keep the row's outer bounds, equalise the gaps in between
-    const left = Math.min(...items.map((o) => o.b.x));
-    const right = Math.max(...items.map((o) => o.b.x + o.b.w));
-    const gap = ((right - left) - totalW) / gaps;
-    let x = left;
+    // evenly: spread across the DEVICE — equal gaps *and* equal device margins,
+    // so the row ends up centred on the device (consistent with Align X/Y)
+    const gap = span / (gaps + 1);
+    let x = gap;
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   }
   // say something when the layout is already correct, otherwise the button
