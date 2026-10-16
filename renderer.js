@@ -2894,6 +2894,24 @@ $('inpTitle').addEventListener('focus', pushHistory);
 $('inpTitle').addEventListener('pointerdown', pushHistory);
 $('btnUndo').onclick = undo;
 $('btnRedo').onclick = redo;
+// ---------- keyboard nudge ----------
+// Arrow keys move the selection by 1px, Shift+arrow by 10px (Alt+arrow still
+// reorders layers). One undo entry per burst, so holding a key down doesn't fill
+// the history, and the panels catch up once the key repeat stops.
+const NUDGE_KEYS = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+let nudgeAt = 0;
+let nudgeTimer = null;
+function nudgeHistory() {
+  const now = Date.now();
+  if (now - nudgeAt > 600) pushHistory();
+  nudgeAt = now;
+}
+function nudgeRender() {
+  render();
+  paintLayer(selected);
+  if (nudgeTimer) clearTimeout(nudgeTimer);
+  nudgeTimer = setTimeout(() => { nudgeTimer = null; refreshPanels(); }, 200);
+}
 window.addEventListener('keydown', (e) => {
   const inField = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT');
   if (project && selected >= 0 && !inField && (e.key === 'Delete' || e.key === 'Backspace')) {
@@ -2912,6 +2930,26 @@ window.addEventListener('keydown', (e) => {
   }
   if (project && e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
     e.preventDefault(); moveSelected(e.key === 'ArrowUp' ? -1 : 1); return;
+  }
+  if (project && !inField && !e.altKey && !e.ctrlKey && !e.metaKey && NUDGE_KEYS[e.key]) {
+    // an open dialog owns the keyboard
+    if (document.querySelector('.modal-backdrop:not([hidden])')) return;
+    const ss = slot();
+    // same rule as dragging: the whole group / multi-selection moves together,
+    // a single child moves on its own; locked layers stay put
+    const ids = (groupSel.size ? [...groupSel] : [selected]).filter((i) => ss.widgets[i] && !ss.widgets[i]._locked);
+    if (!ids.length) return;
+    e.preventDefault();
+    const [dx, dy] = NUDGE_KEYS[e.key];
+    const step = e.shiftKey ? 10 : 1;
+    nudgeHistory();
+    for (const i of ids) {
+      const w2 = ss.widgets[i];
+      w2.X = (w2.X || 0) + dx * step;
+      w2.Y = (w2.Y || 0) + dy * step;
+    }
+    nudgeRender();
+    return;
   }
   if (!(e.ctrlKey || e.metaKey) || project == null) return;
   const t = e.target;
