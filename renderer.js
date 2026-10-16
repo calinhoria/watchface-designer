@@ -14,6 +14,99 @@ const $ = (id) => document.getElementById(id);
 const escAttr = (v) => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const cv = $('cv'), ctx = cv.getContext('2d');
 
+// ---------- custom select ----------
+// Progressive enhancement: every native <select> keeps its value/onchange but
+// is rendered as a styled dropdown so options can carry a thumbnail
+// (option.dataset.img) — one glance tells you what you are picking. The native
+// select stays in the DOM (hidden) as the single source of truth, so all
+// existing code ($(id).value / .onchange / innerHTML) keeps working.
+function enhanceSelect(sel) {
+  if (sel._enhanced || sel.multiple) return;
+  sel._enhanced = true;
+  try {
+    sel.classList.add('nsel-native');
+    const wrap = document.createElement('div');
+    wrap.className = 'nsel';
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'nsel-btn';
+    const pop = document.createElement('div');
+    pop.className = 'nsel-pop';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(btn); wrap.appendChild(pop); wrap.appendChild(sel);
+
+    const contentRow = (opt) => {
+      const row = document.createElement('span'); row.className = 'nsel-opt-in';
+      const img = opt.dataset && opt.dataset.img;
+      if (img) { const i = document.createElement('img'); i.className = 'nsel-thumb'; i.src = img; i.alt = ''; row.appendChild(i); }
+      const sp = document.createElement('span'); sp.className = 'nsel-opt-tx'; sp.textContent = opt.textContent; row.appendChild(sp);
+      return row;
+    };
+    const renderBtn = () => {
+      btn.innerHTML = '';
+      const opt = sel.options[sel.selectedIndex];
+      if (opt) btn.appendChild(contentRow(opt));
+      else { const sp = document.createElement('span'); sp.className = 'nsel-opt-tx'; sp.textContent = '\u2014'; btn.appendChild(sp); }
+      btn.disabled = sel.disabled;
+      btn.classList.toggle('empty', !opt);
+    };
+    const renderPop = () => {
+      pop.innerHTML = '';
+      const walk = (parent, host) => {
+        for (const child of parent.children) {
+          if (child.tagName === 'OPTGROUP') {
+            const g = document.createElement('div'); g.className = 'nsel-group'; g.textContent = child.label; host.appendChild(g);
+            walk(child, host);
+          } else if (child.tagName === 'OPTION') {
+            const o = document.createElement('button');
+            o.type = 'button';
+            o.className = 'nsel-opt' + (child.value === sel.value ? ' sel' : '') + (child.disabled ? ' dis' : '');
+            o.appendChild(contentRow(child));
+            o.onclick = () => {
+              if (child.disabled) return;
+              sel.value = child.value;
+              sel.dispatchEvent(new Event('change', { bubbles: true }));
+              close(); render();
+            };
+            host.appendChild(o);
+          }
+        }
+      };
+      walk(sel, pop);
+    };
+    const render = () => { renderBtn(); renderPop(); };
+    let open = false;
+    const onDoc = (e) => { if (!wrap.contains(e.target)) close(); };
+    const close = () => { if (!open) return; open = false; wrap.classList.remove('open'); document.removeEventListener('mousedown', onDoc, true); };
+    const show = () => { if (open) return; open = true; renderPop(); wrap.classList.add('open'); document.addEventListener('mousedown', onDoc, true); };
+    btn.onclick = () => (open ? close() : show());
+    sel.addEventListener('change', render);
+    sel._nselRender = render;
+    new MutationObserver(render).observe(sel, { childList: true, subtree: true });
+    render();
+  } catch (e) {
+    // never break the UI for a cosmetic upgrade
+    sel._enhanced = true;
+  }
+}
+function enhanceAllSelects(root = document) {
+  if (root.tagName === 'SELECT') { enhanceSelect(root); return; }
+  root.querySelectorAll('select').forEach(enhanceSelect);
+}
+const selObserver = new MutationObserver((muts) => {
+  for (const m of muts) {
+    if (m.type === 'childList') {
+      for (const node of m.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        if (node.tagName === 'SELECT') enhanceSelect(node);
+        else if (node.querySelectorAll) node.querySelectorAll('select').forEach(enhanceSelect);
+      }
+      // option lists rebuilt in place: refresh label + popup
+      if (m.target.tagName === 'SELECT' && m.target._nselRender) m.target._nselRender();
+    }
+  }
+});
+selObserver.observe(document.documentElement, { childList: true, subtree: true });
+
 // Human-readable DataSrc mapping (XiaomiWatch.Common FaceItemDataSrc).
 // 4-char codes = shape+display hex bytes, shared across all devices.
 // Data sources — authoritative list from EasyFace's dataSrc_list.txt (m0tral),
@@ -927,7 +1020,7 @@ function ilmRender() {
   const singleImg = ilmState.singleKey != null;
   $('ilmTitle').textContent = singleImg ? 'Image' : 'Images';
   $('ilmSub').textContent = singleImg
-    ? 'Pick or upload one image for this field'
+    ? 'Pick one image for this field'
     : 'Drag the handle to reorder \u00b7 first entry is index 0';
   // index-origin hints (EasyFace: weekday Index0 = Sunday, month Index1 = January)
   const hintEl = $('ilmHint');
@@ -951,8 +1044,11 @@ function ilmRender() {
   const pick = $('ilmPick');
   pick.innerHTML = '';
   const avail = s.images.map((i) => i.name).filter((n) => !used.has(n));
+  const urlOf = new Map(s.images.map((i) => [i.name, i.url]));
   for (const n of avail) {
-    const o = document.createElement('option'); o.value = n; o.textContent = n; pick.appendChild(o);
+    const o = document.createElement('option'); o.value = n; o.textContent = n;
+    if (urlOf.get(n)) o.dataset.img = urlOf.get(n); // thumbnail in the custom dropdown
+    pick.appendChild(o);
   }
   // preset helpers: distance thresholds, sign frame
   const kmBtn = $('ilmKm');
@@ -960,14 +1056,9 @@ function ilmRender() {
   kmBtn.hidden = !(ilmState.widget._kmValues || /^0?821$/.test(String(ilmState.widget.DataSrcIndex || '')));
   signBtn.hidden = !(ilmState.widget.Shape === 31 || ilmState.widget.Shape === 32);
   const single = ilmState.widget.Shape === 30 || ilmState.singleKey != null;
-  if (single && ilmState.entries.length) {
-    // an image layer shows exactly one image: picking another one replaces it
-    $('ilmAdd').textContent = 'Replace';
-    $('ilmUploadBtn').textContent = 'Replace…';
-  } else {
-    $('ilmAdd').textContent = 'Add';
-    $('ilmUploadBtn').textContent = 'Upload…';
-  }
+  // single-image field: one button, labelled Replace; multiple: Add (+ Upload)
+  $('ilmAdd').textContent = single ? (ilmState.entries.length ? 'Replace' : 'Choose') : 'Add';
+  $('ilmUploadBtn').hidden = single;
   pick.disabled = !avail.length;
   $('ilmAdd').disabled = !avail.length;
   // live preview of the highlighted option so images are identifiable

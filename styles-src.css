@@ -224,6 +224,42 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 }
 /* thin divider grouping property rows (analog dial vs hands) */
 .prop-sep { height: 1px; background: var(--color-line); margin: 10px 0 2px; }
+/* ---------- custom select (native <select> enhanced with thumbnails) ---------- */
+.nsel { position: relative; width: 100%; min-width: 0; }
+.nsel-native { display: none !important; }
+.nsel-btn {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; min-width: 0; text-align: left; cursor: pointer;
+  background: #0d0f14; border: 1px solid var(--color-line); color: var(--color-ink);
+  border-radius: 8px; padding: 6px 8px; font-size: 13px;
+}
+.nsel-btn:hover { border-color: #39415a; }
+.nsel-btn:disabled { opacity: .5; cursor: default; }
+.nsel-btn::after { content: ''; flex: none; width: 0; height: 0; margin-left: 4px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--color-mut); }
+.nsel.open .nsel-btn { border-color: var(--color-acc); box-shadow: 0 0 0 2px #5b8cff40; }
+.nsel-pop {
+  display: none; position: absolute; z-index: 70; top: calc(100% + 4px); left: 0; right: 0;
+  max-height: 300px; overflow-y: auto; padding: 4px;
+  background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 10px;
+  box-shadow: 0 22px 55px -20px #000000d9;
+}
+.nsel.open .nsel-pop { display: block; }
+.nsel-group { text-transform: uppercase; letter-spacing: .05em; color: var(--color-mut); font-size: 10px; padding: 7px 8px 3px; }
+.nsel-opt {
+  display: flex; align-items: center; width: 100%; text-align: left; cursor: pointer;
+  background: transparent; border: 0; color: var(--color-ink); border-radius: 7px; padding: 5px 8px; font-size: 13px;
+}
+.nsel-opt:hover { background: #ffffff0f; }
+.nsel-opt.sel { background: #5b8cff24; }
+.nsel-opt.dis { opacity: .4; cursor: default; }
+.nsel-opt-in { display: flex; align-items: center; gap: 8px; min-width: 0; width: 100%; }
+.nsel-opt-tx { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nsel-thumb {
+  width: 24px; height: 24px; object-fit: contain; border-radius: 4px; flex: none;
+  background: repeating-conic-gradient(#15181f 0 25%, #0d0f14 0 50%) 0 0/8px 8px;
+}
+.ilm-add .nsel { flex: 1; width: auto; }
+.ilm-add .nsel .nsel-pop { min-width: 220px; }
 .ilm-row .idx { width: 22px; text-align: right; font-size: 11px; color: var(--color-mut); flex: none; }
 .ilm-row .nm { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ilm-row .val { width: 62px; flex: none; }
