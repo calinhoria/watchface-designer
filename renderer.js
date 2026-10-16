@@ -1904,6 +1904,27 @@ function refreshPanels() {
     gb.appendChild(gfRow);
     gb.appendChild(gfBody);
     renderGroupFill();
+    // alignment helpers: horizontal (left/centre/right) + vertical (top/middle/bottom)
+    const aliRow = mkRow('Align', 'Align the selected layers');
+    const aliwrap = document.createElement('div');
+    aliwrap.className = 'aligntools';
+    const ALIGN = [
+      ['left', 'Align left', '<path d="M4 3v18"/><rect x="7" y="6" width="12" height="4"/><rect x="7" y="14" width="8" height="4"/>'],
+      ['hcenter', 'Align horizontal centre', '<path d="M12 3v18"/><rect x="5" y="6" width="14" height="4"/><rect x="8" y="14" width="8" height="4"/>'],
+      ['right', 'Align right', '<path d="M20 3v18"/><rect x="5" y="6" width="12" height="4"/><rect x="9" y="14" width="8" height="4"/>'],
+      ['top', 'Align top', '<path d="M3 4h18"/><rect x="6" y="7" width="4" height="12"/><rect x="14" y="7" width="4" height="8"/>'],
+      ['vcenter', 'Align vertical middle', '<path d="M3 12h18"/><rect x="6" y="5" width="4" height="14"/><rect x="14" y="8" width="4" height="8"/>'],
+      ['bottom', 'Align bottom', '<path d="M3 20h18"/><rect x="6" y="5" width="4" height="12"/><rect x="14" y="9" width="4" height="8"/>'],
+    ];
+    for (const [mode, tip, path] of ALIGN) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.title = tip;
+      b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+      b.onclick = () => alignSelection(mode);
+      aliwrap.appendChild(b);
+    }
+    aliRow.appendChild(aliwrap);
+    gb.appendChild(aliRow);
     const arow = document.createElement('div'); arow.className = 'row rowcontrols';
     const ungroup = document.createElement('button'); ungroup.textContent = 'Ungroup';
     ungroup.onclick = () => ungroupSelection();
@@ -2386,6 +2407,33 @@ function updatePinfo() {
 function membersOf(w, s) {
   if (!w._group) return [w];
   return s.widgets.filter((x) => x._group === w._group);
+}
+// Align the current multi-selection (group or Ctrl-selected layers).
+// mode: left|hcenter|right|top|vcenter|bottom
+function alignSelection(mode) {
+  if (!project) return;
+  const s = slot();
+  const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._locked);
+  if (ids.length < 2) return;
+  pushHistory();
+  const boxes = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) }));
+  const minX = Math.min(...boxes.map((o) => o.b.x));
+  const maxX = Math.max(...boxes.map((o) => o.b.x + o.b.w));
+  const minY = Math.min(...boxes.map((o) => o.b.y));
+  const maxY = Math.max(...boxes.map((o) => o.b.y + o.b.h));
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  for (const o of boxes) {
+    let dx = 0, dy = 0;
+    if (mode === 'left') dx = minX - o.b.x;
+    else if (mode === 'right') dx = maxX - (o.b.x + o.b.w);
+    else if (mode === 'hcenter') dx = cx - (o.b.x + o.b.w / 2);
+    else if (mode === 'top') dy = minY - o.b.y;
+    else if (mode === 'bottom') dy = maxY - (o.b.y + o.b.h);
+    else if (mode === 'vcenter') dy = cy - (o.b.y + o.b.h / 2);
+    o.w.X = Math.round((o.w.X || 0) + dx);
+    o.w.Y = Math.round((o.w.Y || 0) + dy);
+  }
+  refreshPanels(); render();
 }
 function groupSelection() {
   if (!project) return;
