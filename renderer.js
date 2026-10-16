@@ -3185,7 +3185,10 @@ function fontSetBase(family, size, color, bold, italic, uniqueFor, styleKey) {
   const fam = String(family).replace(/[^\w]+/g, '-');
   const col = String(color || '#ffffff').replace('#', '');
   const uniq = uniqueFor ? `${String(uniqueFor).replace(/[^\w]+/g, '-')}_` : '';
-  return `font_${uniq}${fam}_${size}${bold ? 'b' : ''}${italic ? 'i' : ''}_${col}` + (styleKey ? `_${styleKey}` : '');
+  // g2: glyphs are now centred inside their cell (narrow digits used to sit at
+  // the cell's left edge, which made the visible gaps uneven) — the token makes
+  // every existing set regenerate
+  return `font_${uniq}${fam}_${size}${bold ? 'b' : ''}${italic ? 'i' : ''}_${col}_g2` + (styleKey ? `_${styleKey}` : '');
 }
 // short key describing the fill style so glyph PNG names change with it
 function fontStyleKey(f) {
@@ -3378,11 +3381,17 @@ async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mo
     const c = c2.getContext('2d');
     setFontOn(c, family, size);
     const fillType = f.fill || 'solid';
-    // place the measured INK box inside the cell: origin at pad+left, baseline at
-    // pad+ascent, with the italic shear compensated by the added slant width.
+    // place the measured INK box CENTRED in the cell. With a shared (mono) cell
+    // width, a narrow glyph like "1" used to sit at the cell's left edge, so its
+    // right side had a big empty hole — the visible gaps between layers then
+    // looked uneven (e.g. "01" | ":" | "16"). Chrome returns
+    // actualBoundingBoxLeft <= 0 for left-aligned text, so the ink spans
+    // [-left, right] and the ink width is left + right.
     c.textAlign = 'left'; c.textBaseline = 'alphabetic';
     c.save();
-    const tx = pad + i.left + slant, ty = pad + ascent;
+    const inkW = Math.max(0, i.left + i.right);
+    const tx = (cw - inkW - slant) / 2 + i.left + slant;
+    const ty = pad + ascent;
     c.translate(tx, ty);
     if (italic) c.transform(1, 0, -0.212, 1, 0, 0);
     // fill AFTER the translate, offsetting the gradient so it still spans the
