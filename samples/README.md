@@ -8,8 +8,7 @@ project is self-contained.
 | file | store id | device | subVersion | slots | notable |
 |---|---|---|---|---|---|
 | `465700750_comet-twilight.bin` | 465700750 "Comet Twilight" (m0tral) | Redmi Watch 5 (465) | 0 | 1 | **animations** (sec4, 2 entries), tap actions |
-| `120917380718_funny-big-face-time.bin` | 120917380718 趣味大脸时间 (Xiaomi) | Redmi Watch 5 (465) | 4 | 2 | AOD slot is raw (sec8 flag + 4 sec9 elements), PAL8 images on 465 |
-| `120917426911_liberty-road.bin` | 120917426911 自由大道 (Xiaomi) | Redmi Watch 5 (465) | 4 | 2 | same AOD pattern as above |
+| `120917368850_amber.bin` | 120917368850 "Amber" (Xiaomi) | Redmi Watch 5 (465) | 36 | 2 | raw AOD slot (sec8 flag + sec9 elements) |
 
 The `.mwz` files are the original store packages (editor project metadata:
 `capability.json`, `description.xml`, `editor.config.json`, previews). The
@@ -41,6 +40,8 @@ URLs, which work with plain `curl` while fresh.
 ## Round-trip status (2026-10-16)
 
 - Original 5 faces: byte-identical.
-- These 3: NOT yet — they exercise unmodelled content (sec4 animations echo,
-  raw AOD faces, per-image PAL8/RGBA preservation, subVersion 4). See
-  `tools/roundtrip.js` output; tracked as the next compiler work.
+- Comet: differs (sec4 animations need echo — first animation sample).
+- Amber: differs (raw AOD slot, subVersion 36) — newest sample.
+- Removed 2026-10-16: two Chinese-named faces (120917380718, 120917426911,
+  subVersion 4 with the same raw-AOD pattern); to be replaced with English
+  faces. See `tools/roundtrip.js` output; tracked as the next compiler work.
