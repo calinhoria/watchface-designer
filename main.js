@@ -39,6 +39,10 @@ async function handleOpenBin(filePath) {
     previewOffset: s.previewOffset >>> 0,
     tail: s.tail || null,
     orphanSec9: s.orphanSec9 || [],
+    orphanWidgets: s.orphanWidgets || [],
+    orphanImages: s.orphanImages || [],
+    orphanSingles: s.orphanSingles || [],
+    orphanLists: s.orphanLists || [],
     widgets: s.widgets,
     rawActions: s.rawActions || [],
     images: [...s.images.entries()]
@@ -278,6 +282,10 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
     aod: Boolean(s.aod), aodFlag: s.aodFlag >>> 0,
     previewOffset: s.previewOffset >>> 0, tail: s.tail || null,
     orphanSec9: s.orphanSec9 || [],
+    orphanWidgets: s.orphanWidgets || [],
+    orphanImages: s.orphanImages || [],
+    orphanSingles: s.orphanSingles || [],
+    orphanLists: s.orphanLists || [],
     images: Object.fromEntries(s.images.map((im) => {
       const png = PNG.sync.read(Buffer.from(im.dataBase64, 'base64'));
       return [im.name, { width: png.width, height: png.height, data: Buffer.from(png.data), origBlob: im.origBlob || null, rgbaHash: im.rgbaHash || null, listEnc: im.listEnc || null }];

@@ -294,6 +294,38 @@ function unpackV2(data, watchType) {
       .filter((a) => a.RawData && !sec9Targets.includes(a.Id >>> 0))
       .map((a) => Buffer.from(a.RawData).toString('hex'));
     const { widgets, rawActions } = buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta);
+    // sec7 widgets that no element references (some packs — Mi Watch S5, MB9
+    // Pro, S4 — carry composite/extra widgets positioned by other means). They
+    // are echoed verbatim on compile so they are not silently dropped.
+    const matched7 = new Set(lste.filter((e) => (e.TargetId >>> 24) === 0x07).map((e) => e.TargetId >>> 0));
+    const orphanWidgets = [];
+    const orphanImgIds = new Set();
+    for (const w of lstw) {
+      if (matched7.has(w.Id >>> 0)) continue;
+      orphanWidgets.push({ blob: Buffer.from(w.RawData).toString('hex'), tgt: w.TargetId >>> 0 });
+      if ((w.TargetId >>> 24) === 0x02) orphanImgIds.add(w.TargetId >>> 0);
+    }
+    const orphanImages = lsti
+      .filter((im) => orphanImgIds.has(im.Id >>> 0))
+      .map((im) => ({ id: im.Id >>> 0, name: im.Name }));
+    // images no *modelled* widget uses (by name: buttons/hands/pointers are
+    // emitted from their Bitmap/hand fields, not their target id) — echoed
+    // verbatim so a compile does not silently drop them
+    const modeledImgNames = new Set();
+    for (const w of widgets) {
+      if (w.Bitmap) modeledImgNames.add(w.Bitmap);
+      if (w.PointerImage) modeledImgNames.add(w.PointerImage);
+      for (const k of ['HourHandImage', 'MinuteHandImage', 'SecondHandImage']) if (w[k]) modeledImgNames.add(w[k]);
+    }
+    const matchedTargets = new Set(lstw.filter((w) => matched7.has(w.Id >>> 0)).map((w) => w.TargetId >>> 0));
+    const orphanSingles = lsti
+      .filter((im) => !modeledImgNames.has(im.Name) && !orphanImgIds.has(im.Id >>> 0))
+      .map((im) => ({ id: im.Id >>> 0, name: im.Name }));
+    const orphanLists = lstil
+      .filter((l) => !matchedTargets.has(l.Id >>> 0))
+      .map((l) => ({ id: l.Id >>> 0, blob: l.OrigBlob }));
+    // app widgets (Shape 34): the sec5 app blobs are echoed verbatim
+    const rawApps = lstApp.filter((a) => a.RawBlob).map((a) => ({ id: a.Id >>> 0, blob: a.RawBlob }));
     const images = new Map();
     for (const im of lsti) images.set(im.Name, { width: im.Width, height: im.Height, rgba: im.Rgba, origBlob: im.OrigBlob, rgbaHash: im.RgbaHash });
     for (const il of lstil) for (const n of il.NameList) {
@@ -304,7 +336,7 @@ function unpackV2(data, watchType) {
     // section 5 = app widgets. Both are unsupported on compile, so flag them.
     slots.push({
       index, subVersion, widgets, rawActions, images, lsti, lstil, lste,
-      sectionCounts, aod, aodFlag, previewOffset, orphanSec9, tail, faceBlock,
+      sectionCounts, aod, aodFlag, previewOffset, orphanSec9, tail, faceBlock, orphanWidgets, orphanImages, orphanSingles, orphanLists, rawApps,
       animationCount: sectionCounts[4] || 0,
       appCount: sectionCounts[5] || 0,
     });
@@ -453,7 +485,7 @@ function readApps(data, blkCount, blkOff) {
       const filenameLen = data[dataOfs + 3];
       const bin = getByteArray(data, dataOfs, 0x14 + filenameLen + fileSize);
       const filename = Buffer.from(getByteArray(bin, 0x14, filenameLen)).toString('ascii');
-      lst.push({ Id: id, Name: filename, Data: getByteArray(bin, 0x14 + filenameLen, fileSize) });
+      lst.push({ Id: id, Name: filename, Data: getByteArray(bin, 0x14 + filenameLen, fileSize), RawBlob: Buffer.from(bin).toString('hex') });
     } catch (e) { }
     o += 0x10;
   }
@@ -791,7 +823,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
         }
       } else if (hi === 0x05) {
         const app = lstApp.find(c => c.Id === e.TargetId);
-        if (app) widgets.push({ Shape: 34, Name: `app_${app.Name}`, X: 0, Y: 0, Width: getScreenWidth(watchType), Height: getScreenHeight(watchType), Alpha: 255 });
+        if (app) widgets.push({ Shape: 34, Name: `app_${app.Name}`, X: 0, Y: 0, Width: getScreenWidth(watchType), Height: getScreenHeight(watchType), Alpha: 255, _appId: app.Id >>> 0 });
       }
     } catch (e) { }
     idx++;

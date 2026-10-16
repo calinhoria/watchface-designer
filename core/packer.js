@@ -180,6 +180,7 @@ function compileFaceProject(proj) {
       L.users.forEach(u => u(id));
     });
     f.widgets7.forEach((w7, i) => {
+      if (!w7.widget) return; // orphan widget: nothing references it
       const id = (0x07000000 | ((f.ordBase[7] + i) & 0xFF)) >>> 0;
       if (w7.hand) w7.widget['_' + w7.hand.replace('HandImage', '') + 'TargetId'] = id;
       else w7.widget._TargetId = id;
@@ -187,6 +188,14 @@ function compileFaceProject(proj) {
     f.actions.forEach((a, i) => {
       if (a.kind === 'button') a.widget._ActionId = (0x09000000 | (i & 0xFF)) >>> 0;
     });
+    // app widgets: map the original sec5 id to the new entry id and point the
+    // widget's element at it
+    f.appIdMap = new Map();
+    f.rawApps.forEach((a, i) => f.appIdMap.set(a.id, (0x05000000 | (i & 0xFF)) >>> 0));
+    for (const w of f.widgets) if (w.Shape === 34 && w._appId != null) {
+      const nid = f.appIdMap.get(w._appId);
+      if (nid != null) w._TargetId = nid;
+    }
   }
 
   // table layout: contiguous per face, sections 0..9 in order
@@ -362,6 +371,14 @@ function compileFaceProject(proj) {
         wEntry(f, 3, i, 3, al.off, blob.length, ord3 + i);
         if (al.fresh) blobParts.push({ off: al.off, buf: blob });
       });
+      // unreferenced lists: echoed verbatim, after the widget lists
+      f.orphanLists.forEach((o, j) => {
+        const blob = Buffer.from(o.blob, 'hex');
+        const idx = f.lists.length + j;
+        const al = allocShared(3, blob);
+        wEntry(f, 3, idx, 3, al.off, blob.length, ord3 + idx);
+        if (al.fresh) blobParts.push({ off: al.off, buf: blob });
+      });
     };
     // ACTIONS (button ImageIds were assigned up front)
     const allocActions = () => {
@@ -405,6 +422,15 @@ function compileFaceProject(proj) {
         blobParts.push({ off: ebo, buf: eb, el: { widget: { X: r.x, Y: r.y }, face: f, tidOverride: id } });
       });
     };
+    // APP WIDGETS (sec5): echoed verbatim
+    const allocApps = () => {
+      f.rawApps.forEach((a, i) => {
+        const blob = Buffer.from(a.blob, 'hex');
+        const bo = alloc(blob.length);
+        wEntry(f, 5, i, 5, bo, blob.length, i);
+        blobParts.push({ off: bo, buf: blob });
+      });
+    };
     // orphan sec9 records (AOD slots): verbatim, no element, after raw zones
     const allocOrphans = () => {
       const base = f.actions.length + f.rawActions.length;
@@ -416,11 +442,11 @@ function compileFaceProject(proj) {
       });
     };
     if (newOrder) {
-      allocElements(); allocWidgets(); allocActions(); allocRaw(); allocOrphans();
+      allocElements(); allocWidgets(); allocActions(); allocRaw(); allocOrphans(); allocApps();
       if (fi === 0) allocPreview();
       allocSingles(); allocLists();
     } else {
-      allocElements(); allocWidgets(); allocSingles(); allocLists(); allocActions(); allocRaw(); allocOrphans();
+      allocElements(); allocWidgets(); allocSingles(); allocLists(); allocActions(); allocRaw(); allocOrphans(); allocApps();
     }
     for (const bp of blobParts) if (bp.el && bp.el.face === f) fillElement(bp.buf, bp.el);
     for (const bp of blobParts) if (bp.w7 && bp.w7.face === f) fillWidget(bp.buf, bp.w7);
@@ -490,7 +516,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
     return { width: im.width, height: im.height, data: Buffer.from(im.data), origBlob: im.origBlob, rgbaHash: im.rgbaHash, listEnc: im.listEnc };
   };
   for (const w of widgets) {
-    if (![30, 31, 32, 27, 43].includes(w.Shape)) throw new Error(`Widget "${w.Name}": shape ${w.Shape} unsupported in v1 (30/31/32/27/43 only).`);
+    if (![30, 31, 32, 27, 43, 34].includes(w.Shape)) throw new Error(`Widget "${w.Name}": shape ${w.Shape} unsupported in v1 (30/31/32/27/43/34 only).`);
     if (w.Shape === 30 && isAppW(w.Name)) throw new Error(`Widget "${w.Name}": app widgets unsupported in v1.`);
     if (w.Shape === 31 && isAnimName(w.Name)) throw new Error(`Widget "${w.Name}": animations unsupported in v1.`);
     if (w.Shape === 31 || w.Shape === 32) {
@@ -508,6 +534,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
     if (w.Shape === 30) { nElem += 1; nSingle += 1; if (isButtonWidget(w)) nAction += 1; }
     if (w._imgWidget) nWidget += 1;   // value-driven image: needs a sec7 entry
     else if (w.Shape === 43) { nElem += 1; nSingle += 1; nWidget += 1; } // gauge: pointer image + sec7
+    else if (w.Shape === 34) { nElem += 1; } // app widget: element -> sec5 entry
     else if (w.Shape === 27) { const h = handsOf(w).length; nElem += h; nSingle += h; nWidget += h; }
     else if (w.Shape === 31 || w.Shape === 32) {
       nElem += 1; nWidget += 1;
@@ -520,10 +547,18 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   const rawActions = (slot.rawActions || []).filter(r => r && r.blob);
   // sec9 records with no element (AOD slots): verbatim, no element
   const orphanSec9 = (slot.orphanSec9 || []).filter(h => typeof h === 'string' && h.length);
+  // sec7 widgets with no element (echoed verbatim) + the images they reference
+  const orphanWidgets = (slot.orphanWidgets || []).filter(o => o && o.blob);
+  const orphanImages = (slot.orphanImages || []).filter(o => o && o.name);
+  const orphanSingles = (slot.orphanSingles || []).filter(o => o && o.name);
+  const orphanLists = (slot.orphanLists || []).filter(o => o && o.blob);
   nElem += rawActions.length;
   nAction += rawActions.length + orphanSec9.length;
-  const counts = [nElem, 0, nSingle, listOrder.length, 0, 0, 0, nWidget, 0, nAction];
-  const f = { counts, aod: Boolean(slot.aod), aodFlag: slot.aodFlag >>> 0, previewOffset: slot.previewOffset >>> 0, tail: slot.tail || null, orphanSec9, secTable: new Array(10).fill(0), elements: [], singles: [], lists: [], widgets7: [], actions: [], widgets, preview: null, rawActions };
+  nSingle += orphanImages.length + orphanSingles.length;
+  nWidget += orphanWidgets.length;
+  const rawApps = (slot.rawApps || []).filter((a) => a && a.blob);
+  const counts = [nElem, 0, nSingle, listOrder.length + orphanLists.length, 0, rawApps.length, 0, nWidget, 0, nAction];
+  const f = { counts, aod: Boolean(slot.aod), aodFlag: slot.aodFlag >>> 0, previewOffset: slot.previewOffset >>> 0, tail: slot.tail || null, orphanSec9, orphanWidgets, orphanImages, orphanSingles, orphanLists, rawApps, secTable: new Array(10).fill(0), elements: [], singles: [], lists: [], widgets7: [], actions: [], widgets, preview: null, rawActions };
   // elements (widget order; clocks expand to hands)
   widgets.forEach((w) => {
     if (w.Shape === 27) {
@@ -545,6 +580,26 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
         pushSingle(w[k], (id) => { w[tkey] = id; });
       }
     }
+  }
+  // orphan singles: images referenced only by orphan widgets. The original
+  // image id -> new entry id map lets the echoed widget blob be patched.
+  const orphanIdMap = new Map();
+  for (const o of orphanImages) {
+    const im = getImg(o.name);
+    f.singles.push({
+      name: o.name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data),
+      enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null,
+      assign: (id) => orphanIdMap.set(o.id, id),
+    });
+  }
+  // unreferenced images: echoed verbatim as singles (no widget references them)
+  for (const o of orphanSingles) {
+    const im = getImg(o.name);
+    f.singles.push({
+      name: o.name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data),
+      enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null,
+      assign: () => { },
+    });
   }
   // lists (dedup by bitmap names)
   const byKey = {};
@@ -600,6 +655,10 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
       const rawLen = w._widgetRaw ? w._widgetRaw.length / 2 : 32;
       f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, gauge: true, face: f });
     }
+  }
+  // orphan widgets (no element): echoed verbatim, image id patched
+  for (const o of f.orphanWidgets) {
+    f.widgets7.push({ widget: null, hand: null, blobSize: o.blob.length / 2, orphan: { blob: o.blob, tgt: o.tgt }, idMap: orphanIdMap, face: f });
   }
   // actions (buttons in widget order; blobs built at pack time)
   for (const w of widgets) {
@@ -693,6 +752,15 @@ function fillElement(buf, el) {
 
 function fillWidget(buf, w7) {
   const w = w7.widget;
+  if (w7.orphan) {
+    const raw = Buffer.from(w7.orphan.blob, 'hex');
+    raw.copy(buf, 0, 0, Math.min(raw.length, buf.length));
+    if ((w7.orphan.tgt >>> 24) === 0x02 && w7.idMap) {
+      const nid = w7.idMap.get(w7.orphan.tgt);
+      if (nid != null) setDWord(buf, 8, nid >>> 0);
+    }
+    return;
+  }
   if (w7.gauge) {
     // gauge/pointer: echo the original 32-byte blob, patch the image id
     const raw = w._widgetRaw ? Buffer.from(w._widgetRaw, 'hex') : null;
