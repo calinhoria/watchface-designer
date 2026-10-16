@@ -1918,20 +1918,20 @@ function refreshPanels() {
       gb.appendChild(row);
     };
     alignRow('Align X', [
-      ['Align left edges', '<path d="M3 3v18"/><rect x="7" y="5" width="12" height="5" rx="1"/><rect x="7" y="14" width="8" height="5" rx="1"/>', () => alignSelection('left')],
-      ['Align horizontal centres', '<path d="M12 3v18"/><rect x="5" y="5" width="14" height="5" rx="1"/><rect x="8" y="14" width="8" height="5" rx="1"/>', () => alignSelection('hcenter')],
-      ['Align right edges', '<path d="M21 3v18"/><rect x="5" y="5" width="12" height="5" rx="1"/><rect x="9" y="14" width="8" height="5" rx="1"/>', () => alignSelection('right')],
+      ['Align left edges (device)', '<path d="M3 3v18"/><rect x="7" y="5" width="12" height="5" rx="1"/><rect x="7" y="14" width="8" height="5" rx="1"/>', () => alignSelection('left')],
+      ['Centre horizontally on the device', '<path d="M12 3v18"/><rect x="5" y="5" width="14" height="5" rx="1"/><rect x="8" y="14" width="8" height="5" rx="1"/>', () => alignSelection('hcenter')],
+      ['Align right edges (device)', '<path d="M21 3v18"/><rect x="5" y="5" width="12" height="5" rx="1"/><rect x="9" y="14" width="8" height="5" rx="1"/>', () => alignSelection('right')],
     ]);
     alignRow('Align Y', [
-      ['Align top edges', '<path d="M3 3h18"/><rect x="5" y="7" width="5" height="12" rx="1"/><rect x="14" y="7" width="5" height="8" rx="1"/>', () => alignSelection('top')],
-      ['Align vertical middles', '<path d="M3 12h18"/><rect x="5" y="6" width="5" height="14" rx="1"/><rect x="14" y="8" width="5" height="8" rx="1"/>', () => alignSelection('vcenter')],
-      ['Align bottom edges', '<path d="M3 21h18"/><rect x="5" y="5" width="5" height="12" rx="1"/><rect x="14" y="9" width="5" height="8" rx="1"/>', () => alignSelection('bottom')],
+      ['Align top edges (device)', '<path d="M3 3h18"/><rect x="5" y="7" width="5" height="12" rx="1"/><rect x="14" y="7" width="5" height="8" rx="1"/>', () => alignSelection('top')],
+      ['Centre vertically on the device', '<path d="M3 12h18"/><rect x="5" y="6" width="5" height="14" rx="1"/><rect x="14" y="8" width="5" height="8" rx="1"/>', () => alignSelection('vcenter')],
+      ['Align bottom edges (device)', '<path d="M3 21h18"/><rect x="5" y="5" width="5" height="12" rx="1"/><rect x="14" y="9" width="5" height="8" rx="1"/>', () => alignSelection('bottom')],
     ]);
     alignRow('Distribute', [
-      ['Space evenly', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('evenly')],
-      ['Space between (ends pinned)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="8" width="4" height="8" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('between')],
-      ['Pack left', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="8" y="6" width="4" height="12" rx="1"/><rect x="13" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('left')],
-      ['Pack right', '<rect x="7" y="6" width="4" height="12" rx="1"/><rect x="12" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('right')],
+      ['Space evenly across the device', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('evenly')],
+      ['Space between (device edges)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="8" width="4" height="8" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('between')],
+      ['Pack to the left edge', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="8" y="6" width="4" height="12" rx="1"/><rect x="13" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('left')],
+      ['Pack to the right edge', '<rect x="7" y="6" width="4" height="12" rx="1"/><rect x="12" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('right')],
     ]);
     // Apply sits at the bottom of the box (full width)
     const applyRow = document.createElement('div');
@@ -2416,50 +2416,43 @@ function alignSelection(mode) {
   const s = slot();
   const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._locked);
   if (ids.length < 2) return;
+  const W = project.screenW || 0, H = project.screenH || 0;
   pushHistory();
-  const boxes = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) }));
-  const minX = Math.min(...boxes.map((o) => o.b.x));
-  const maxX = Math.max(...boxes.map((o) => o.b.x + o.b.w));
-  const minY = Math.min(...boxes.map((o) => o.b.y));
-  const maxY = Math.max(...boxes.map((o) => o.b.y + o.b.h));
-  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-  for (const o of boxes) {
-    let dx = 0, dy = 0;
-    if (mode === 'left') dx = minX - o.b.x;
-    else if (mode === 'right') dx = maxX - (o.b.x + o.b.w);
-    else if (mode === 'hcenter') dx = cx - (o.b.x + o.b.w / 2);
-    else if (mode === 'top') dy = minY - o.b.y;
-    else if (mode === 'bottom') dy = maxY - (o.b.y + o.b.h);
-    else if (mode === 'vcenter') dy = cy - (o.b.y + o.b.h / 2);
-    o.w.X = Math.round((o.w.X || 0) + dx);
-    o.w.Y = Math.round((o.w.Y || 0) + dy);
+  for (const i of ids) {
+    const w = s.widgets[i];
+    const b = visualBox(w);
+    if (mode === 'left') w.X = 0;
+    else if (mode === 'right') w.X = Math.round(W - b.w);
+    else if (mode === 'hcenter') w.X = Math.round((W - b.w) / 2);
+    else if (mode === 'top') w.Y = 0;
+    else if (mode === 'bottom') w.Y = Math.round(H - b.h);
+    else if (mode === 'vcenter') w.Y = Math.round((H - b.h) / 2);
   }
   refreshPanels(); render();
 }
-// Distribute the current selection horizontally.
+// Distribute across the DEVICE width (0 .. screenW).
 // mode: evenly | between | left | right
 function distributeSelection(mode) {
   if (!project) return;
   const s = slot();
   const ids = [...groupSel].filter((i) => s.widgets[i] && !s.widgets[i]._locked);
   if (ids.length < 2) return;
+  const W = project.screenW || 0;
   pushHistory();
   const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) })).sort((a, b) => a.b.x - b.b.x);
-  const minX = Math.min(...items.map((o) => o.b.x));
-  const maxX = Math.max(...items.map((o) => o.b.x + o.b.w));
   const totalW = items.reduce((a, o) => a + o.b.w, 0);
   const gaps = items.length - 1;
-  const span = maxX - minX - totalW;
+  const span = W - totalW;
   if (mode === 'left') {
-    let x = minX;
-    for (const o of items) { o.w.X = Math.round((o.w.X || 0) + (x - o.b.x)); x += o.b.w; }
+    let x = 0;
+    for (const o of items) { o.w.X = Math.round(x); x += o.b.w; }
   } else if (mode === 'right') {
-    let x = maxX;
-    for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; o.w.X = Math.round((o.w.X || 0) + (x - o.b.x)); }
+    let x = W;
+    for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; o.w.X = Math.round(x); }
   } else {
     const gap = span / (mode === 'between' ? gaps : gaps + 1);
-    let x = mode === 'between' ? minX : minX + gap;
-    for (const o of items) { o.w.X = Math.round((o.w.X || 0) + (x - o.b.x)); x += o.b.w + gap; }
+    let x = mode === 'between' ? 0 : gap;
+    for (const o of items) { o.w.X = Math.round(x); x += o.b.w + gap; }
   }
   refreshPanels(); render();
 }
