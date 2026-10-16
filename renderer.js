@@ -3184,9 +3184,14 @@ function fontStyleKey(f) {
 }
 // parse a CSS linear-gradient(...) into a canvas gradient (2..n stops)
 function parseCssGradient(str, w, h, ox, oy) {
-  const m = /linear-gradient\s*\(([\s\S]*)\)/i.exec(String(str || ''));
-  if (!m) return null;
-  const parts = m[1].split(',').map((s) => s.trim()).filter(Boolean);
+  const src = String(str || '');
+  // a paste can contain several declarations (-webkit-, W3C, fallback):
+  // take the last linear-gradient(...) so the standard one wins
+  const re = /[a-z-]*linear-gradient\s*\(([^)]*)\)/gi;
+  let m, body = null;
+  while ((m = re.exec(src))) body = m[1];
+  if (!body) return null;
+  const parts = body.split(',').map((s) => s.trim()).filter(Boolean);
   if (parts.length < 2) return null;
   let angle = 180, i0 = 0;
   const a = /^(-?[\d.]+)deg$/i.exec(parts[0]);
@@ -3195,7 +3200,9 @@ function parseCssGradient(str, w, h, ox, oy) {
   else if (to) { angle = ({ bottom: 180, top: 0, right: 90, left: 270 })[to[1].toLowerCase()]; i0 = 1; }
   const stops = parts.slice(i0);
   if (stops.length < 2) return null;
-  const rad = angle * Math.PI / 180;
+  // CSS angles are clockwise from "to top"; canvas y grows downward, so the
+  // canvas direction is (cssAngle - 90).
+  const rad = ((angle - 90) * Math.PI) / 180;
   const cx = (ox || 0) + w / 2, cy = (oy || 0) + h / 2;
   const len = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
   const dx = Math.cos(rad) * len / 2, dy = Math.sin(rad) * len / 2;
