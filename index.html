@@ -52,12 +52,12 @@
       <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Project <span class="flex-1"></span><span class="lbtns"><button id="btnLint" title="Check the project (EasyFace rules)">Check</button><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span><span class="chev">▾</span></h3>
       <div class="pbody">
         <div id="slots" class="mb-2"></div>
-        <label class="row"><span class="lbl">Title</span><input id="inpTitle" type="text" /></label>
-        <label class="row"><span class="lbl">Slot role</span><select id="slotRoleSel">
+        <div class="row"><span class="lbl">Title</span><input id="inpTitle" type="text" /></div>
+        <div class="row"><span class="lbl">Slot role</span><select id="slotRoleSel">
           <option value="face">Face</option>
           <option value="aod">AOD</option>
-        </select></label>
-        <label class="row"><span class="lbl">Project font</span><select id="projFont"></select></label>
+        </select></div>
+        <div class="row"><span class="lbl">Project font</span><select id="projFont"></select></div>
         <div class="row small" id="screenInfo"></div>
         <button id="btnConvert" class="row-btn" title="Retarget this project at another device (scales geometry, resamples images)">Convert device…</button>
         <button id="btnCloseProject" class="row-btn">Close project</button>
@@ -105,7 +105,7 @@
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
       <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Test data <span class="flex-1"></span><span class="chev">▾</span></h3>
       <div class="pbody">
-        <label class="row"><span class="lbl">Current time</span><input id="tdCurrent" type="checkbox" title="Drive time/date fields from the real clock" /></label>
+        <div class="row"><span class="lbl">Current time</span><input id="tdCurrent" type="checkbox" title="Drive time/date fields from the real clock" /></div>
         <div id="testData"></div>
       </div>
     </div>
@@ -114,15 +114,15 @@
 <div id="slotModal" class="modal-backdrop" hidden>
   <div class="modal">
     <h3>Add slot</h3>
-    <label class="row"><span class="lbl">Role</span><select id="slotRole">
+    <div class="row"><span class="lbl">Role</span><select id="slotRole">
         <option value="face">Face (main watchface)</option>
         <option value="aod">AOD (always-on display)</option>
       </select>
-    </label>
-    <label class="row"><span class="lbl">Copy</span><span class="rowctl" style="justify-content:flex-start">
+    </div>
+    <div class="row"><span class="lbl">Copy</span><span class="rowctl" style="justify-content:flex-start">
       <input type="checkbox" id="slotCopyMain" style="width:auto" />
       <span class="muted" style="font-size:12px">Copy layers + images from the main face</span>
-    </span></label>
+    </span></div>
     <div class="modal-btns">
       <button id="slotCancel">Cancel</button>
       <button id="slotCreate">Add</button>
@@ -132,8 +132,8 @@
 <div id="newFaceModal" class="modal-backdrop" hidden>
   <div class="modal">
     <h3>New watchface</h3>
-    <label class="row"><span class="lbl">Name</span><input id="newFaceName" type="text" placeholder="My face" /></label>
-    <label class="row"><span class="lbl">Device</span><select id="newFaceDevice"></select></label>
+    <div class="row"><span class="lbl">Name</span><input id="newFaceName" type="text" placeholder="My face" /></div>
+    <div class="row"><span class="lbl">Device</span><select id="newFaceDevice"></select></div>
     <div class="modal-btns">
       <button id="newFaceCancel">Cancel</button>
       <button id="newFaceCreate">Create</button>
@@ -144,12 +144,12 @@
   <div class="modal">
     <h3 id="convTitle">Convert project</h3>
     <div class="muted" id="convFile" style="margin-bottom:8px"></div>
-    <label class="row"><span class="lbl">Device</span><select id="convDevice"></select></label>
+    <div class="row"><span class="lbl">Device</span><select id="convDevice"></select></div>
     <div class="muted" id="convScale" style="margin-bottom:8px"></div>
-    <label class="row" id="convScaleRow"><span class="lbl">Scaling</span><select id="convAspect">
+    <div class="row" id="convScaleRow"><span class="lbl">Scaling</span><select id="convAspect">
       <option value="fit">Fit (keep aspect, letterbox)</option>
       <option value="stretch">Stretch to fill each axis</option>
-    </select></label>
+    </select></div>
     <div id="convModeRow" class="muted" style="display:flex;gap:16px;margin-bottom:4px">
       <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="convMode" value="inplace" checked /> Convert current</label>
       <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="convMode" value="copy" /> Make a copy</label>
@@ -193,10 +193,10 @@
 <div id="textModal" class="modal-backdrop" hidden>
   <div class="modal">
     <h3>Custom text</h3>
-    <label class="row"><span class="lbl">Text</span><input id="txtValue" type="text" placeholder="MONDAY" /></label>
-    <label class="row"><span class="lbl">Font</span><select id="txtFont"></select></label>
-    <label class="row"><span class="lbl">Size</span><input id="txtSize" type="number" value="100" /></label>
-    <label class="row"><span class="lbl">Colour</span><input id="txtColor" type="color" value="#ffffff" /></label>
+    <div class="row"><span class="lbl">Text</span><input id="txtValue" type="text" placeholder="MONDAY" /></div>
+    <div class="row"><span class="lbl">Font</span><select id="txtFont"></select></div>
+    <div class="row"><span class="lbl">Size</span><input id="txtSize" type="number" value="100" /></div>
+    <div class="row"><span class="lbl">Colour</span><input id="txtColor" type="color" value="#ffffff" /></div>
     <div class="muted">Rendered to one transparent PNG and added as an image layer (works on the watch like any other image).</div>
     <div class="modal-btns">
       <button id="txtCancel">Cancel</button>

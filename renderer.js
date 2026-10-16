@@ -2380,9 +2380,11 @@ function refreshPanels() {
 }
 
 // live read-only summary in Properties (kept in sync while dragging/editing)
-// every Properties row: <label class="row"><span class="lbl">..</span>control</label>
+// every Properties row: <div class="row"><span class="lbl">..</span>control</div>
+// (a <label> here would forward clicks on the text to the first control in the
+// row — e.g. the Align-left button — so rows are inert containers)
 function mkRow(labelText, title) {
-  const lab = document.createElement('label');
+  const lab = document.createElement('div');
   lab.className = 'row';
   const sp = document.createElement('span');
   sp.className = 'lbl';
