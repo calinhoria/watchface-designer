@@ -800,7 +800,7 @@ function applyLayerOrder() {
     items.push({ w, gid: body ? body.dataset.gid : null });
   }
   if (items.length !== s.widgets.length) { refreshPanels(); return; }
-  const next = items.map((o) => o.w).reverse(); // the list is shown top-most first
+  const next = items.map((o) => o.w); // the list is shown in creation order
   const moved = next.some((w, k) => w !== s.widgets[k]);
   const regrouped = items.some((o) => (o.w._group || null) !== o.gid);
   if (!moved && !regrouped) { $('meta').textContent = 'Nothing changed \u2014 dropped in the same place.'; refreshPanels(); return; }
@@ -1647,10 +1647,11 @@ function refreshPanels() {
     }
     sl.appendChild(wrap);
   });
-  // layers — shown in Z-ORDER: the top-most layer (drawn last, i.e. the last
-  // widget in the file) is the first row. A group is a block with a collapsible
-  // header and its own Sortable body, so dragging a layer in/out of that body is
-  // what changes its group.
+  // layers — listed in CREATION order: the first widget in the file is the first
+  // row, so a clock preset reads hour, colon, minute top-to-bottom and Distribute
+  // lays them out left-to-right in that same order. A group is a block with a
+  // collapsible header and its own Sortable body, so dragging a layer in or out
+  // of that body is what changes its group.
   const L = $('layers'); L.innerHTML = '';
   // NB: must not be called mkRow — that name is the Properties row helper
   const mkLayerRow = (i) => {
@@ -1665,7 +1666,7 @@ function refreshPanels() {
     return d;
   };
   const seenGroups = new Set();
-  for (let i = s.widgets.length - 1; i >= 0; i--) {
+  for (let i = 0; i < s.widgets.length; i++) {
     const w = s.widgets[i];
     if (!w._group) { mkLayerRow(i); continue; }
     if (seenGroups.has(w._group)) continue;
@@ -1705,7 +1706,7 @@ function refreshPanels() {
     const body = document.createElement('div');
     body.className = 'group-body';
     body.dataset.gid = gid;
-    for (const m of members.slice().reverse()) body.appendChild(mkLayerRow(m.k));
+    for (const m of members) body.appendChild(mkLayerRow(m.k));
     block.appendChild(body);
     L.appendChild(block);
     sortable(body, {
