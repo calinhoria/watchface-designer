@@ -515,6 +515,35 @@ function visualBox(w) {
 
 // safe accessor: returns a dummy slot when no project is open
 function slot() { return project ? project.slots[slotIndex] : { widgets: [], images: [], rawActions: [] }; }
+// Uploaded images are reduced to what the watch can actually show — the layer's
+// box, capped at the screen. A 976x549 phone photo on a 432x514 face was being
+// stored at full size (2 MB of the .bin); now it is cropped to fill and stored at
+// 432x514. 'cover' crops (full resolution of the visible part), 'stretch' scales
+// to the box, anything else fits inside. Never enlarged.
+function resizeUploadedImage(img, boxW, boxH) {
+  const sw = img.naturalWidth, sh = img.naturalHeight;
+  const screenW = (project && project.screenW) || sw, screenH = (project && project.screenH) || sh;
+  const capW = Math.max(1, Math.min(boxW || screenW, screenW));
+  const capH = Math.max(1, Math.min(boxH || screenH, screenH));
+  const c = document.createElement('canvas');
+  const g = c.getContext('2d');
+  if (sw <= capW && sh <= capH) { c.width = sw; c.height = sh; g.drawImage(img, 0, 0); return c; }
+  const fit = (ilmState && ilmState.widget && ilmState.widget._fit) || 'stretch';
+  if (fit === 'cover') {
+    const scale = Math.max(capW / sw, capH / sh);
+    const dw = Math.round(sw * scale), dh = Math.round(sh * scale);
+    c.width = Math.min(capW, dw); c.height = Math.min(capH, dh);
+    g.drawImage(img, Math.round((dw - c.width) / 2), Math.round((dh - c.height) / 2), c.width, c.height, 0, 0, c.width, c.height);
+  } else if (fit === 'stretch') {
+    c.width = capW; c.height = capH;
+    g.drawImage(img, 0, 0, capW, capH);
+  } else {
+    const scale = Math.min(capW / sw, capH / sh);
+    c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
+    g.drawImage(img, 0, 0, c.width, c.height);
+  }
+  return c;
+}
 // ---------- project font (default for new digital/list layers) ----------
 function updateProjFontSelect() {
   const sel = $('projFont');
@@ -1285,12 +1314,11 @@ $('ilmUpload').onchange = async () => {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
     try { await img.decode(); } catch (e) { continue; }
-    const c = document.createElement('canvas');
-    c.width = img.naturalWidth; c.height = img.naturalHeight;
-    c.getContext('2d').drawImage(img, 0, 0);
+    const w0 = ilmState.widget;
+    const c = resizeUploadedImage(img, w0 && w0.Width, w0 && w0.Height);
     const name = uniqName(file.name.replace(/\.[^.]+$/, '') + '.png', taken); taken.add(name);
     imgCache.delete(name);
-    s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url: c.toDataURL('image/png') });
+    s.images.push({ name, width: c.width, height: c.height, url: c.toDataURL('image/png') });
     if (ilmState.widget.Shape === 30 || ilmState.singleKey != null) ilmState.entries = [{ value: null, name }];
     else ilmState.entries.push({ value: null, name });
   }
@@ -3984,14 +4012,13 @@ $('fileUpload').onchange = async () => {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
     try { await img.decode(); } catch (e) { continue; }
-    // any source format -> PNG so the project only ever stores PNG
-    const c = document.createElement('canvas');
-    c.width = img.naturalWidth; c.height = img.naturalHeight;
-    c.getContext('2d').drawImage(img, 0, 0);
+    // any source format -> PNG, and no bigger than the screen: a project-wide
+    // upload has no layer box, so the device screen is the cap
+    const c = resizeUploadedImage(img, 0, 0);
     const pngUrl = c.toDataURL('image/png');
     const name = uniqName(file.name.replace(/\.[^.]+$/, '') + '.png', taken); taken.add(name);
     imgCache.delete(name);
-    s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url: pngUrl });
+    s.images.push({ name, width: c.width, height: c.height, url: pngUrl });
   }
   $('fileUpload').value = '';
   refreshPanels(); render();
