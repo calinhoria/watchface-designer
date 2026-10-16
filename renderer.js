@@ -745,8 +745,16 @@ function shapeIcon(s) {
 // joins or leaves a group. Rows carry data-wi pointing at the pre-drag order and
 // the new order is read back out of the DOM, so there is no index arithmetic.
 function sortable(container, opts) {
-  if (!container || container._sortableReady || typeof Sortable === 'undefined') return;
+  if (!container || container._sortableReady) return;
+  if (typeof Sortable === 'undefined') {
+    // never fail silently: without the library the lists simply do not drag
+    console.error('[sortable] SortableJS is not loaded — drag-to-reorder is disabled. Check vendor/Sortable.min.js');
+    const m = document.getElementById('meta');
+    if (m) m.textContent = 'SortableJS missing — layer drag disabled (check vendor/Sortable.min.js)';
+    return;
+  }
   container._sortableReady = true;
+  console.log('[sortable] ready on', container.id || container.className);
   Sortable.create(container, Object.assign({
     animation: 150,
     // pointer-driven instead of the browser's native HTML5 drag: no draggable
@@ -761,6 +769,13 @@ function sortable(container, opts) {
   }, opts));
 }
 const LAYER_GROUP = { name: 'wf-layers', pull: true, put: true };
+// "clock_hour" for a row, "Group 1" for a block — used in drag feedback
+function layerLabel(el) {
+  if (!el) return 'layer';
+  const g = el.querySelector('.gname');
+  const n = el.querySelector('.nname');
+  return ((g && g.textContent) || (n && n.textContent) || 'layer').trim().split(' ')[0];
+}
 function clearGroupDropMarks() {
   document.querySelectorAll('#layers .group-block.drop-in').forEach((b) => b.classList.remove('drop-in'));
 }
@@ -788,8 +803,10 @@ function applyLayerOrder() {
   const next = items.map((o) => o.w).reverse(); // the list is shown top-most first
   const moved = next.some((w, k) => w !== s.widgets[k]);
   const regrouped = items.some((o) => (o.w._group || null) !== o.gid);
-  if (!moved && !regrouped) { refreshPanels(); return; }
+  if (!moved && !regrouped) { $('meta').textContent = 'Nothing changed \u2014 dropped in the same place.'; refreshPanels(); return; }
   const keep = s.widgets[selected];
+  const dropped = items.find((o) => o.w === keep) || items[items.length - 1];
+  const label = layerLabel(dropped && dropped.w ? $(`#layers .layer[data-wi="${s.widgets.indexOf(dropped.w)}"]`) : null);
   pushHistory();
   s.widgets.length = 0;
   s.widgets.push(...next);
@@ -801,6 +818,7 @@ function applyLayerOrder() {
   }
   selected = keep ? s.widgets.indexOf(keep) : -1;
   refreshPanels(); render();
+  $('meta').textContent = `${label || 'Layer'} moved${regrouped ? ' (group updated)' : ''}.`;
 }
 
 document.querySelectorAll('[data-panel]').forEach((p) => {
@@ -1634,8 +1652,10 @@ function refreshPanels() {
   // header and its own Sortable body, so dragging a layer in/out of that body is
   // what changes its group.
   const L = $('layers'); L.innerHTML = '';
-  const mkRow = (i) => {
+  // NB: must not be called mkRow — that name is the Properties row helper
+  const mkLayerRow = (i) => {
     const w = s.widgets[i];
+    if (!w) return null;
     const inGroup = Boolean(w._group);
     const d = document.createElement('div');
     d.className = 'layer' + (inGroup ? ' ingroup' : '') + (i === selected ? ' sel' : '') + (w._hidden ? ' hid' : '');
@@ -1647,7 +1667,7 @@ function refreshPanels() {
   const seenGroups = new Set();
   for (let i = s.widgets.length - 1; i >= 0; i--) {
     const w = s.widgets[i];
-    if (!w._group) { mkRow(i); continue; }
+    if (!w._group) { mkLayerRow(i); continue; }
     if (seenGroups.has(w._group)) continue;
     seenGroups.add(w._group);
     const gid = w._group;
@@ -1685,7 +1705,7 @@ function refreshPanels() {
     const body = document.createElement('div');
     body.className = 'group-body';
     body.dataset.gid = gid;
-    for (const m of members.slice().reverse()) body.appendChild(mkRow(m.k));
+    for (const m of members.slice().reverse()) body.appendChild(mkLayerRow(m.k));
     block.appendChild(body);
     L.appendChild(block);
     sortable(body, {
@@ -1718,9 +1738,12 @@ function refreshPanels() {
     });
   }
   sortable(L, {
-    draggable: '.layer',               // group blocks stay put
-    filter: '.lb, .locked',            // row buttons / locked layers don't drag
+    // layers and whole groups are both draggable (a group moves as one unit);
+    // a mousedown on a member row resolves to that row, not to its block
+    draggable: '.layer, .group-block',
+    filter: '.lb, .locked, .gchev',    // row buttons / locked layers don't drag
     group: LAYER_GROUP,
+    onChoose: (evt) => { $('meta').textContent = `Dragging ${layerLabel(evt.item)} \u2014 drop to move`; },
     onMove: markGroupDrop,
     onAdd: (evt) => { clearGroupDropMarks(); applyLayerOrder(evt); },
     onEnd: (evt) => { clearGroupDropMarks(); applyLayerOrder(evt); },
