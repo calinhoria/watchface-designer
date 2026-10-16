@@ -952,15 +952,25 @@ function ilmRender() {
   signBtn.hidden = !(ilmState.widget.Shape === 31 || ilmState.widget.Shape === 32);
   const single = ilmState.widget.Shape === 30 || ilmState.singleKey != null;
   if (single && ilmState.entries.length) {
-    // an image layer shows exactly one image: replace via the row's ✕ then Add
-    $('ilmPick').disabled = true;
-    $('ilmAdd').disabled = true;
+    // an image layer shows exactly one image: picking another one replaces it
+    $('ilmAdd').textContent = 'Replace';
     $('ilmUploadBtn').textContent = 'Replace…';
   } else {
-    pick.disabled = !avail.length;
-    $('ilmAdd').disabled = !avail.length;
+    $('ilmAdd').textContent = 'Add';
     $('ilmUploadBtn').textContent = 'Upload…';
   }
+  pick.disabled = !avail.length;
+  $('ilmAdd').disabled = !avail.length;
+  // live preview of the highlighted option so images are identifiable
+  const prev = $('ilmPreview');
+  const showPrev = () => {
+    const u = new Map(s.images.map((i) => [i.name, i.url]));
+    prev.src = u.get(pick.value) || '';
+    prev.hidden = !u.has(pick.value);
+    prev.title = pick.value || '';
+  };
+  pick.onchange = showPrev;
+  showPrev();
 }
 function openImgListDialog(w, key) {
   ilmState = { widget: w, entries: listEntries(w, key), singleKey: key || null };
@@ -1538,7 +1548,9 @@ function refreshPanels() {
       const thumb = document.createElement('img');
       thumb.className = 'imgthumb-sm';
       const cur = s.images.find((im) => im.name === w[key]);
-      thumb.src = cur ? cur.url : '';
+      // no src when empty — a broken-image icon is worse than no thumbnail
+      if (cur) thumb.src = cur.url;
+      else thumb.hidden = true;
       thumb.alt = '';
       const nm = document.createElement('span');
       nm.textContent = w[key] || 'Choose image…';
