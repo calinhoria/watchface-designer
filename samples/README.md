@@ -44,8 +44,15 @@ URLs, which work with plain `curl` while fresh.
 
 ## Round-trip status (2026-10-16)
 
-- Original 5 faces: byte-identical.
+- 3 original 465 faces: byte-identical (`fwc26xarg`, `giulia_cerchi`,
+  `horizontal`). 2 original 565 faces: sec0/7/9 identical, sec2 drops 9
+  phantom singles per face (tap-zone ordinals used to false-match image
+  indices and paint duplicate layers — fixed 2026-10-16, see unpacker
+  `readActions`: only 56B blobs carry an image id).
 - Comet: differs (sec4 animations need echo — first animation sample).
 - Amber + 5 new faces: differ (raw AOD slots, PAL8-on-465 images, subVersion
   32/36/38) — the next compiler chunk is per-image codec echo + section echo.
+- Known gap: Widget groups (76B sec9 containers, e.g. temp digits+symbol on
+  high-efficiency-1/amber) decode as imageless tap zones; children not yet
+  materialized. Ground truth in `editor.config.json` of downloaded faces.
   See `tools/roundtrip.js` output.

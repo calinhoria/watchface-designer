@@ -5,6 +5,11 @@ const { getDWord, getWord, getByte, getByteArray, getAsciiString, getUTF8String,
 const { uncompressRLEv10, uncompressRLEv11, uncompressRLEv20 } = require('./rle');
 const { rgb565ToRgba, bgraBufferToRgba, decodeGTR, decodeGTRv2, rw3aDecompress } = require('./img');
 const { getWatchType, getScreenWidth, getScreenHeight, WatchType } = require('./watch');
+const crypto = require('crypto');
+// hash of decoded RGBA: lets the packer echo an image's original encoded blob
+// verbatim when the decoded pixels are unchanged (preserves stock PAL8/LVGL
+// payloads, whose exact palette ordering we cannot re-synthesise).
+function sha1Hex(buf) { return crypto.createHash('sha1').update(buf).digest('hex'); }
 
 const MAGIC_V1_1 = 0x46616365, MAGIC_V1_2 = 0x46696C65, MAGIC_V2 = 0x5AA53412;
 const MAGIC_V3_1 = 0x00000607, MAGIC_V3_2 = 0x00020001;
@@ -316,14 +321,16 @@ function readActions(data, blkCount, blkOff) {
       const idx = getWord(data, o), id = getDWord(data, o);
       const dataOfs = getDWord(data, o + 8), dataLen = getDWord(data, o + 0x0C);
       const bin = getByteArray(data, dataOfs, dataLen);
-      let imageId = getDWord(bin, 0x20) & 0xFF;
-      if (imageId === 0) {
-        // Offset 0x30 holds the button image id in BOTH action layouts: the
-        // 56-byte RedmiWatch4ActionPacker template and the 52-byte name-based
-        // zone blob (where it reads as the ordinal). Only used when the caller
-        // finds that single image, so a real position-only zone (no image for
-        // that id) still falls through to the raw-blob path below.
-        imageId = getDWord(bin, 48) & 0xFF;
+      // Only the 56-byte button template carries a background image id (at
+      // 0x30). The 52-byte zone blob has NO image field — its dword at 0x30 is
+      // the tap ordinal, which used to false-match single-image indices and
+      // paint phantom images (e.g. a calories flame over the temp group).
+      // Anything else (76B group containers, 16B records, ...) is opaque:
+      // keep raw so it re-emits verbatim and never renders a phantom image.
+      let imageId = 0;
+      if (bin.length === 56) {
+        imageId = getDWord(bin, 0x20) & 0xFF;
+        if (imageId === 0) imageId = getDWord(bin, 48) & 0xFF;
       }
       if (imageId === 0) {
         // position-only tap zone (old 52B format): no image, keep raw
@@ -389,7 +396,12 @@ function readSingles(data, blkCount, blkOff, watchType, version) {
         })());
       }
       const name = `img_${String(idx).padStart(4, '0')}.png`;
-      lst.push({ Id: id, Width: w2, Height: height, Name: name, Rgba: rgba });
+      lst.push({ Id: id, Width: w2, Height: height, Name: name, Rgba: rgba,
+        // verbatim echo: original encoded blob + hash of decoded pixels.
+        // Packer reuses OrigBlob when pixels unchanged (PAL8 palette order
+        // cannot be re-synthesised, so re-encode would never match).
+        OrigBlob: Buffer.from(getByteArray(data, dataOfs, dataLen)).toString('hex'),
+        RgbaHash: sha1Hex(rgba) });
     } catch (e) { /* console.error(e) */ }
     o += 0x10;
   }
