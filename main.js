@@ -170,6 +170,13 @@ function openProjectDir(root) {
           _base: f.base || undefined,
           glyphs: Array.isArray(f.glyphs) ? f.glyphs : undefined,
           files: Array.isArray(f.files) ? f.files.slice() : [],
+          fill: f.fill || undefined,
+          gradFrom: f.gradFrom || undefined,
+          gradTo: f.gradTo || undefined,
+          gradAngle: f.gradAngle == null ? undefined : f.gradAngle,
+          cssFill: f.cssFill || undefined,
+          outlineColor: f.outlineColor || undefined,
+          outlineWidth: f.outlineWidth == null ? undefined : f.outlineWidth,
         };
       }
     }
@@ -415,6 +422,14 @@ ipcMain.handle('export-project', async (_e, payload) => {
           base: f._base || null,
           glyphs: Array.isArray(f.glyphs) ? f.glyphs : null,
           files: Array.isArray(f.files) ? f.files.slice() : [],
+          // fill style: keep every property so reload restores the exact look
+          fill: f.fill || 'solid',
+          gradFrom: f.gradFrom || null,
+          gradTo: f.gradTo || null,
+          gradAngle: f.gradAngle == null ? null : f.gradAngle,
+          cssFill: f.cssFill || null,
+          outlineColor: f.outlineColor || null,
+          outlineWidth: f.outlineWidth == null ? null : f.outlineWidth,
         };
       }
     }
