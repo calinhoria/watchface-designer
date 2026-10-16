@@ -567,7 +567,7 @@ function slotName(i) {
   if (r === 'face') return i === 0 ? 'Face' : `Style ${i + 1}`;
   return i === 0 ? 'Face' : (s.aod ? `AOD ${i}` : `Style ${i + 1}`);
 }
-$('btnAddSlot').onclick = () => { if (project) $('slotModal').hidden = false; };
+$('btnAddSlot').onclick = () => { if (project) { $('slotCopyMain').checked = false; $('slotModal').hidden = false; } };
 function removeSlot(i) {
   if (!project || project.slots.length <= 1) return; // keep at least one
   const s = project.slots[i];
@@ -590,7 +590,14 @@ $('slotCreate').onclick = () => {
   const role = $('slotRole').value;
   const n = project.slots.length;
   const aod = role === 'aod';
-  project.slots.push({ index: n, role, aod, aodFlag: aod ? 0x80000000 : 0, orphanSec9: [], widgets: [], rawActions: [], images: [] });
+  const copyMain = $('slotCopyMain').checked && project.slots[0];
+  const main = copyMain ? project.slots[0] : null;
+  project.slots.push({
+    index: n, role, aod, aodFlag: aod ? 0x80000000 : 0, orphanSec9: [],
+    widgets: main ? structuredClone(main.widgets) : [],
+    rawActions: main ? structuredClone(main.rawActions || []) : [],
+    images: main ? structuredClone(main.images) : [],
+  });
   slotIndex = n; selected = -1;
   refreshPanels(); render();
 };
