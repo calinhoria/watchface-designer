@@ -759,6 +759,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
               Shape: 43, Name: `widget_${String(idx).padStart(2, '0')}`, X: e.PosX, Y: e.PosY,
               Width: imgi.Width, Height: imgi.Height, Alpha: 255,
               DataSrcVal: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay), PointerImage: imgi.Name,
+              _widgetRaw: Buffer.from(wdgt.RawData).toString('hex'),
             });
           }
         }

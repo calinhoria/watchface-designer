@@ -82,5 +82,12 @@ Model URNs seen: `m66`/`m66gl` (Mi Band 9), `n66cn`/`n66nfc` (Mi Band 9),
 - Remaining DIFF is structural and shared across families: sec0/7/9 group
   flattening (76-byte group containers become flat layers) and re-encoded
   singles/lists.
-- Known failure: `120917380249_mi-watch-s5_moonbeam.bin` contains a Shape 43
-  gauge, which the compiler still rejects (30/31/32/27 only).
+- Shape 43 gauges are supported now: the widget's 32-byte sec7 blob (same family
+  as the clock hands) is echoed verbatim with the pointer image id patched, and
+  the pointer image is emitted as a single. `moonbeam` compiles (its gauge blobs
+  match stock, one renumbered to our image order, pointing at the same picture).
+- Known failures: faces carrying **Shape 34 app widgets** (Lua apps in sec5) —
+  `367701405_mi-band-9-pro_calculator`, `462700166/167/168_mi-watch-s4_*` — are
+  still rejected by the compiler. Also two suspicious size drops to check:
+  `120917381519_mi-watch-s5_text-display-4` (302→118 KB) and
+  `367701409_mi-band-9-pro_stat-rings-2` (460→69 KB).

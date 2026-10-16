@@ -490,7 +490,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
     return { width: im.width, height: im.height, data: Buffer.from(im.data), origBlob: im.origBlob, rgbaHash: im.rgbaHash, listEnc: im.listEnc };
   };
   for (const w of widgets) {
-    if (![30, 31, 32, 27].includes(w.Shape)) throw new Error(`Widget "${w.Name}": shape ${w.Shape} unsupported in v1 (30/31/32/27 only).`);
+    if (![30, 31, 32, 27, 43].includes(w.Shape)) throw new Error(`Widget "${w.Name}": shape ${w.Shape} unsupported in v1 (30/31/32/27/43 only).`);
     if (w.Shape === 30 && isAppW(w.Name)) throw new Error(`Widget "${w.Name}": app widgets unsupported in v1.`);
     if (w.Shape === 31 && isAnimName(w.Name)) throw new Error(`Widget "${w.Name}": animations unsupported in v1.`);
     if (w.Shape === 31 || w.Shape === 32) {
@@ -507,6 +507,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   for (const w of widgets) {
     if (w.Shape === 30) { nElem += 1; nSingle += 1; if (isButtonWidget(w)) nAction += 1; }
     if (w._imgWidget) nWidget += 1;   // value-driven image: needs a sec7 entry
+    else if (w.Shape === 43) { nElem += 1; nSingle += 1; nWidget += 1; } // gauge: pointer image + sec7
     else if (w.Shape === 27) { const h = handsOf(w).length; nElem += h; nSingle += h; nWidget += h; }
     else if (w.Shape === 31 || w.Shape === 32) {
       nElem += 1; nWidget += 1;
@@ -536,6 +537,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   };
   for (const w of widgets) {
     if (w.Shape === 30) pushSingle(w.Bitmap, (id) => { w._ImageId = id; });
+    else if (w.Shape === 43 && w.PointerImage) pushSingle(w.PointerImage, (id) => { w._PointerImageId = id; });
     else if (w.Shape === 27) {
       for (const k of HANDS) {
         if (!w[k]) continue;
@@ -592,6 +594,11 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
       f.widgets7.push({ widget: w, hand: null, blobSize: custom ? 16 + 4 * frames.length : 20, values, custom, face: f });
     } else if (w.Shape === 32) {
       f.widgets7.push({ widget: w, hand: null, blobSize: 20, face: f });
+    } else if (w.Shape === 43) {
+      // gauge/pointer: same 32-byte blob family as the clock hands, echoed
+      // verbatim (only the pointer image id is patched at pack time)
+      const rawLen = w._widgetRaw ? w._widgetRaw.length / 2 : 32;
+      f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, gauge: true, face: f });
     }
   }
   // actions (buttons in widget order; blobs built at pack time)
@@ -686,6 +693,19 @@ function fillElement(buf, el) {
 
 function fillWidget(buf, w7) {
   const w = w7.widget;
+  if (w7.gauge) {
+    // gauge/pointer: echo the original 32-byte blob, patch the image id
+    const raw = w._widgetRaw ? Buffer.from(w._widgetRaw, 'hex') : null;
+    if (raw && raw.length >= 12) {
+      raw.copy(buf, 0, 0, Math.min(raw.length, buf.length));
+      setDWord(buf, 8, (w._PointerImageId || 0) >>> 0);
+      return;
+    }
+    setWord(buf, 0, parseDataSrc(w.DataSrcVal), 1);
+    buf[3] = 48; setWord(buf, 6, 1000);
+    setDWord(buf, 8, (w._PointerImageId || 0) >>> 0);
+    return;
+  }
   if (w7.imgWidget) {
     // TypeId 4 value-driven image: stock blobs carry extra bytes we do not
     // model, so emit the original verbatim and patch only the image id.
