@@ -844,7 +844,7 @@ function paintLayer(i) {
     + (w._locked ? ' locked' : '');
   d.innerHTML = `<span class="lname"><span class="grip" title="Drag to reorder"><svg viewBox="0 0 24 24" fill="currentColor">${SVG.grip}</svg></span>${shapeIcon(w.Shape)}<span class="nname">${w.Name || ''}${badge}${w._hidden ? ' <em>(hidden)</em>' : ''}${w._locked ? ' <em>(locked)</em>' : ''}</span></span>`
     + `<span class="lrow-r">`
-    + `<button class="lb lock${w._locked ? ' on' : ''}" title="${w._locked ? 'Unlock layer' : 'Lock layer (no dragging)'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${w._locked ? SVG.lock : SVG.unlock}</svg></button>`
+    + `<button class="lb lock${w._locked ? ' on' : ''}" title="${w._locked ? (w._autoLock ? 'Background is locked so it cannot be nudged by accident \u2014 click to unlock' : 'Unlock layer') : 'Lock layer (no dragging)'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${w._locked ? SVG.lock : SVG.unlock}</svg></button>`
     + `<button class="lb eye" title="${w._hidden ? 'Show layer' : 'Hide layer'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${w._hidden ? SVG.eyeOff : SVG.eye}</svg></button>`
     + `<button class="lb trash" title="Delete layer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${SVG.trash}</svg></button>`
     + `</span>`;
@@ -853,6 +853,8 @@ function paintLayer(i) {
     ev.stopPropagation();
     pushHistory();
     w._locked = !w._locked;
+    if (!w._locked) w._unlockKeep = true;   // keep it unlocked on reload
+    else delete w._unlockKeep;
     if (w._locked && drag && drag.primary === w) drag = null;
     paintLayer(i); render();
   };
@@ -2459,6 +2461,25 @@ function updatePinfo() {
     $('pinfoType').textContent += ' · hidden';
   }
 }
+// A face's backdrop photo is a plain image layer covering the whole screen. It
+// is the one layer you never want to nudge by accident, so it starts locked —
+// exactly like Photoshop's Background layer. Unlocking it sticks (the choice is
+// saved as _unlockKeep in designer.json).
+function autoLockBackgrounds() {
+  if (!project) return;
+  const W = project.screenW || 0, H = project.screenH || 0;
+  if (!W || !H) return;
+  for (const s of project.slots) {
+    for (const w of s.widgets) {
+      if (w._locked || w._background || w._unlockKeep) continue;
+      if (!(w.Shape === 30 || w.Shape === 27 || w.Shape === 31)) continue;
+      if ((w.X || 0) > 2 || (w.Y || 0) > 2) continue;
+      if ((w.Width || 0) < W * 0.98 || (w.Height || 0) < H * 0.98) continue;
+      w._locked = true;
+      w._autoLock = true;
+    }
+  }
+}
 // ---------- grouping ----------
 function membersOf(w, s) {
   if (!w._group) return [w];
@@ -3890,6 +3911,7 @@ async function loadProject(res) {
       regenerateWidgetGlyphs(w, s).catch(() => { });
     }
   }
+  autoLockBackgrounds();
   $('imagesPanel').classList.add('collapsed'); // Images always opens collapsed
   // custom fonts saved with the project (fonts/<file>) -> re-register
   for (const f of res.customFonts || []) {
@@ -4217,7 +4239,9 @@ function hitWidget(clientX, clientY) {
   const mx = (clientX - r.left) * (cv.width / r.width), my = (clientY - r.top) * (cv.height / r.height);
   const s = slot();
   for (let i = s.widgets.length - 1; i >= 0; i--) {
-    if (s.widgets[i]._hidden) continue;
+    // same skip list as the drag hit-test: a locked backdrop must not swallow
+    // double-clicks aimed at the layers on top of it
+    if (s.widgets[i]._hidden || s.widgets[i]._background || s.widgets[i]._locked) continue;
     const vb = visualBox(s.widgets[i]);
     const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
     if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) return i;
@@ -4243,7 +4267,10 @@ cv.addEventListener('mousedown', (e) => {
   const s = slot();
   let hit = -1;
   for (let i = s.widgets.length - 1; i >= 0; i--) {
-    if (s.widgets[i]._hidden || s.widgets[i]._background) continue; // background is not movable/clickable
+    // locked/hidden layers and the backdrop are not click targets on the canvas
+    // (select them in the Layers panel) — so a locked background never steals a
+    // click meant for the clock
+    if (s.widgets[i]._hidden || s.widgets[i]._background || s.widgets[i]._locked) continue;
     const vb = visualBox(s.widgets[i]);
     const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
     if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) { hit = i; break; }

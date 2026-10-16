@@ -156,12 +156,14 @@ function openProjectDir(root) {
     const presets = meta.presets || {};
     const groups = meta.groups || {};
     const locked = new Set(meta.locked || []);
+    const unlocked = new Set(meta.unlocked || []);
     for (const w of slot.widgets) {
       if (hidden.has(w.Name)) w._hidden = true;
       if (taps[w.Name]) w._tap = taps[w.Name];
       if (presets[w.Name]) w._preset = presets[w.Name];
       if (groups[w.Name]) w._group = groups[w.Name];
       if (locked.has(w.Name)) w._locked = true;
+      if (unlocked.has(w.Name)) { w._unlockKeep = true; w._locked = false; }
       const f = meta.fonts && meta.fonts[w.Name];
       if (f) {
         w._font = {
@@ -402,13 +404,14 @@ ipcMain.handle('export-project', async (_e, payload) => {
     const face = { DeviceType: deviceType, Screen: { Title: title, Bitmap: 'preview.png', Widgets: s.widgets } };
     fs.writeFileSync(path.join(dir, `${defaultBase}.fprj`), serializeFaceProject(face));
     // collect per-widget designer metadata
-    const fonts = {}, hidden = [], taps = {}, presets = {}, groups = {}, locked = [];
+    const fonts = {}, hidden = [], taps = {}, presets = {}, groups = {}, locked = [], unlocked = [];
     for (const w of s.widgets) {
       if (w._hidden) hidden.push(w.Name);
       if (w._tap) taps[w.Name] = w._tap;
       if (w._preset) presets[w.Name] = w._preset;
       if (w._group) groups[w.Name] = w._group;
       if (w._locked) locked.push(w.Name);
+      if (w._unlockKeep) unlocked.push(w.Name);
       const f = w._font;
       if (f && f.family) {
         fonts[w.Name] = {
@@ -433,7 +436,7 @@ ipcMain.handle('export-project', async (_e, payload) => {
         };
       }
     }
-    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), aod: !!s.aod, aodFlag: s.aodFlag >>> 0, previewOffset: s.previewOffset >>> 0, tail: s.tail || null, orphanSec9: s.orphanSec9 || [], fonts, hidden, taps, presets, groups, locked });
+    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), aod: !!s.aod, aodFlag: s.aodFlag >>> 0, previewOffset: s.previewOffset >>> 0, tail: s.tail || null, orphanSec9: s.orphanSec9 || [], fonts, hidden, taps, presets, groups, locked, unlocked });
     for (const g of Object.values(groups)) {
       const n = parseInt(String(g).replace(/\D/g, ''), 10) || 0;
       if (n >= designer.groupSeq) designer.groupSeq = n + 1;
