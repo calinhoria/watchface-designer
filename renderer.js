@@ -2460,7 +2460,12 @@ function distributeSelection(mode) {
     return;
   }
   const W = project.screenW || 432;
-  const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) })).sort((a, b) => a.b.x - b.b.x);
+  // ORDER matters: lay the layers out in their group order (the order they are
+  // listed in), never by their current X — a jumbled layout must not scramble
+  // the reading order (hour, colon, minute…).
+  const order = new Map(s.widgets.map((w, i) => [w, i]));
+  const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) }))
+    .sort((a, b) => order.get(a.w) - order.get(b.w));
   const totalW = items.reduce((a, o) => a + o.b.w, 0);
   const gaps = items.length - 1;
   const span = W - totalW;
@@ -2469,6 +2474,7 @@ function distributeSelection(mode) {
     let x = 0;
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w; }
   } else if (mode === 'right') {
+    // last layer in the order ends at the right edge
     let x = W;
     for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; targets.set(o.w, Math.round(x)); }
   } else if (mode === 'between') {
@@ -2476,9 +2482,9 @@ function distributeSelection(mode) {
     let x = 0;
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   } else {
-    // evenly: keep the ends, equalise the gaps in between
-    const left = items[0].b.x;
-    const right = items[items.length - 1].b.x + items[items.length - 1].b.w;
+    // evenly: keep the row's outer bounds, equalise the gaps in between
+    const left = Math.min(...items.map((o) => o.b.x));
+    const right = Math.max(...items.map((o) => o.b.x + o.b.w));
     const gap = ((right - left) - totalW) / gaps;
     let x = left;
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
