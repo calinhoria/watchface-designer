@@ -111,18 +111,23 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .group-row .gname:hover { border-color: var(--color-line); background: #0b0d12; }
 .group-row.drop-in { border-color: var(--color-acc); background: #5b8cff29; }
 /* alignment helper buttons in the group box */
-.aligntools { display: flex; gap: 2px; flex-wrap: wrap; }
-/* beat #props button (id specificity): no chrome, just the glyph */
+.aligntools { display: flex; gap: 3px; flex-wrap: wrap; }
+/* beat #props button (id specificity): faint bordered tile + glyph */
 #props .aligntools button,
 .aligntools button {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; padding: 0; cursor: pointer;
-  background: transparent !important; border: 0 !important;
+  width: 26px; height: 26px; padding: 0; cursor: pointer;
+  background: #0d0f14 !important;
+  border: 1px solid var(--color-line) !important;
   color: var(--color-ink); border-radius: 6px;
 }
 #props .aligntools button:hover,
-.aligntools button:hover { background: #ffffff12 !important; color: #fff; }
-.aligntools svg { width: 27px; height: 27px; }
+.aligntools button:hover {
+  background: #171b23 !important;
+  border-color: #39415a !important;
+  color: #fff;
+}
+.aligntools svg { width: 19px; height: 19px; }
 /* B / I style toggle buttons */
 #props .tgl,
 .tgl {

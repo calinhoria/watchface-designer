@@ -1923,7 +1923,7 @@ function refreshPanels() {
       for (const [tip, path, fn] of defs) {
         const b = document.createElement('button');
         b.type = 'button'; b.title = tip;
-        b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+        b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
         b.onclick = fn;
         wrap.appendChild(b);
       }
@@ -1931,20 +1931,20 @@ function refreshPanels() {
       gb.appendChild(row);
     };
     alignRow('Align X', [
-      ['Align left edges (device)', '<path d="M3 3v18"/><rect x="7" y="5" width="12" height="5" rx="1"/><rect x="7" y="14" width="8" height="5" rx="1"/>', () => alignSelection('left')],
-      ['Centre horizontally on the device', '<path d="M12 3v18"/><rect x="5" y="5" width="14" height="5" rx="1"/><rect x="8" y="14" width="8" height="5" rx="1"/>', () => alignSelection('hcenter')],
-      ['Align right edges (device)', '<path d="M21 3v18"/><rect x="5" y="5" width="12" height="5" rx="1"/><rect x="9" y="14" width="8" height="5" rx="1"/>', () => alignSelection('right')],
+      ['Align left edges (device)', '<path d="M3.5 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="6.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('left')],
+      ['Centre horizontally on the device', '<path d="M12 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="8.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('hcenter')],
+      ['Align right edges (device)', '<path d="M20.5 4v16"/><rect x="6.5" y="6.5" width="11" height="4.5" rx="1"/><rect x="10.5" y="13" width="7" height="4.5" rx="1"/>', () => alignSelection('right')],
     ]);
     alignRow('Align Y', [
-      ['Align top edges (device)', '<path d="M3 3h18"/><rect x="5" y="7" width="5" height="12" rx="1"/><rect x="14" y="7" width="5" height="8" rx="1"/>', () => alignSelection('top')],
-      ['Centre vertically on the device', '<path d="M3 12h18"/><rect x="5" y="6" width="5" height="14" rx="1"/><rect x="14" y="8" width="5" height="8" rx="1"/>', () => alignSelection('vcenter')],
-      ['Align bottom edges (device)', '<path d="M3 21h18"/><rect x="5" y="5" width="5" height="12" rx="1"/><rect x="14" y="9" width="5" height="8" rx="1"/>', () => alignSelection('bottom')],
+      ['Align top edges (device)', '<path d="M4 3.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="6.5" width="4.5" height="7" rx="1"/>', () => alignSelection('top')],
+      ['Centre vertically on the device', '<path d="M4 12h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="8.5" width="4.5" height="7" rx="1"/>', () => alignSelection('vcenter')],
+      ['Align bottom edges (device)', '<path d="M4 20.5h16"/><rect x="6.5" y="6.5" width="4.5" height="11" rx="1"/><rect x="13" y="10.5" width="4.5" height="7" rx="1"/>', () => alignSelection('bottom')],
     ]);
     alignRow('Distribute', [
-      ['Space evenly across the device', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('evenly')],
-      ['Space between (device edges)', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="8" width="4" height="8" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('between')],
-      ['Pack to the left edge', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="8" y="6" width="4" height="12" rx="1"/><rect x="13" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('left')],
-      ['Pack to the right edge', '<rect x="7" y="6" width="4" height="12" rx="1"/><rect x="12" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('right')],
+      ['Space evenly across the device', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="10" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/><path d="M7.6 12h2.2M14.4 12h2.2"/>', () => distributeSelection('evenly')],
+      ['Space between (device edges)', '<path d="M3 4v16M21 4v16"/><rect x="5" y="6.5" width="3.5" height="11" rx="1"/><rect x="10.2" y="9.5" width="3.5" height="5" rx="1"/><rect x="15.5" y="6.5" width="3.5" height="11" rx="1"/>', () => distributeSelection('between')],
+      ['Pack to the left edge', '<path d="M3 4v16"/><rect x="6" y="6" width="3.5" height="12" rx="1"/><rect x="10.5" y="6" width="3.5" height="12" rx="1"/><rect x="15" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('left')],
+      ['Pack to the right edge', '<path d="M21 4v16"/><rect x="5.5" y="6" width="3.5" height="12" rx="1"/><rect x="10" y="6" width="3.5" height="12" rx="1"/><rect x="14.5" y="6" width="3.5" height="12" rx="1"/>', () => distributeSelection('right')],
     ]);
     // Apply sits at the bottom of the box (full width)
     const applyRow = document.createElement('div');
