@@ -123,6 +123,17 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 #props .aligntools button:hover,
 .aligntools button:hover { background: #ffffff12 !important; color: #fff; }
 .aligntools svg { width: 27px; height: 27px; }
+/* B / I style toggle buttons */
+#props .tgl,
+.tgl {
+  width: 30px; height: 26px; padding: 0; cursor: pointer;
+  background: transparent !important; border: 0 !important;
+  color: var(--color-mut); border-radius: 6px; font-weight: 700; font-size: 14px;
+}
+#props .tgl:hover,
+.tgl:hover { background: #ffffff12 !important; color: #fff; }
+#props .tgl.on,
+.tgl.on { background: #5b8cff2e !important; color: #cdd9ff; }
 .group-row .lb { width: 20px; height: 20px; border-radius: 5px; background: transparent; border: 0; color: var(--color-mut); cursor: pointer; }
 .group-row .lb:hover { background: #ffffff12; color: var(--color-ink); }
 .layer.ingroup { margin-left: 14px; }

@@ -1801,20 +1801,15 @@ function refreshPanels() {
     fsel.value = cur;
     frow.appendChild(fsel);
     gb.appendChild(frow);
-    const srow = document.createElement('div'); srow.className = 'row rowcontrols';
     const sizeInp = document.createElement('input');
     sizeInp.type = 'number'; sizeInp.title = 'Font size (px)';
     sizeInp.value = (first._font && first._font.size) || PRESET_SIZE;
     const colInp = document.createElement('input');
     colInp.type = 'color'; colInp.title = 'Colour';
     colInp.value = (first._font && first._font.color) || '#ffffff';
-    const mkCheck = (key, title) => {
-      const l = document.createElement('label'); l.className = 'small'; l.title = title;
-      const c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!(first._font && first._font[key]);
-      l.appendChild(c); l.appendChild(document.createTextNode(' ' + key[0].toUpperCase()));
-      return { l, c };
-    };
-    const bC = mkCheck('bold', 'Faux bold'), iC = mkCheck('italic', 'Faux italic');
+    let gBold = !!(first._font && first._font.bold), gItalic = !!(first._font && first._font.italic);
+    const boldBtn = tglBtn('B', 'Faux bold', () => gBold, (v) => { gBold = v; });
+    const italBtn = tglBtn('I', 'Faux italic', () => gItalic, (v) => { gItalic = v; });
     // effect (fill) values for the whole selection, read by Apply below
     const gf = first._font || {};
     let gFill = gf.fill || 'solid';
@@ -1839,8 +1834,8 @@ function refreshPanels() {
         if (fsel.value) w2._font.family = fsel.value;
         w2._font.size = parseInt(sizeInp.value, 10) || PRESET_SIZE;
         w2._font.color = colInp.value;
-        w2._font.bold = bC.c.checked;
-        w2._font.italic = iC.c.checked;
+        w2._font.bold = gBold;
+        w2._font.italic = gItalic;
         // effect (solid / gradient / css gradient / outline)
         w2._font.fill = gFill;
         if (gFill === 'gradient') { w2._font.gradFrom = gFrom; w2._font.gradTo = gTo; w2._font.gradAngle = gAngle; }
@@ -1859,8 +1854,11 @@ function refreshPanels() {
       if (pb) pb.scrollTop = 0;
       $('meta').textContent = `Font applied to ${ids.length} layers.`;
     };
-    srow.appendChild(sizeInp); srow.appendChild(colInp); srow.appendChild(bC.l); srow.appendChild(iC.l);
-    gb.appendChild(srow);
+    const sRow = mkRow('Size', 'Font size (px)');
+    sRow.appendChild(sizeInp); gb.appendChild(sRow);
+    const cRow = mkRow('Colour', 'Font colour'); cRow.appendChild(colInp); gb.appendChild(cRow);
+    const bRow = mkRow('Bold', 'Faux bold'); bRow.appendChild(boldBtn); gb.appendChild(bRow);
+    const iRow = mkRow('Italic', 'Faux italic'); iRow.appendChild(italBtn); gb.appendChild(iRow);
     // effect (fill) — same options as a single layer, applied to the selection
     const gfRow = mkRow('Fill type', 'Effect applied to every selected layer (with Apply)');
     const gfSel = document.createElement('select');
@@ -2236,7 +2234,6 @@ function refreshPanels() {
     frow.appendChild(fsel);
     grid.appendChild(frow);
     if (f.family) {
-      const srow = document.createElement('div'); srow.className = 'row rowcontrols';
       const sizeInp = document.createElement('input'); sizeInp.type = 'number'; sizeInp.title = 'Digit height (px)';
       sizeInp.value = f.size || w.Height || 60;
       sizeInp.setAttribute('data-font-size', '1');
@@ -2244,20 +2241,16 @@ function refreshPanels() {
       const colInp = document.createElement('input'); colInp.type = 'color'; colInp.title = 'Digit color';
       colInp.value = f.color || '#ffffff';
       colInp.oninput = () => { f.color = colInp.value; queueFontGen(w); };
-      const mkCheck = (key, title) => {
-        const l = document.createElement('label'); l.className = 'small'; l.title = title;
-        const c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!f[key];
-        c.onchange = () => { f[key] = c.checked; queueFontGen(w); };
-        l.appendChild(c); l.appendChild(document.createTextNode(' ' + key[0].toUpperCase()));
-        l.title = title;
-        return l;
-      };
+      const mkTgl = (key, label, title) => tglBtn(label, title, () => f[key], (v) => { f[key] = v; queueFontGen(w); });
+      // one control per row (size / colour / bold / italic / generate)
+      const sRow = mkRow('Size', 'Digit height (px)'); sRow.appendChild(sizeInp); grid.appendChild(sRow);
+      const cRow = mkRow('Colour', 'Digit colour'); cRow.appendChild(colInp); grid.appendChild(cRow);
+      const bRow = mkRow('Bold', 'Faux bold'); bRow.appendChild(mkTgl('bold', 'B', 'Faux bold')); grid.appendChild(bRow);
+      const iRow = mkRow('Italic', 'Faux italic'); iRow.appendChild(mkTgl('italic', 'I', 'Faux italic')); grid.appendChild(iRow);
+      const gRow = mkRow('Glyphs', f.glyphs ? 'Regenerate the glyph images' : 'Generate the 0-9 digit images');
       const gen = document.createElement('button'); gen.className = 'grow-btn'; gen.textContent = f.glyphs ? 'Regenerate' : 'Generate 0-9';
       gen.onclick = () => regenerateWidgetGlyphs(w, slot());
-      srow.appendChild(sizeInp); srow.appendChild(colInp);
-      srow.appendChild(mkCheck('bold', 'Faux bold')); srow.appendChild(mkCheck('italic', 'Faux italic'));
-      srow.appendChild(gen);
-      grid.appendChild(srow);
+      gRow.appendChild(gen); grid.appendChild(gRow);
       // fill type: solid / gradient (2 stops) / gradient from CSS / outline
       const fRow = mkRow('Fill type', 'How the glyphs are painted');
       const fSel = document.createElement('select');
@@ -2409,6 +2402,15 @@ function membersOf(w, s) {
 }
 // Align the current multi-selection (group or Ctrl-selected layers).
 // mode: left|hcenter|right|top|vcenter|bottom
+// small toggle button (bold/italic etc.) — reads/writes through get/set
+function tglBtn(label, title, get, set) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'tgl'; b.title = title; b.textContent = label;
+  const sync = () => b.classList.toggle('on', !!get());
+  b.onclick = () => { set(!get()); sync(); };
+  sync();
+  return b;
+}
 function alignSelection(mode) {
   if (!project) return;
   const s = slot();
