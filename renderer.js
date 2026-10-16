@@ -4043,11 +4043,9 @@ async function composeSlotPng(si, w, h) {
 // embedded thumbnail; once the project is edited we regenerate it from the
 // current composition so the saved/compiled preview is never stale.
 async function slotPreviewB64(si, w, h) {
-  const s = project.slots[si];
-  if (!dirty) {
-    if (s && s.previewUrl) return s.previewUrl.split(',')[1];
-    if (si === 0 && project.previewUrl) return project.previewUrl.split(',')[1];
-  }
+  // Always compose from the canvas so the saved/compiled preview matches what
+  // the editor shows. (An imported pack's own preview.png can depict a
+  // different style than the slot being edited, which looked like a bug.)
   return composeSlotPng(si, w, h);
 }
 // Save the project (fprj + images + previews + designer.json).
