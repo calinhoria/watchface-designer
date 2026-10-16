@@ -213,6 +213,17 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
   background: repeating-conic-gradient(#15181f 0 25%, #0d0f14 0 50%) 0 0/12px 12px;
 }
 .imgpick .grow-btn { flex: none; padding-left: 10px; padding-right: 10px; }
+/* image field button: thumbnail + name, one row like every other field */
+.imgbtn { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.imgbtn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imgbtn.empty { color: var(--color-mut); }
+.imgbtn.missing span { color: #ff9d9d; }
+.imgthumb-sm {
+  width: 28px; height: 28px; object-fit: contain; border-radius: 5px; flex: none;
+  background: repeating-conic-gradient(#15181f 0 25%, #0d0f14 0 50%) 0 0/10px 10px;
+}
+/* thin divider grouping property rows (analog dial vs hands) */
+.prop-sep { height: 1px; background: var(--color-line); margin: 10px 0 2px; }
 .ilm-row .idx { width: 22px; text-align: right; font-size: 11px; color: var(--color-mut); flex: none; }
 .ilm-row .nm { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ilm-row .val { width: 62px; flex: none; }

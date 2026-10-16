@@ -1529,52 +1529,31 @@ function refreshPanels() {
 
   if (w.Shape === 27) {
     const s = slot();
+    // single-image field: thumbnail + name button opening the same picker
+    // dialog the digital layers use (with preview + upload). No dropdown.
     const imgRow = (labelText, key, title) => {
       const row = mkRow(labelText, title);
-      const sel = document.createElement('select');
-      const none = document.createElement('option');
-      none.value = ''; none.textContent = '\u2014 none \u2014';
-      sel.appendChild(none);
-      for (const im of s.images) {
-        const o = document.createElement('option'); o.value = im.name; o.textContent = im.name; sel.appendChild(o);
-      }
-      if (w[key] && !s.images.some((im) => im.name === w[key])) {
-        const o = document.createElement('option'); o.value = w[key]; o.textContent = `${w[key]} (missing)`; sel.appendChild(o);
-      }
-      sel.value = w[key] || '';
-      sel.onchange = () => {
-        w[key] = sel.value;
-        const hand = CLOCK_HANDS.find((h) => h[0] === key);
-        if (hand && sel.value) {
-          // first pick: pivot at the image centre so the hand spins about itself
-          if (!w[hand[1]] && !w[hand[2]]) {
-            const im = s.images.find((x) => x.name === sel.value);
-            if (im) { w[hand[1]] = Math.round(im.width / 2); w[hand[2]] = Math.round(im.height / 2); }
-          }
-        }
-        pushHistory();
-        refreshPanels(); render();
-      };
-      // thumbnail + the same image picker the digital layers use, so the
-      // image is visible and can be picked/uploaded with a preview
-      const wrap = document.createElement('div');
-      wrap.className = 'imgpick';
+      const btn = document.createElement('button');
+      btn.className = 'grow-btn imgbtn';
       const thumb = document.createElement('img');
-      thumb.className = 'imgthumb';
+      thumb.className = 'imgthumb-sm';
       const cur = s.images.find((im) => im.name === w[key]);
       thumb.src = cur ? cur.url : '';
       thumb.alt = '';
-      thumb.title = w[key] || '(none)';
-      const pick = document.createElement('button');
-      pick.className = 'grow-btn';
-      pick.textContent = '…';
-      pick.title = 'Choose image (with preview)…';
-      pick.onclick = () => openImgListDialog(w, key);
-      wrap.appendChild(sel); wrap.appendChild(thumb); wrap.appendChild(pick);
-      row.appendChild(wrap);
+      const nm = document.createElement('span');
+      nm.textContent = w[key] || 'Choose image…';
+      btn.title = w[key] ? `${w[key]} — click to change` : 'Choose image (with preview)…';
+      if (!w[key]) btn.classList.add('empty');
+      else if (!cur) btn.classList.add('missing');
+      btn.appendChild(thumb); btn.appendChild(nm);
+      btn.onclick = () => openImgListDialog(w, key);
+      row.appendChild(btn);
       return row;
     };
     grid.appendChild(imgRow('Background', 'BackgroundImage', 'Optional dial image, centred on the clock'));
+    const div = document.createElement('div');
+    div.className = 'prop-sep';
+    grid.appendChild(div);
     for (const [imgKey, pxKey, pyKey] of CLOCK_HANDS) {
       const name = imgKey.replace('HandImage', '').replace('Image', '');
       grid.appendChild(imgRow(`${name} hand`, imgKey, 'Hand image; it rotates about its pivot'));
