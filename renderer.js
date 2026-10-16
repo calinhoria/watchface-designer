@@ -392,7 +392,7 @@ function closeProject() {
   past = []; future = []; dirty = false; imgCache.clear();
   $('inpTitle').value = '';
   ctx.clearRect(0, 0, cv.width, cv.height);
-  for (const id of ['btnExport', 'btnCompile', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = true;
+  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = true;
   updateHistoryButtons();
   $('meta').textContent = '';
   setEmptyState();
@@ -2748,6 +2748,197 @@ function deviceSlot(d) {
   o.textContent = `${d.name} \u00b7 ${d.screen[0]}\u00d7${d.screen[1]}` + (pv !== `${d.screen[0]}\u00d7${d.screen[1]}` ? ` (${pv} preview)` : '');
   return o;
 }
+// ---------- device convert ----------
+function resampleDataUrl(url, tw, th) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = Math.max(tw, 1); c.height = Math.max(th, 1);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        resolve(c.toDataURL('image/png'));
+      } catch (e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+async function convertResData(res, devType, fitMode) {
+  const warns = [];
+  const dev = deviceByType(parseInt(devType, 10));
+  if (!dev) throw new Error(`Unknown device ${devType}.`);
+  if (dev.type === res.watchType) return warns;
+  let sx = dev.screen[0] / res.screenW, sy = dev.screen[1] / res.screenH;
+  if (!Number.isFinite(sx) || !Number.isFinite(sy) || sx <= 0 || sy <= 0) throw new Error('Cannot scale from unknown screen size.');
+  const R = (v) => Math.round(v);
+  // 'fit' keeps the aspect ratio (uniform scale, design centred); otherwise
+  // each axis stretches to the new screen.
+  let dx = 0, dy = 0;
+  if (fitMode === 'fit') {
+    const s = Math.min(sx, sy); sx = sy = s;
+    dx = R((dev.screen[0] - res.screenW * s) / 2);
+    dy = R((dev.screen[1] - res.screenH * s) / 2);
+  }
+  const SX = new Set(['Width', 'Spacing', 'HourImageRotateX', 'MinuteImageRotateX', 'SecondImageRotateX', '_firstBmpW']);
+  const SY = new Set(['Height', 'HourImageRotateY', 'MinuteImageRotateY', 'SecondImageRotateY']);
+  let imgs = 0, raws = 0;
+  for (const s of res.slots) {
+    for (const w of s.widgets) {
+      for (const k of SX) if (Number.isFinite(w[k])) w[k] = R(w[k] * sx);
+      for (const k of SY) if (Number.isFinite(w[k])) w[k] = R(w[k] * sy);
+      if (Number.isFinite(w.X)) w.X = R(w.X * sx) + dx;
+      if (Number.isFinite(w.Y)) w.Y = R(w.Y * sy) + dy;
+      // 56B button blobs carry W/H at 52/54: keep them in sync with the box
+      if (w._actionRaw && w._actionRaw.length === 112) {
+        try {
+          const b = Buffer.from(w._actionRaw, 'hex');
+          b.writeUInt16LE(R(b.readUInt16LE(52) * sx), 52);
+          b.writeUInt16LE(R(b.readUInt16LE(54) * sy), 54);
+          w._actionRaw = b.toString('hex');
+        } catch (e) { }
+      }
+      // value-driven widget raws embed unscaled coords: drop, packer rebuilds
+      if (w._imgWidget && w._imgWidget.raw) { delete w._imgWidget.raw; raws += 1; }
+      for (const f of ['DataSrcValue', 'DataSrcIndex']) {
+        if (w[f] == null || w[f] === '') continue;
+        const canon = w[f === 'DataSrcValue' ? '_srcCanonical' : '_srcCanonicalIndex'] || String(w[f]);
+        const mapped = toDeviceSource(dev.type, canon);
+        if (mapped !== String(w[f])) w[f] = mapped;
+        if (f === 'DataSrcValue') w._srcCanonical = w._srcCanonical || String(canon);
+        else w._srcCanonicalIndex = w._srcCanonicalIndex || String(canon);
+      }
+    }
+    for (const im of s.images) {
+      const tw = R(im.width * sx), th = R(im.height * sy);
+      if (tw === im.width && th === im.height) continue;
+      const url = await resampleDataUrl(im.url, tw, th);
+      if (!url) { warns.push(`Could not resample ${im.name}.`); continue; }
+      im.url = url; im.width = tw; im.height = th; imgs += 1;
+      imgCache.delete(im.name);
+    }
+    // orphan tap zones keep their own anchor coords + any embedded W/H
+    for (const r of (s.rawActions || [])) {
+      if (Number.isFinite(r.x)) r.x = R(r.x * sx) + dx;
+      if (Number.isFinite(r.y)) r.y = R(r.y * sy) + dy;
+      if (r.blob && r.blob.length === 112) {
+        try {
+          const b = Buffer.from(r.blob, 'hex');
+          b.writeUInt16LE(R(b.readUInt16LE(52) * sx), 52);
+          b.writeUInt16LE(R(b.readUInt16LE(54) * sy), 54);
+          r.blob = b.toString('hex');
+        } catch (e) { }
+      }
+    }
+    // per-slot preview (saved projects carry their own)
+    if (s.previewUrl) {
+      const dims = await new Promise((res2) => {
+        const im = new Image();
+        im.onload = () => res2({ w: im.naturalWidth, h: im.naturalHeight });
+        im.onerror = () => res2(null);
+        im.src = s.previewUrl;
+      });
+      if (dims) {
+        const url = await resampleDataUrl(s.previewUrl, R(dims.w * sx), R(dims.h * sy));
+        if (url) s.previewUrl = url;
+      }
+    }
+  }
+  if (res.previewUrl) {
+    const dims = await new Promise((res2) => {
+      const im = new Image();
+      im.onload = () => res2({ w: im.naturalWidth, h: im.naturalHeight });
+      im.onerror = () => res2(null);
+      im.src = res.previewUrl;
+    });
+    if (dims) {
+      const url = await resampleDataUrl(res.previewUrl, R(dims.w * sx), R(dims.h * sy));
+      if (url) res.previewUrl = url;
+    }
+  }
+  res.watchType = dev.type; res.watchName = dev.name;
+  res.screenW = dev.screen[0]; res.screenH = dev.screen[1];
+  res.compilable = dev.compilable !== false;
+  // subVersion is device-specific (RW5 stock = 0/32/36/38): drop the echo so
+  // the compiler picks the new device's default
+  res.subVersion = null;
+  if (raws) warns.push(`${raws} value-widget raw blob(s) dropped (rebuilt on compile).`);
+  if (imgs) warns.push(`${imgs} image(s) resampled ${sx.toFixed(2)}×${sy.toFixed(2)} — lossy.`);
+  return warns;
+}
+let convertCtx = null; // { res, sourceType, fileLabel, forImport }
+async function openConvertDialog(ctx) {
+  await loadDevices();
+  convertCtx = ctx;
+  const src = deviceByType(ctx.res.watchType);
+  $('convTitle').textContent = ctx.forImport ? 'Import watchface' : 'Convert project';
+  $('convFile').textContent = `${ctx.fileLabel} · ${ctx.res.screenW}×${ctx.res.screenH}` + (src ? ` · ${src.name}` : '');
+  $('convModeRow').hidden = !!ctx.forImport;
+  const sel = $('convDevice');
+  sel.innerHTML = '';
+  const addGroup = (label, list) => {
+    if (!list.length) return;
+    const g = document.createElement('optgroup');
+    g.label = label;
+    for (const d of list) {
+      const o = deviceSlot(d);
+      if (d.type === ctx.res.watchType) o.textContent += ' · original';
+      g.appendChild(o);
+    }
+    sel.appendChild(g);
+  };
+  addGroup('Compilable', DEVICES.filter((d) => d.compilable));
+  addGroup('Other watches (design + export — compile with EasyFace)', DEVICES.filter((d) => !d.compilable));
+  sel.value = String(ctx.res.watchType);
+  updateConvScale();
+  $('convGo').textContent = ctx.forImport ? 'Import' : 'Convert';
+  $('convertModal').hidden = false;
+}
+function updateConvScale() {
+  if (!convertCtx) return;
+  const dev = deviceByType(parseInt($('convDevice').value, 10));
+  const el = $('convScale');
+  if (!dev || dev.type === convertCtx.res.watchType) { el.textContent = 'Same device — no scaling.'; return; }
+  let sx = dev.screen[0] / convertCtx.res.screenW, sy = dev.screen[1] / convertCtx.res.screenH;
+  const fit = $('convAspect').value === 'fit';
+  if (fit) { const s = Math.min(sx, sy); sx = sy = s; }
+  el.textContent = `${convertCtx.res.screenW}×${convertCtx.res.screenH} → ${dev.screen[0]}×${dev.screen[1]}`
+    + ` (×${sx.toFixed(2)}${fit ? ' fit' : ' ×' + sy.toFixed(2)}) · images resampled, lossy · undoable`;
+}
+async function runConvertDialog() {
+  const ctx = convertCtx;
+  if (!ctx) return;
+  const target = parseInt($('convDevice').value, 10);
+  const fitMode = $('convAspect').value;
+  const copy = !ctx.forImport && document.querySelector('input[name=convMode]:checked').value === 'copy';
+  $('convertModal').hidden = true;
+  convertCtx = null;
+  if (ctx.forImport) {
+    if (target !== ctx.res.watchType) {
+      const warns = await convertResData(ctx.res, target, fitMode);
+      if (warns.length) $('meta').textContent = `Converted to ${deviceByType(target).name}: ${warns.join(' ')}`;
+    }
+    loadProject(ctx.res);
+    return;
+  }
+  if (copy) {
+    const clone = structuredClone(project);
+    clone.base = `${clone.base}-copy`; clone.filePath = null;
+    await convertResData(clone, target, fitMode);
+    loadProject(clone);
+    dirty = true;
+    $('meta').textContent = `Converted copy on ${deviceByType(target).name} — original untouched.`;
+    return;
+  }
+  pushHistory();
+  await convertResData(project, target, fitMode);
+  dirty = true;
+  const dc = deviceByType(project.watchType);
+  $('btnCompile').disabled = (dc && dc.compilable === false) || project.version !== 2;
+  imgCache.clear();
+  refreshPanels(); render();
+  $('meta').textContent = `Converted to ${project.watchName} ${project.screenW}×${project.screenH} — undo restores the original.`;
+}
 async function openNewFaceDialog() {
   await loadDevices();
   const sel = $('newFaceDevice');
@@ -2788,7 +2979,7 @@ function createNewFace() {
   dirty = false;
   updateHistoryButtons();
   $('inpTitle').value = title;
-  for (const id of ['btnExport', 'btnCompile', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
+  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
   const dc = deviceByType(project.watchType);
   if (dc && dc.compilable === false) $('btnCompile').disabled = true;
   refreshPanels(); render();
@@ -2807,7 +2998,16 @@ $('btnOpenProject').onclick = async () => {
 $('btnOpen').onclick = async () => {
   const res = await window.api.openBinDialog();
   if (!res) return;
-  loadProject(res);
+  openConvertDialog({ res, fileLabel: `${res.base}.bin`, forImport: true });
+};
+$('convDevice').onchange = updateConvScale;
+$('convAspect').onchange = updateConvScale;
+$('convCancel').onclick = () => { $('convertModal').hidden = true; convertCtx = null; };
+$('convGo').onclick = runConvertDialog;
+$('convertModal').addEventListener('mousedown', (e) => { if (e.target === $('convertModal')) { $('convertModal').hidden = true; convertCtx = null; } });
+$('btnConvert').onclick = () => {
+  if (!project) return;
+  openConvertDialog({ res: project, fileLabel: project.base || project.title || 'project', forImport: false });
 };
 async function loadProject(res) {
   await loadMaskMeta();
@@ -2841,7 +3041,7 @@ async function loadProject(res) {
   $('meta').textContent = `${res.base} · v${res.version} · ${res.watchName} · ${res.screenW}×${res.screenH} · ${res.slots.length} slot(s)`
     + (res.animationCount ? ` · ⚠ ${res.animationCount} animation entr${res.animationCount === 1 ? 'y' : 'ies'} (not supported — compile would drop them)` : '')
     + (res.appCount ? ` · ⚠ ${res.appCount} app widget(s)` : '');
-  for (const id of ['btnExport', 'btnCompile', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
+  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
   const dc = deviceByType(project.watchType);
   if (dc && dc.compilable === false) $('btnCompile').disabled = true;
   if (res.version !== 2) $('btnCompile').disabled = true;

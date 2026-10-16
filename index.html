@@ -55,6 +55,7 @@
         <label class="row"><span class="lbl">Title</span><input id="inpTitle" type="text" /></label>
         <label class="row"><span class="lbl">Project font</span><select id="projFont"></select></label>
         <div class="row small" id="screenInfo"></div>
+        <button id="btnConvert" class="row-btn" title="Retarget this project at another device (scales geometry, resamples images)">Convert device…</button>
         <button id="btnCloseProject" class="row-btn">Close project</button>
       </div>
     </div>
@@ -128,6 +129,26 @@
     <div class="modal-btns">
       <button id="newFaceCancel">Cancel</button>
       <button id="newFaceCreate">Create</button>
+    </div>
+  </div>
+</div>
+<div id="convertModal" class="modal-backdrop" hidden>
+  <div class="modal">
+    <h3 id="convTitle">Convert project</h3>
+    <div class="muted" id="convFile" style="margin-bottom:8px"></div>
+    <label class="row"><span class="lbl">Device</span><select id="convDevice"></select></label>
+    <div class="muted" id="convScale" style="margin-bottom:8px"></div>
+    <label class="row"><span class="lbl">Scaling</span><select id="convAspect">
+      <option value="stretch">Stretch to fill each axis</option>
+      <option value="fit">Fit (keep aspect, letterbox)</option>
+    </select></label>
+    <div id="convModeRow" class="muted" style="display:flex;gap:16px;margin-bottom:4px">
+      <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="convMode" value="inplace" checked /> Convert current</label>
+      <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="convMode" value="copy" /> Make a copy</label>
+    </div>
+    <div class="modal-btns">
+      <button id="convCancel">Cancel</button>
+      <button id="convGo">Convert</button>
     </div>
   </div>
 </div>
