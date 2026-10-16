@@ -1759,31 +1759,39 @@ function refreshPanels() {
     for (const [imgKey, pxKey, pyKey] of CLOCK_HANDS) {
       const name = imgKey.replace('HandImage', '').replace('Image', '');
       grid.appendChild(imgRow(`${name} hand`, imgKey, 'Hand image; it rotates about its pivot'));
-      // one row per axis so the value and its Centre button are never cramped
+      // pivots use the usual row layout: label left, full-width value right
       const mkAxis = (key, label, axis) => {
         const row = mkRow(label);
-        const wrap = document.createElement('div');
-        wrap.className = 'rowctl';
         const inp = document.createElement('input');
         inp.type = 'number'; inp.value = w[key] || 0;
-        inp.title = `Pivot ${axis} inside the hand image (${label})`;
+        inp.title = `Pivot ${axis} inside the hand image (scroll to step)`;
         inp.oninput = () => { w[key] = parseInt(inp.value, 10) || 0; render(); };
-        const centre = document.createElement('button');
-        centre.textContent = 'Centre';
-        centre.title = `Set pivot ${axis} to the middle of the hand image`;
-        centre.onclick = () => {
+        row.appendChild(inp);
+        return row;
+      };
+      grid.appendChild(mkAxis(pxKey, 'Pivot X', 'X'));
+      grid.appendChild(mkAxis(pyKey, 'Pivot Y', 'Y'));
+      // one Centre per axis, on its own compact row
+      const crow = mkRow('Centre');
+      const cwrap = document.createElement('div');
+      cwrap.className = 'rowctl';
+      const centreFor = (key, axis) => {
+        const b = document.createElement('button');
+        b.textContent = axis;
+        b.title = `Set pivot ${axis} to the middle of the hand image`;
+        b.onclick = () => {
           const im = s.images.find((x) => x.name === w[imgKey]);
           if (!im) return;
           pushHistory();
           w[key] = Math.round((axis === 'X' ? im.width : im.height) / 2);
           refreshPanels(); render();
         };
-        wrap.appendChild(inp); wrap.appendChild(centre);
-        row.appendChild(wrap);
-        return row;
+        return b;
       };
-      grid.appendChild(mkAxis(pxKey, 'Pivot X', 'X'));
-      grid.appendChild(mkAxis(pyKey, 'Pivot Y', 'Y'));
+      cwrap.appendChild(centreFor(pxKey, 'X'));
+      cwrap.appendChild(centreFor(pyKey, 'Y'));
+      crow.appendChild(cwrap);
+      grid.appendChild(crow);
     }
   }
   if (w.Shape === 30 || w.BitmapList !== undefined) {
