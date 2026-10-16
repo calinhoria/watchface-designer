@@ -109,6 +109,7 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .group-row .gname:hover { border-color: var(--color-line); background: #0b0d12; }
+.group-row.drop-in { border-color: var(--color-acc); background: #5b8cff29; }
 .group-row .lb { width: 20px; height: 20px; border-radius: 5px; background: transparent; border: 0; color: var(--color-mut); cursor: pointer; }
 .group-row .lb:hover { background: #ffffff12; color: var(--color-ink); }
 .layer.ingroup { margin-left: 14px; }

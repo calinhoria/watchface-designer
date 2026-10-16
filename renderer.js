@@ -733,9 +733,10 @@ function enableDragSort(container, opts) {
   if (container.dataset.sortReady) return;
   container.dataset.sortReady = '1';
   const { rowSel, handleSel } = opts;
+  const groupSel = opts.groupSel || null;
   let from = -1;
   const rows = () => [...container.querySelectorAll(rowSel)];
-  const clearMarks = () => rows().forEach((r) => r.classList.remove('drop-before', 'drop-after', 'dragging'));
+  const clearMarks = () => container.querySelectorAll('.drop-before,.drop-after,.dragging,.drop-in').forEach((r) => r.classList.remove('drop-before', 'drop-after', 'dragging', 'drop-in'));
   const idxOf = (el) => rows().indexOf(el.closest(rowSel));
   container.addEventListener('dragstart', (e) => {
     const h = e.target.closest(handleSel);
@@ -748,6 +749,11 @@ function enableDragSort(container, opts) {
   });
   container.addEventListener('dragover', (e) => {
     if (from < 0) return;
+    // dropping onto a group row means join/leave that group
+    if (groupSel) {
+      const g = e.target.closest(groupSel);
+      if (g) { e.preventDefault(); clearMarks(); g.classList.add('drop-in'); return; }
+    }
     const row = e.target.closest(rowSel);
     if (!row || idxOf(row) === from) return;
     e.preventDefault();
@@ -759,6 +765,15 @@ function enableDragSort(container, opts) {
   });
   container.addEventListener('drop', (e) => {
     if (from < 0) return;
+    if (groupSel) {
+      const g = e.target.closest(groupSel);
+      if (g) {
+        e.preventDefault();
+        const f = from; from = -1; clearMarks();
+        if (opts.onDropGroup) opts.onDropGroup(g, f);
+        return;
+      }
+    }
     const row = e.target.closest(rowSel);
     if (!row) return;
     e.preventDefault();
@@ -1574,6 +1589,8 @@ function refreshPanels() {
       const collapsed = collapsedGroups.has(w._group);
       const head = document.createElement('div');
       head.className = 'group-row' + (collapsed ? ' collapsed' : '');
+      head.dataset.gid = w._group;
+      head.title = 'Drag a layer here to add it to this group (drag a member here to remove it)';
       head.innerHTML = `<span class="gchev">\u25be</span>`
         + `<span class="gname" title="${escAttr(groupName(w._group))}">${escAttr(groupName(w._group))}</span>`
         + `<span class="gcount">${members.length} layer${members.length > 1 ? 's' : ''}</span>`
@@ -1637,14 +1654,38 @@ function refreshPanels() {
     });
   }
   enableDragSort(L, {
-    rowSel: '.layer', handleSel: '.grip',
+    rowSel: '.layer', handleSel: '.grip', groupSel: '.group-row',
     onDrop: (from, to) => {
       const ss = slot();
       if (from === to) return;
       pushHistory();
+      const dragged = ss.widgets[from];
+      const hadGroup = dragged && dragged._group;
       const [w2] = ss.widgets.splice(from, 1);
       ss.widgets.splice(to, 0, w2);
+      // groups follow position: land inside a group block (both neighbours in
+      // the same group) -> join it; land between two ungrouped layers -> leave
+      const prev = ss.widgets[to - 1], next = ss.widgets[to + 1];
+      const pg = prev && prev._group, ng = next && next._group;
+      if (pg && pg === ng) w2._group = pg;
+      else if (!pg && !ng) delete w2._group;
       selected = to;
+      refreshPanels(); render();
+    },
+    onDropGroup: (headEl, from) => {
+      const ss = slot();
+      const gid = headEl.dataset.gid;
+      const w2 = ss.widgets[from];
+      if (!w2 || !gid) return;
+      pushHistory();
+      if (w2._group === gid) {
+        // dropped on its own group: leave it
+        delete w2._group;
+        if (!ss.widgets.some((x) => x._group === gid)) delete groupNames[gid];
+      } else {
+        w2._group = gid;
+      }
+      selected = ss.widgets.indexOf(w2);
       refreshPanels(); render();
     },
   });
