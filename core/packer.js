@@ -44,34 +44,39 @@ const RW4_ACTIONS = {
   calendar: '343101005304',
 };
 const ACTION_BLOB_SIZE = 56;
-// Position-only tap zones (no button image) use the 52-byte NAME-based format
-// seen in every stock Watch 6 face: name[0..15] + zeros + code[40..43] +
-// zeros[44..47] + (ordinal | 0x02000000)[48..51]. Only the 9 apps below have
-// byte-verified templates (harvested from stock faces); other apps must use an
-// image layer (button format), which is what the official packer emits.
-const ACTION_ZONE_SIZE = 52;
-// 565-family (and the newer generation) uses 52-byte name zones whose +36 and
-// +48 dwords both carry the ordinal; the older generation (465) uses 56 bytes
-// with the tap box W/H at +52/+54. Only the 52-byte layout has byte-verified
-// app codes (harvested from stock 565 faces).
-const ZONE_NEW = new Set([362, 366, 367, 462, 562, 565]);
+// Position-only tap zones (no button image). Every real stock tap blob we have
+// is >=56 bytes with the app code at +40, a (kind | id) dword at +48 and the tap
+// box W/H right after — e.g. the Redmi Watch 5 "neon-night" taps:
+//   40: 01 00 13 12   app jump code (weather)
+//   48: 1f 00 00 07   kind 7 (image button) | image id 31
+//   52: 34 00 34 00   tap box 52x52
+//   56: 01 00 53 10 / 48: 03 00 00 09   heartrate, kind 9
+// We emit the same 56-byte shape with kind 2 (position-only, no image), which is
+// what the 366 stock zones use, and the tap box so the hit area is not empty.
+const ZONE_KIND = 0x02;
+const JUMP_APP_CODE = {
+  weather: '01001312',
+  activities: '01003311',
+  heartrate: '01005310',
+};
 const ZONE_CODE = {
   music: '010c5f01', timer: '010c6f02', alarm: '010c8f02', flashlight: '010caf01',
   steps: '03023f01', calories: '03033f01', hrm: '03065f00', spo2: '0307ef00',
   weather: '030b1f02',
 };
-const ZONE_APPS = Object.keys(ZONE_CODE);
+// apps we can author as a position-only tap zone (jump-code ones are byte-verified)
+const ZONE_APPS = [...new Set([...Object.keys(JUMP_APP_CODE), ...Object.keys(ZONE_CODE)])];
 function zoneBlob(app, ordinal, w, h, deviceType) {
-  const code = ZONE_CODE[String(app).toLowerCase()];
+  const key = String(app).toLowerCase();
+  // the jump codes are byte-verified in a working stock face, so prefer them
+  const code = JUMP_APP_CODE[key] || ZONE_CODE[key];
   if (!code) throw new Error(`tap app "${app}" has no verified zone template — use an image layer for it`);
-  const size = ZONE_NEW.has(deviceType) ? 52 : 56;
-  const blob = Buffer.alloc(size, 0);
-  Buffer.from(String(app).toLowerCase(), 'ascii').copy(blob, 0, 0, 15);
+  const blob = Buffer.alloc(ACTION_BLOB_SIZE, 0);
+  Buffer.from(key, 'ascii').copy(blob, 0, 0, 15);
   Buffer.from(code, 'hex').copy(blob, 40);
-  const ref = (ordinal | 0x02000000) >>> 0;
-  if (size === 52) setDWord(blob, 36, ref); // newer layout repeats the ordinal at +36
-  setDWord(blob, 48, ref);
-  if (size === 56) { setWord(blob, 52, w || 0); setWord(blob, 54, h || 0); }
+  setDWord(blob, 48, ((ZONE_KIND << 24) | ((ordinal || 1) & 0xff)) >>> 0);
+  setWord(blob, 52, w || 0);
+  setWord(blob, 54, h || 0);
   return blob;
 }
 
@@ -848,4 +853,4 @@ function fillWidget(buf, w7) {
   }
 }
 
-module.exports = { compileFaceProject, SUPPORTED, parseDataSrc, parseAlignment, RW4_ACTIONS, ZONE_APPS };
+module.exports = { compileFaceProject, SUPPORTED, parseDataSrc, parseAlignment, RW4_ACTIONS, ZONE_APPS, zoneBlob };
