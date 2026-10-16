@@ -15,6 +15,10 @@
 // screens are full circles, everything else uses the DB's Radius attribute.
 // The label is only used in generated SVG comments / the device list.
 const { DeviceCatalog, deviceInfo } = require('./watch');
+// EasyFace's DB radius reads too square for some shells (the Redmi Watch 5/6
+// body is a much rounder rounded-rectangle). Manual overrides win over the DB
+// value; missing entries fall through to the DB radius.
+const RADIUS_OVERRIDE = { 465: 112, 565: 112 };
 const MASK_SPECS = (() => {
   const info = {};
   for (const d of deviceInfo().devices) info[d.type] = d;
@@ -27,7 +31,7 @@ const MASK_SPECS = (() => {
       continue;
     }
     specs[dev.type] = /rounded/i.test(di.shape || '')
-      ? { kind: 'rounded', radius: di.radius || 60, label: dev.name }
+      ? { kind: 'rounded', radius: RADIUS_OVERRIDE[dev.type] || di.radius || 60, label: dev.name }
       : { kind: 'circle', label: dev.name };
   }
   return specs;
