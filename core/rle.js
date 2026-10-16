@@ -158,4 +158,36 @@ function encodeV20(src) {
   }
   return Buffer.from(out);
 }
-module.exports = { uncompressRLE, uncompressRLEv20, uncompressRLEv10, uncompressRLEv11, encodeV10, encodeV20 };
+// RLE v11 encoder. Oracle-verified against RleEncoder.EncodeV11_4 and the
+// MiBand7Pro compressor on structured + random vectors: runs of 2..128 become
+// ((0x80|(run-1)), record); every other record is its own 1-literal ((0x00),
+// record) — singles are never grouped into multi-record literals.
+function encodeV11(src, recordSize = 4) {
+  src = Buffer.from(src);
+  if (src.length % recordSize !== 0) throw new Error(`encodeV11: length ${src.length} not multiple of ${recordSize}`);
+  const out = [];
+  let i = 0;
+  const n = src.length / recordSize;
+  while (i < n) {
+    let run = 1;
+    while (run < 128 && i + run < n) {
+      let eq = true;
+      for (let k = 0; k < recordSize; k++) {
+        if (src[i * recordSize + k] !== src[(i + run) * recordSize + k]) { eq = false; break; }
+      }
+      if (!eq) break;
+      run++;
+    }
+    if (run >= 2) {
+      out.push(0x80 | (run - 1));
+      for (let k = 0; k < recordSize; k++) out.push(src[i * recordSize + k]);
+      i += run;
+    } else {
+      out.push(0);
+      for (let k = 0; k < recordSize; k++) out.push(src[i * recordSize + k]);
+      i += 1;
+    }
+  }
+  return Buffer.from(out);
+}
+module.exports = { uncompressRLE, uncompressRLEv20, uncompressRLEv10, uncompressRLEv11, encodeV10, encodeV11, encodeV20 };

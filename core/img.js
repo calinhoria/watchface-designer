@@ -6,6 +6,14 @@ function expand565(word) {
   const r5 = (word >> 11) & 31, g6 = (word >> 5) & 63, b5 = word & 31;
   return [(r5 * 527 + 23) >> 6, (g6 * 259 + 33) >> 6, (b5 * 527 + 23) >> 6];
 }
+// RGB888 -> RGB565 word with the official quantization (oracle-verified against
+// PackRgbaToRgb565Alpha / RepackRgbaToRgb565 on full channel sweeps): scaled
+// floor, NOT truncation — r5 = (R*31/255)|0, g6 = (G*63/255)|0,
+// b5 = (B*31/255)|0. Truncation (>>3/>>2) agrees at the top end but rounds
+// interior values down one step.
+function pack565(r, g, b) {
+  return ((((r * 31 / 255) | 0) << 11) | (((g * 63 / 255) | 0) << 5) | (((b * 31 / 255) | 0))) & 0xFFFF;
+}
 // RGB565 LE buffer -> RGBA (opaque; pure black -> transparent like Magick Transparent(black))
 function rgb565ToRgba(pxls, { blackTransparent = true } = {}) {
   const n = Math.floor(pxls.length / 2);
@@ -146,4 +154,4 @@ function rw3aDecompress(data, width, height, type) {
   if (lo === 3) return decompressRW3ASparse(data, width, height, hi, 1);
   return decompressRW3ADefault(data, width, height);
 }
-module.exports = { expand565, rgb565ToRgba, bgraBufferToRgba, alignRowData, flipRows, decodeGTR, decodeGTRv2, decompressRW3ADefault, decompressRW3ASparse, rw3aDecompress };
+module.exports = { expand565, pack565, rgb565ToRgba, bgraBufferToRgba, alignRowData, flipRows, decodeGTR, decodeGTRv2, decompressRW3ADefault, decompressRW3ASparse, rw3aDecompress };
