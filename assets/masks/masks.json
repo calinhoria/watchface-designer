@@ -1,0 +1,50 @@
+{
+  "11": {
+    "kind": "rounded",
+    "w": 336,
+    "h": 480,
+    "radius": 92
+  },
+  "362": {
+    "kind": "circle",
+    "w": 466,
+    "h": 466,
+    "radius": 233
+  },
+  "365": {
+    "kind": "rounded",
+    "w": 390,
+    "h": 450,
+    "radius": 92
+  },
+  "367": {
+    "kind": "rounded",
+    "w": 336,
+    "h": 480,
+    "radius": 92
+  },
+  "462": {
+    "kind": "circle",
+    "w": 466,
+    "h": 466,
+    "radius": 233
+  },
+  "465": {
+    "kind": "rounded",
+    "w": 432,
+    "h": 514,
+    "radius": 104
+  },
+  "562": {
+    "kind": "circle",
+    "w": 480,
+    "h": 480,
+    "radius": 240
+  },
+  "565": {
+    "kind": "rounded",
+    "w": 432,
+    "h": 514,
+    "radius": 104
+  }
+}

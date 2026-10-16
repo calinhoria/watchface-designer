@@ -10,7 +10,9 @@
     "dist-mac": "electron-builder --mac",
     "dist-win": "electron-builder --win",
     "dist-linux": "electron-builder --linux",
-    "css": "tailwindcss -i styles-src.css -o styles.css --minify"
+    "css": "tailwindcss -i styles-src.css -o styles.css --minify",
+    "masks": "node tools/gen-masks.js",
+    "inspect": "node tools/inspect.js"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
@@ -31,6 +33,7 @@
       "styles.css",
       "renderer.js",
       "assets/fonts/**/*",
+      "assets/masks/**/*",
       "core/**/*"
     ],
     "mac": {

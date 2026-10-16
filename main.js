@@ -16,7 +16,7 @@ function createWindow() {
   });
   win.loadFile('index.html');
 }
-app.whenReady().then(createWindow);
+app.whenReady().then(() => { pruneRecents(); createWindow(); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 
@@ -53,6 +53,8 @@ async function handleOpenBin(filePath) {
   }
   return {
     filePath, base,
+    animationCount: res.animationCount || 0,
+    appCount: res.appCount || 0,
     version: res.version, watchType: res.watchType,
     watchName: watchDisplayName(res.watchType),
     screenW, screenH,
@@ -67,14 +69,35 @@ ipcMain.handle('open-bin-dialog', async () => {
 });
 ipcMain.handle('open-bin-path', async (_e, p) => handleOpenBin(p));
 
+// ---------- recent projects (last 5, persisted in userData) ----------
+const RECENT_MAX = 5;
+function recentsFile() { return path.join(app.getPath('userData'), 'recent-projects.json'); }
+function loadRecents() {
+  try { const l = JSON.parse(fs.readFileSync(recentsFile(), 'utf8')); return Array.isArray(l) ? l : []; } catch (e) { return []; }
+}
+function writeRecents(list) { try { fs.writeFileSync(recentsFile(), JSON.stringify(list, null, 2)); } catch (e) { } }
+function pushRecent(dir, name, deviceType) {
+  const list = loadRecents().filter((r) => r.path !== dir);
+  list.unshift({ path: dir, name: name || path.basename(dir), device: deviceType || 0, at: Date.now() });
+  writeRecents(list.slice(0, RECENT_MAX));
+}
+function listRecents() {
+  return loadRecents().slice(0, RECENT_MAX).map((r) => ({ ...r, exists: fs.existsSync(r.path) }));
+}
+// Startup cleanup: drop entries whose folder is gone (a missing drive or folder
+// removed outside the app shouldn't linger in the list forever).
+function pruneRecents() {
+  const list = loadRecents();
+  const kept = list.filter((r) => r && r.path && fs.existsSync(r.path));
+  if (kept.length !== list.length) writeRecents(kept.slice(0, RECENT_MAX));
+  return list.length - kept.length;
+}
+ipcMain.handle('recent-list', async () => listRecents());
+ipcMain.handle('recent-clear', async () => { writeRecents([]); return []; });
+
 // Open a saved project folder: <dir>/<base>.fprj + images/ (+ AOD/ AOD2/…)
-ipcMain.handle('open-project', async () => {
+function openProjectDir(root) {
   const { parseFprj } = require('./core/fprj');
-  const r = await dialog.showOpenDialog(win, {
-    title: 'Open project', properties: ['openDirectory'],
-  });
-  if (r.canceled || !r.filePaths.length) return null;
-  const root = r.filePaths[0];
   // accept either the project dir itself or a parent containing it
   const candidates = [root, ...fs.readdirSync(root)
     .map((n) => path.join(root, n))
@@ -101,6 +124,52 @@ ipcMain.handle('open-project', async () => {
     return { index, role, widgets: index === 0 ? xface.Screen.Widgets : [], rawActions: [], images, previewUrl };
   };
 
+  // designer-only metadata: font settings + hidden layers (designer.json)
+  let designer = null;
+  const dj = path.join(projDir, 'designer.json');
+  try { if (fs.existsSync(dj)) designer = JSON.parse(fs.readFileSync(dj, 'utf8')); } catch (e) { designer = null; }
+  const slotMeta = (i) => (designer && Array.isArray(designer.slots) ? designer.slots.find((s) => s.index === i) : null);
+  const restoreMeta = (slot) => {
+    const meta = slotMeta(slot.index);
+    if (!meta) return slot;
+    if (meta.role) slot.role = meta.role;
+    const hidden = new Set(meta.hidden || []);
+    const taps = meta.taps || {};
+    const presets = meta.presets || {};
+    const groups = meta.groups || {};
+    const locked = new Set(meta.locked || []);
+    for (const w of slot.widgets) {
+      if (hidden.has(w.Name)) w._hidden = true;
+      if (taps[w.Name]) w._tap = taps[w.Name];
+      if (presets[w.Name]) w._preset = presets[w.Name];
+      if (groups[w.Name]) w._group = groups[w.Name];
+      if (locked.has(w.Name)) w._locked = true;
+      const f = meta.fonts && meta.fonts[w.Name];
+      if (f) {
+        w._font = {
+          family: f.family, size: f.size || undefined, color: f.color || undefined,
+          bold: !!f.bold, italic: !!f.italic, kind: f.kind || 'bundled',
+          _base: f.base || undefined,
+          glyphs: Array.isArray(f.glyphs) ? f.glyphs : undefined,
+          files: Array.isArray(f.files) ? f.files.slice() : [],
+        };
+      }
+    }
+    return slot;
+  };
+  // custom fonts live in <project>/fonts and are re-registered in the renderer
+  const usedCustom = [];
+  if (designer) {
+    for (const s of designer.slots || []) {
+      for (const f of Object.values(s.fonts || {})) {
+        if (f.kind === 'custom' && f.fontFile && !usedCustom.some((u) => u.family === f.family)) {
+          const p = path.join(projDir, 'fonts', f.fontFile);
+          if (fs.existsSync(p)) usedCustom.push({ family: f.family, url: 'file://' + encodeURI(p), fileName: f.fontFile });
+        }
+      }
+    }
+  }
+
   const slots = [];
   let i = 0;
   for (const name of fs.readdirSync(projDir)) {
@@ -114,7 +183,7 @@ ipcMain.handle('open-project', async () => {
   }
   slots[0] = readSlot(projDir, 0, 'face');
   for (let k = 0; k <= i; k++) if (!slots[k]) slots[k] = { index: k, role: 'aod', widgets: [], rawActions: [], images: [], previewUrl: null };
-  const clean = slots.filter(Boolean);
+  const clean = slots.filter(Boolean).map(restoreMeta);
 
   const type = xface.DeviceType;
   return {
@@ -123,8 +192,27 @@ ipcMain.handle('open-project', async () => {
     screenW: getScreenWidth(type) || 466, screenH: getScreenHeight(type) || 466,
     title: xface.Screen.Title || base, faceId: '',
     previewUrl: clean[0].previewUrl,
+    font: (designer && designer.font) || null,
+    groupSeq: (designer && designer.groupSeq) || 1,
+    groupNames: (designer && designer.groupNames) || null,
+    testData: (designer && designer.testData) || null,
+    useCurrentTime: !!(designer && designer.useCurrentTime),
+    customFonts: usedCustom,
     slots: clean,
   };
+}
+ipcMain.handle('open-project', async () => {
+  const r = await dialog.showOpenDialog(win, { title: 'Open project', properties: ['openDirectory'] });
+  if (r.canceled || !r.filePaths.length) return null;
+  const res = openProjectDir(r.filePaths[0]);
+  if (res && !res.error) pushRecent(res.savePath, res.title || res.base, res.watchType);
+  return res;
+});
+ipcMain.handle('open-project-path', async (_e, dir) => {
+  if (!dir || !fs.existsSync(dir)) return { error: 'Project folder not found.' };
+  const res = openProjectDir(dir);
+  if (res && !res.error) pushRecent(res.savePath, res.title || res.base, res.watchType);
+  return res;
 });
 
 // Compile current project state to .bin (V2, 8Pro-family watches)
@@ -143,6 +231,14 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
       return { width: png.width, height: png.height, data: Buffer.from(png.data) };
     })() : null,
   }));
+  if (payload.animationCount || payload.appCount) {
+    const ok = dialog.showMessageBoxSync(win, {
+      type: 'warning', buttons: ['Cancel', 'Compile anyway'], defaultId: 0, cancelId: 0,
+      message: 'This face contains features the compiler cannot write yet',
+      detail: `${payload.animationCount || 0} animation entr${(payload.animationCount || 0) === 1 ? 'y' : 'ies'} and ${payload.appCount || 0} app widget(s) will be DROPPED, so the compiled .bin will not match the original. Inspect it with: node tools/inspect.js <file>`,
+    });
+    if (ok !== 1) return { ok: false, error: 'cancelled (unsupported features)' };
+  }
   let compiled;
   try {
     compiled = compileFaceProject({
@@ -188,7 +284,7 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
 // (slot 0 at the root, extra slots under AOD/ AOD2/ ...). Reuses
 // payload.savePath when the project was saved before, else asks where.
 ipcMain.handle('export-project', async (_e, payload) => {
-  const { defaultBase, title, deviceType, slots, savePath } = payload;
+  const { defaultBase, title, deviceType, slots, savePath, customFonts } = payload;
   let outDir = savePath || null;
   if (!outDir) {
     const r = await dialog.showOpenDialog(win, {
@@ -198,6 +294,26 @@ ipcMain.handle('export-project', async (_e, payload) => {
     if (r.canceled || !r.filePaths.length) return null;
     outDir = path.join(r.filePaths[0], defaultBase);
   }
+  // custom (user-imported) fonts travel with the project so digit
+  // regeneration still works after reopening
+  const fontsDir = path.join(outDir, 'fonts');
+  const fontRefs = new Map();
+  if (customFonts && customFonts.length) {
+    fs.mkdirSync(fontsDir, { recursive: true });
+    for (const f of customFonts) {
+      const safe = `${String(f.family).replace(/[^\w\-]+/g, '_')}${(path.extname(f.fileName || '') || '.ttf')}`;
+      fs.writeFileSync(path.join(fontsDir, safe), Buffer.from(f.dataBase64, 'base64'));
+      fontRefs.set(f.family, safe);
+    }
+    for (const old of fs.readdirSync(fontsDir)) {
+      if (![...fontRefs.values()].includes(old)) { try { fs.unlinkSync(path.join(fontsDir, old)); } catch (e) { } }
+    }
+  } else if (fs.existsSync(fontsDir)) {
+    fs.rmSync(fontsDir, { recursive: true, force: true });
+  }
+  // designer-only metadata (font settings, hidden layers) — never part of .fprj
+  const designer = { format: 'watchface-designer', version: 1, font: payload.projectFont || null, groupSeq: Number(payload.groupSeq) || 1, groupNames: payload.groupNames || null,
+    testData: payload.testData || null, useCurrentTime: !!payload.useCurrentTime, slots: [] };
   for (let i = 0; i < slots.length; i++) {
     const s = slots[i];
     const dir = i === 0 ? outDir : path.join(outDir, i === 1 ? 'AOD' : `AOD${i}`);
@@ -214,6 +330,37 @@ ipcMain.handle('export-project', async (_e, payload) => {
     if (s.previewPngBase64) fs.writeFileSync(path.join(dir, 'preview.png'), Buffer.from(s.previewPngBase64, 'base64'));
     const face = { DeviceType: deviceType, Screen: { Title: title, Bitmap: 'preview.png', Widgets: s.widgets } };
     fs.writeFileSync(path.join(dir, `${defaultBase}.fprj`), serializeFaceProject(face));
+    // collect per-widget designer metadata
+    const fonts = {}, hidden = [], taps = {}, presets = {}, groups = {}, locked = [];
+    for (const w of s.widgets) {
+      if (w._hidden) hidden.push(w.Name);
+      if (w._tap) taps[w.Name] = w._tap;
+      if (w._preset) presets[w.Name] = w._preset;
+      if (w._group) groups[w.Name] = w._group;
+      if (w._locked) locked.push(w.Name);
+      const f = w._font;
+      if (f && f.family) {
+        fonts[w.Name] = {
+          family: f.family,
+          size: f.size || null,
+          color: f.color || null,
+          bold: !!f.bold,
+          italic: !!f.italic,
+          kind: fontRefs.has(f.family) ? 'custom' : 'bundled',
+          fontFile: fontRefs.get(f.family) || null,
+          base: f._base || null,
+          glyphs: Array.isArray(f.glyphs) ? f.glyphs : null,
+          files: Array.isArray(f.files) ? f.files.slice() : [],
+        };
+      }
+    }
+    designer.slots.push({ index: i, role: s.role || (i === 0 ? 'face' : 'aod'), fonts, hidden, taps, presets, groups, locked });
+    for (const g of Object.values(groups)) {
+      const n = parseInt(String(g).replace(/\D/g, ''), 10) || 0;
+      if (n >= designer.groupSeq) designer.groupSeq = n + 1;
+    }
   }
+  fs.writeFileSync(path.join(outDir, 'designer.json'), JSON.stringify(designer, null, 2));
+  pushRecent(outDir, title || defaultBase, deviceType);
   return outDir;
 });

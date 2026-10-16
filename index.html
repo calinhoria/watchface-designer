@@ -26,7 +26,16 @@
     <button id="btnAddClock" title="Add analog clock layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Clock</button>
     <button id="btnAddBtn" title="Add tap button layer" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg>Btn</button>
     <span class="h-4 w-px bg-white/10 mx-0.5"></span>
+    <button id="btnGrid" title="Toggle grid &amp; snapping" class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 4h16v16H4z"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg>Grid</button>
+    <button id="btnMask" title="Toggle device mask" class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="4"/><path d="M9 8h6"/></svg>Mask</button>
     <button id="btnUpload" title="Upload PNG images" disabled class="inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-[12px] text-slate-400 hover:bg-white/8 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none"><svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7 9m5-5 5 5"/><path d="M4 20h16"/></svg>PNG</button>
+  </div>
+
+  <div class="presets">
+    <button id="btnPresets" class="inline-flex items-center gap-1.5 h-9 px-2.5 rounded-lg text-[13px] text-slate-300 hover:bg-white/5 hover:text-white transition-colors disabled:opacity-30 disabled:pointer-events-none" disabled>
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/><circle cx="19" cy="18" r="2"/></svg>Presets
+    </button>
+    <div id="presetsMenu" class="presets-menu" hidden></div>
   </div>
 
   <div class="flex-1"></div>
@@ -37,29 +46,51 @@
   <input id="fileUpload" type="file" accept="image/png,image/bmp" multiple hidden />
   <input id="fileFont" type="file" accept=".ttf,.otf,.woff,.woff2" hidden />
 </header>
-<main class="grid gap-3 p-3 grid-cols-[288px_minmax(0,1fr)_304px]">
+<main class="grid gap-3 p-3 grid-cols-[288px_minmax(0,1fr)_304px] empty">
   <section class="left flex flex-col gap-3 min-w-0">
     <div class="panel-c rounded-xl border border-line bg-panel p-3" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Slots <span class="flex-1"></span><span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span><span class="chev">▾</span></h3>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Project <span class="flex-1"></span><span class="lbtns"><button id="btnAddSlot" title="Add slot (Face / AOD)">+</button></span><span class="chev">▾</span></h3>
       <div class="pbody">
         <div id="slots" class="mb-2"></div>
-        <label class="row">Title <input id="inpTitle" type="text" /></label>
+        <label class="row"><span class="lbl">Title</span><input id="inpTitle" type="text" /></label>
+        <label class="row"><span class="lbl">Project font</span><select id="projFont"></select></label>
         <div class="row small" id="screenInfo"></div>
+        <button id="btnCloseProject" class="row-btn">Close project</button>
       </div>
     </div>
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Layers <span id="wcount"></span><span class="flex-1"></span><span class="lbtns"><button id="btnUp" title="Move layer up">↑</button><button id="btnDown" title="Move layer down">↓</button></span><span class="chev">▾</span></h3>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Layers <span id="wcount"></span><span class="flex-1"></span><span class="lbtns"><button id="btnGroup" title="Group selected layers (Ctrl+G)">&#x29C9;</button><button id="btnUngroup" title="Ungroup (Ctrl+Shift+G)">&#x29C9;&#xFE0E;</button></span><span class="chev">▾</span></h3>
       <div id="layers" class="pbody"></div>
     </div>
+    <div class="panel-c collapsed rounded-xl border border-line bg-panel p-3 min-w-0" data-panel id="imagesPanel">
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Project images <span id="icount"></span><span class="flex-1"></span><span class="chev">▾</span></h3>
+      <div class="pbody">
+        <button id="btnPruneImages" class="row-btn" title="Delete images no layer references">Remove unused</button>
+        <div id="images" class="mt-2"></div>
+      </div>
+    </div>
   </section>
-  <section class="center flex flex-col items-center gap-2.5 min-w-0">
-    <div class="text-center">
+  <section class="center flex flex-col items-center justify-center gap-2.5 min-w-0">
+    <div id="emptyState" class="empty-state" hidden>
+      <h2>No project open</h2>
+      <p class="muted">Start a new watchface, open a saved project, or import a <code>.bin</code>.</p>
+      <div class="es-btns">
+        <button id="btnEmptyNew" class="es-primary">New project</button>
+        <button id="btnEmptyOpenProject">Open project</button>
+        <button id="btnEmptyImport">Import .bin</button>
+      </div>
+      <div id="recentWrap" class="recent" hidden>
+        <div class="recent-head">Recent projects</div>
+        <div id="recentList"></div>
+      </div>
+    </div>
+    <div class="watch-head text-center">
       <div id="watchTitle" class="text-[17px] font-bold leading-tight">No face loaded</div>
       <div id="watchSub" class="text-xs text-mut mt-0.5"></div>
     </div>
-    <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+    <div class="canvas-wrap"><div id="cvDevice" class="cv-device"><canvas id="cv"></canvas></div></div>
     <div id="meta" class="meta-status"></div>
-    <div class="text-xs text-mut text-center">Drag widget to move · click layer to select · Ctrl+Z undo</div>
+    <div class="hint text-xs text-mut text-center">Drag widget to move · click layer to select · Ctrl+Z undo</div>
   </section>
   <section class="flex flex-col gap-3 min-w-0">
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
@@ -67,16 +98,18 @@
       <div id="props" class="pbody text-[13px]"><p class="muted">Select a layer.</p></div>
     </div>
     <div class="panel-c rounded-xl border border-line bg-panel p-3 min-w-0" data-panel>
-      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Images <span id="icount"></span><span class="flex-1"></span><span class="chev">▾</span></h3>
-      <div id="images" class="pbody"></div>
+      <h3 class="flex items-center gap-2 text-[11px] uppercase tracking-wider text-mut font-semibold mb-2 cursor-pointer" data-panel-head>Test data <span class="flex-1"></span><span class="chev">▾</span></h3>
+      <div class="pbody">
+        <label class="row"><span class="lbl">Current time</span><input id="tdCurrent" type="checkbox" title="Drive time/date fields from the real clock" /></label>
+        <div id="testData"></div>
+      </div>
     </div>
   </section>
 </main>
 <div id="slotModal" class="modal-backdrop" hidden>
   <div class="modal">
     <h3>Add slot</h3>
-    <label class="row">Role
-      <select id="slotRole">
+    <label class="row"><span class="lbl">Role</span><select id="slotRole">
         <option value="face">Face (main watchface)</option>
         <option value="aod">AOD (always-on display)</option>
       </select>
@@ -90,16 +123,46 @@
 <div id="newFaceModal" class="modal-backdrop" hidden>
   <div class="modal">
     <h3>New watchface</h3>
-    <label class="row">Name <input id="newFaceName" type="text" placeholder="My face" /></label>
-    <label class="row">Device
-      <select id="newFaceDevice"></select>
-    </label>
+    <label class="row"><span class="lbl">Name</span><input id="newFaceName" type="text" placeholder="My face" /></label>
+    <label class="row"><span class="lbl">Device</span><select id="newFaceDevice"></select></label>
     <div class="modal-btns">
       <button id="newFaceCancel">Cancel</button>
       <button id="newFaceCreate">Create</button>
     </div>
   </div>
 </div>
+<div id="imgListModal" class="modal-backdrop" hidden>
+  <div class="modal wide">
+    <h3>Images <span id="ilmCount" class="muted"></span></h3>
+    <div class="muted" style="margin-bottom:8px">Drag the handle to reorder · first entry is index 0</div>
+    <div id="ilmList" class="ilm-list"></div>
+    <div class="ilm-add">
+      <select id="ilmPick"></select>
+      <button id="ilmAdd">Add</button>
+      <button id="ilmUploadBtn">Upload…</button>
+      <input id="ilmUpload" type="file" accept="image/png" multiple hidden />
+    </div>
+    <div class="modal-btns">
+      <button id="ilmCancel">Cancel</button>
+      <button id="ilmSave">Apply</button>
+    </div>
+  </div>
+</div>
+<div id="textModal" class="modal-backdrop" hidden>
+  <div class="modal">
+    <h3>Custom text</h3>
+    <label class="row"><span class="lbl">Text</span><input id="txtValue" type="text" placeholder="MONDAY" /></label>
+    <label class="row"><span class="lbl">Font</span><select id="txtFont"></select></label>
+    <label class="row"><span class="lbl">Size</span><input id="txtSize" type="number" value="100" /></label>
+    <label class="row"><span class="lbl">Colour</span><input id="txtColor" type="color" value="#ffffff" /></label>
+    <div class="muted">Rendered to one transparent PNG and added as an image layer (works on the watch like any other image).</div>
+    <div class="modal-btns">
+      <button id="txtCancel">Cancel</button>
+      <button id="txtCreate">Add text</button>
+    </div>
+  </div>
+</div>
 <script src="renderer.js"></script>
+<div id="toastHost" class="toast-host"></div>
 </body>
 </html>

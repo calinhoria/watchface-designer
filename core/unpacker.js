@@ -239,8 +239,10 @@ function unpackV2(data, watchType) {
     const backImageId = getDWord(data, offset);
     offset += 8; // + previewImageOffset skipped
     let lste = [], lsti = [], lstil = [], lsta = [], lstw = [], lstApp = [];
+    const sectionCounts = new Array(10).fill(0);
     for (let i = 0; i < 10; i++) {
       const blkCount = getDWord(data, offset), blkOff = getDWord(data, offset + 4);
+      sectionCounts[i] = blkCount;
       if (i === 0) lste = readElements(data, blkCount, blkOff);
       if (i === 2) lsti = readSingles(data, blkCount, blkOff, watchType, version);
       if (i === 3) lstil = readLists(data, blkCount, blkOff, watchType);
@@ -255,9 +257,18 @@ function unpackV2(data, watchType) {
     const images = new Map();
     for (const im of lsti) images.set(im.Name, { width: im.Width, height: im.Height, rgba: im.Rgba });
     for (const il of lstil) for (const n of il.NameList) { const e = il.RgbaMap?.[n]; if (e) images.set(n, e); }
-    slots.push({ index, subVersion, widgets, rawActions, images, lsti, lstil, lste });
+    // section 4 = animation table (official SetupAnimation reads dir entry 4);
+    // section 5 = app widgets. Both are unsupported on compile, so flag them.
+    slots.push({
+      index, subVersion, widgets, rawActions, images, lsti, lstil, lste,
+      sectionCounts,
+      animationCount: sectionCounts[4] || 0,
+      appCount: sectionCounts[5] || 0,
+    });
   }
-  return { title, preview, slots, subVersion };
+  const animationCount = slots.reduce((a, s) => a + (s.animationCount || 0), 0);
+  const appCount = slots.reduce((a, s) => a + (s.appCount || 0), 0);
+  return { title, preview, slots, subVersion, animationCount, appCount };
 }
 
 function readElements(data, blkCount, blkOff) {
@@ -288,6 +299,9 @@ function readWidgets(data, blkCount, blkOff) {
         RawData: bin, Shape: bin[0], DataSrcDisplay: bin[1],
         X: bin.length >= 0x20 ? getWord(bin, 0x14) : 0, Y: bin.length >= 0x20 ? getWord(bin, 0x16) : 0,
         Id: id, Digits: digits, Align: bin[3] & 3, TypeId: bin[3] >> 4, TargetId: getDWord(bin, 8),
+        // opaque per-device fields we must echo back untouched (Watch 6 uses
+        // 1000 at +6, Redmi Watch 5 uses 0)
+        U4: bin.length >= 8 ? getWord(bin, 4) : 0, U6: bin.length >= 8 ? getWord(bin, 6) : 1000,
       });
     } catch (e) { }
     o += 0x10;
@@ -470,8 +484,21 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             Shape: 32, Name: `widget_${String(idx).padStart(2, '0')}`, X: Math.round(posX), Y: e.PosY,
             Width: imgl.Width, Height: imgl.Height, Digits: digits, Alignment: getTextAlignment(wdgt.Align),
             Spacing: wdgt.RawData.length > 13 ? wdgt.RawData[13] : 0,
+            _u4: wdgt.U4, _u6: wdgt.U6,
             Blanking: (wdgt.RawData.length > 3 && (wdgt.RawData[3] & 4)) ? 0 : 1,
             Alpha: 255, DataSrcValue: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay), BitmapList: imgl.NameList.join('|'),
+          });
+        } else if (wdgt.TypeId === 4 && imgi) {
+          // Value-driven image widget (Redmi Watch 5 faces): a widget entry whose
+          // target is a single image — the watch picks/renders it by value.
+          // Keep it as an image layer carrying its own widget entry so the
+          // structure survives a recompile.
+          widgets.push({
+            Shape: 30, Name: `image_${String(idx).padStart(2, '0')}`, X: e.PosX, Y: e.PosY,
+            Width: imgi.Width, Height: imgi.Height, Alpha: 255, Bitmap: imgi.Name,
+            DataSrcValue: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay),
+            _imgWidget: { align: wdgt.Align, shape: wdgt.Shape, disp: wdgt.DataSrcDisplay,
+              raw: Buffer.from(wdgt.RawData).toString('hex') },
           });
         } else if (wdgt.TypeId === 2 && imgl) {
           const hasCustom = wdgt.RawData.length > 0x0c && ((wdgt.RawData[0x0c] | (wdgt.RawData[0x0d] << 8)) === 0x200);
@@ -486,6 +513,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             Shape: 31, Name: `widget_${String(idx).padStart(2, '0')}`, X: e.PosX, Y: e.PosY,
             Width: imgl.Width, Height: imgl.Height, Alpha: 255,
             DataSrcIndex: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay), BitmapList: bmpList,
+            _listValues: hasCustom,   // stock faces may ship the array even if it equals the indices
           });
         } else if (wdgt.TypeId === 3) {
           if (wdgt.DataSrcDisplay === 0x11) {
@@ -519,6 +547,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             Shape: 30, Name: `btn_${String(idx).padStart(2, '0')}${suffix}`, X: e.PosX, Y: e.PosY, Alpha: 255,
             Bitmap: action.ImageName, Width: im.Width, Height: im.Height,
             _action: { h0: action.H0, h40: action.H40 }, _app: appName,
+            _actionRaw: Buffer.from(action.RawData).toString('hex'),
           });
         } else {
           // orphan tap zone (no image widget): preserve raw blob for recompile
@@ -705,7 +734,9 @@ function unpack(buffer) {
     const allImages = new Map();
     for (const s of r.slots) for (const [k, v] of s.images) if (!allImages.has(k)) allImages.set(k, v);
     if (r.preview) allImages.set('preview.png', r.preview);
-    return { version, watchType, title: r.title, slots: r.slots, preview: r.preview, allImages, rawName: name, faceId: getAsciiString(data, 40) };
+    return { version, watchType, title: r.title, slots: r.slots, preview: r.preview, allImages,
+      animationCount: r.animationCount || 0, appCount: r.appCount || 0,
+      rawName: name, faceId: getAsciiString(data, 40) };
   }
   const r = unpackV3(data, watchType);
   return { version, watchType, title: r.title, slots: [{ index: 0, widgets: r.widgets, images: r.images }], preview: r.images.get('preview.png') || null, allImages: r.images, rawName: name, faceId: getAsciiString(data, 40) };

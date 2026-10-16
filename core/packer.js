@@ -31,6 +31,27 @@ const RW4_ACTIONS = {
   calendar: '343101005304',
 };
 const ACTION_BLOB_SIZE = 56;
+// Position-only tap zones (no button image) use the 52-byte NAME-based format
+// seen in every stock Watch 6 face: name[0..15] + zeros + code[40..43] +
+// zeros[44..47] + (ordinal | 0x02000000)[48..51]. Only the 9 apps below have
+// byte-verified templates (harvested from stock faces); other apps must use an
+// image layer (button format), which is what the official packer emits.
+const ACTION_ZONE_SIZE = 52;
+const ZONE_CODE = {
+  music: '010c5f01', timer: '010c6f02', alarm: '010c8f02', flashlight: '010caf01',
+  steps: '03023f01', calories: '03033f01', hrm: '03065f00', spo2: '0307ef00',
+  weather: '030b1f02',
+};
+const ZONE_APPS = Object.keys(ZONE_CODE);
+function zoneBlob(app, ordinal) {
+  const code = ZONE_CODE[String(app).toLowerCase()];
+  if (!code) throw new Error(`tap app "${app}" has no verified zone template — use an image layer for it`);
+  const blob = Buffer.alloc(ACTION_ZONE_SIZE, 0);
+  Buffer.from(String(app).toLowerCase(), 'ascii').copy(blob, 0, 0, 15);
+  Buffer.from(code, 'hex').copy(blob, 40);
+  setDWord(blob, 48, (ordinal | 0x02000000) >>> 0);
+  return blob;
+}
 
 // FaceItemDataSrc.Parse port: hex(last4) + hex(leading)
 function parseDataSrc(s) {
@@ -67,6 +88,23 @@ function packFrames(w) {
   return bmps;
 }
 const HANDS = ['HourHandImage', 'MinuteHandImage', 'SecondHandImage'];
+// A widget can carry a tap action two ways, mirroring the file format:
+//  - Image layers become *button* layers: one element targets the action and the
+//    action blob carries the image + size (this is how stock buttons work).
+//  - any other layer keeps its own element and gets an EXTRA tap-zone element
+//    (sec0 entry -> action) at the layer's top-left, like stock tap zones.
+function tapApp(w) { return w._tap || (isButton(w.Name) ? appNameOf(w.Name) : null); }
+function isButtonWidget(w) { return w.Shape === 30 && Boolean(w._tap || w._action || isButton(w.Name) || appNameOf(w.Name)); }
+function isZoneTap(w) { return Boolean(w._tap) && w.Shape !== 30; }
+// bounding box used for the action's W/H and the tap point
+function tapBox(w) {
+  const ww = w.Width || 0, hh = w.Height || 0;
+  if (w.Shape === 32) {
+    const n = Math.min(w.Digits || 1, (DIGIT_DEMO[String(w.DataSrcValue)] || '120000').length);
+    return { x: w.X || 0, y: w.Y || 0, w: n > 1 ? n * ww + (n - 1) * (w.Spacing || 0) : ww, h: hh };
+  }
+  return { x: w.X || 0, y: w.Y || 0, w: ww, h: hh };
+}
 // Demo digit strings per DataSrcValue (mirrors unpacker's getStringSource);
 // only the length matters (maxLen = min(Digits, len)).
 const DIGIT_DEMO = {
@@ -188,13 +226,32 @@ function compileFaceProject(proj) {
       L.users.forEach(u => u(id));
     });
     // ACTIONS (built here: button ImageIds are assigned above)
+    let zoneCount = 0;
     f.actions.forEach((a, i) => {
       const w = a.widget;
-      const blob = w._action ? actionFromHeads(w._action, w._ImageId, w.Width, w.Height)
-        : actionFromTemplate(appNameOf(w.Name), w._ImageId, w.Width, w.Height);
-      const bo = alloc(ACTION_BLOB_SIZE);
-      w._ActionId = wEntry(f, 9, i, 9, bo, ACTION_BLOB_SIZE);
+      const box = tapBox(w);
+      const isZone = a.kind === 'zone';
+      const blob = isZone ? zoneBlob(tapApp(w), i + 1)
+        : (w._actionRaw ? (() => {
+          const b2 = Buffer.from(w._actionRaw, 'hex');
+          setDWord(b2, 48, (w._ImageId || 0) >>> 0);   // keep the stock layout
+          return b2;
+        })()
+          : (w._action ? actionFromHeads(w._action, w._ImageId, box.w, box.h)
+            : actionFromTemplate(tapApp(w), w._ImageId, box.w, box.h)));
+      const blobLen = blob.length;
+      const bo = alloc(blobLen);
+      const id = wEntry(f, 9, i, 9, bo, blobLen);
       blobParts.push({ off: bo, buf: blob });
+      if (a.kind === 'button') w._ActionId = id;
+      else {
+        // zone: extra element at the layer's top-left targeting the action
+        const eb = Buffer.alloc(16, 0);
+        const ebo = alloc(16);
+        wEntry(f, 0, f.elements.length + zoneCount, 0, ebo, 16);
+        zoneCount += 1;
+        blobParts.push({ off: ebo, buf: eb, el: { widget: { X: box.x, Y: box.y }, face: f, tidOverride: id } });
+      }
     });
     // orphan tap zones: verbatim blobs + elements (stock order: after widgets)
     f.rawActions.forEach((r, j) => {
@@ -271,10 +328,12 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   const listOrder = [];
   const seenList = new Set();
   for (const w of widgets) {
-    if (w.Shape === 30) { nElem += 1; nSingle += 1; if (isButton(w.Name)) nAction += 1; }
+    if (w.Shape === 30) { nElem += 1; nSingle += 1; if (isButtonWidget(w)) nAction += 1; }
+    if (w._imgWidget) nWidget += 1;   // value-driven image: needs a sec7 entry
     else if (w.Shape === 27) { const h = handsOf(w).length; nElem += h; nSingle += h; nWidget += h; }
     else if (w.Shape === 31 || w.Shape === 32) {
       nElem += 1; nWidget += 1;
+      if (isZoneTap(w)) { nElem += 1; nAction += 1; } // extra tap-zone element
       const key = packFrames(w).map(b => b.name).join('|');
       if (!seenList.has(key)) { seenList.add(key); listOrder.push(key); }
     }
@@ -335,6 +394,11 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   }
   // widgets7 (sec7; clocks expand)
   for (const w of widgets) {
+    if (w.Shape === 30 && w._imgWidget) {
+      const rawLen = w._imgWidget.raw ? w._imgWidget.raw.length / 2 : 20;
+      f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, imgWidget: true, face: f });
+      continue;
+    }
     if (w.Shape === 30) continue;
     if (w.Shape === 27) {
       for (const k of HANDS) if (w[k]) f.widgets7.push({ widget: w, hand: k, blobSize: 32, face: f });
@@ -343,7 +407,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
       const values = frames.map((b, i) => (b.value == null ? i : b.value));
       // Values array exists only when custom (any value != its index);
       // otherwise a fixed 20-byte blob with [12]=0 (observed in stock).
-      const custom = values.some((v, i) => v !== i);
+      const custom = Boolean(w._listValues) || values.some((v, i) => v !== i);
       const L = byKey[frames.map(b => b.name).join('|')];
       f.widgets7.push({ widget: w, hand: null, blobSize: custom ? 16 + 4 * frames.length : 20, values, custom, face: f });
     } else if (w.Shape === 32) {
@@ -352,10 +416,17 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   }
   // actions (buttons in widget order; blobs built at pack time)
   for (const w of widgets) {
-    if (w.Shape !== 30 || !isButton(w.Name)) continue;
-    if (!w._action && !appNameOf(w.Name))
-      throw new Error(`Button "${w.Name}": needs an [app] suffix (e.g. ${w.Name}_[alarm]).`);
-    f.actions.push({ widget: w });
+    if (isButtonWidget(w)) {
+      if (!w._action && !tapApp(w)) throw new Error(`Button "${w.Name}": needs a tap app (e.g. alarm).`);
+      f.actions.push({ widget: w, kind: 'button' });
+    } else if (isZoneTap(w)) {
+      const app = String(w._tap).toLowerCase();
+      if (!RW4_ACTIONS[app]) throw new Error(`Layer "${w.Name}": unknown tap app "${w._tap}".`);
+      if (!ZONE_CODE[app]) {
+        throw new Error(`Layer "${w.Name}": "${app}" has no verified tap-zone template. Use an image layer for it (image layers can carry any of the 37 apps).`);
+      }
+      f.actions.push({ widget: w, kind: 'zone' });
+    }
   }
   // preview
   const pv = slot.preview;
@@ -374,7 +445,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
 
 function actionFromTemplate(app, imageId, W, H) {
   const t = RW4_ACTIONS[String(app).toLowerCase()];
-  if (!t) throw new Error(`Unknown button app "${app}" (not in action table).`);
+  if (!t) throw new Error(`Unknown tap app "${app}" (not in action table).`);
   return actionBytes(Buffer.from(t, 'hex'), imageId, W, H);
 }
 function actionFromHeads(heads, imageId, W, H) {
@@ -387,7 +458,8 @@ function actionBytes(tb, imageId, W, H) {
   const blob = Buffer.alloc(ACTION_BLOB_SIZE, 0);
   tb.copy(blob, 0, 0, 2);
   tb.copy(blob, 40, 2, 4);
-  setDWord(blob, 48, imageId >>> 0);
+  // imageId 0 = position-only tap zone (no button image), as in stock faces
+  setDWord(blob, 48, (imageId || 0) >>> 0);
   setWord(blob, 52, W || 0); setWord(blob, 54, H || 0);
   return blob;
 }
@@ -425,13 +497,31 @@ function fillElement(buf, el) {
     if (w.Alignment === 0) X += bw * maxLen;
     else if (w.Alignment === 1) X += (bw * maxLen) / 2;
   }
-  const tid = w.Shape === 30 ? (w._ActionId != null ? w._ActionId : w._ImageId) : w._TargetId;
+  const tid = w.Shape === 30
+    ? (w._ActionId != null ? w._ActionId : (w._imgWidget && w._TargetId != null ? w._TargetId : w._ImageId))
+    : w._TargetId;
   setDWord(buf, 0, tid >>> 0);
   setWord(buf, 4, X); setWord(buf, 6, Y);
 }
 
 function fillWidget(buf, w7) {
   const w = w7.widget;
+  if (w7.imgWidget) {
+    // TypeId 4 value-driven image: stock blobs carry extra bytes we do not
+    // model, so emit the original verbatim and patch only the image id.
+    const raw = w._imgWidget && w._imgWidget.raw ? Buffer.from(w._imgWidget.raw, 'hex') : null;
+    if (raw && raw.length >= 12) {
+      raw.copy(buf, 0, 0, Math.min(raw.length, buf.length));
+      setDWord(buf, 8, w._ImageId >>> 0);
+      return;
+    }
+    setWord(buf, 0, parseDataSrc(w.DataSrcValue), 1);
+    buf[2] = 0;
+    const align = w._imgWidget ? (w._imgWidget.align || 0) : 0;
+    buf[3] = 64 | (align & 3); // 4 << 4
+    setDWord(buf, 8, w._ImageId >>> 0);
+    return;
+  }
   if (w7.hand) {
     const isH = w7.hand === 'HourHandImage', isM = w7.hand === 'MinuteHandImage';
     setWord(buf, 0, parseDataSrc(isH ? '0811' : isM ? '1011' : '1811'), 1);
@@ -463,11 +553,13 @@ function fillWidget(buf, w7) {
     // (1->2, 2->0, else->1) which operates on new-DLL-domain values.
     const al = w.Alignment || 0;
     buf[3] = 16 | (w.Blanking ? 0 : 4) | (al === 1 ? 2 : al === 2 ? 1 : 0);
-    setWord(buf, 4, 0);
-    setWord(buf, 6, 1000); // observed 1000 in all stock digital blobs
+    // echo the source values when known (Watch 6 ships 1000 at +6, Redmi
+    // Watch 5 ships 0) so untouched faces recompile byte-identically
+    setWord(buf, 4, w._u4 != null ? w._u4 : 0);
+    setWord(buf, 6, w._u6 != null ? w._u6 : 1000);
     setDWord(buf, 8, w._ImageId >>> 0);
     buf[13] = w.Spacing || 0;
   }
 }
 
-module.exports = { compileFaceProject, SUPPORTED, parseDataSrc, parseAlignment, RW4_ACTIONS };
+module.exports = { compileFaceProject, SUPPORTED, parseDataSrc, parseAlignment, RW4_ACTIONS, ZONE_APPS };
