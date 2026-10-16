@@ -3401,7 +3401,10 @@ $('btnCompile').onclick = async () => {
     slots.push({
       widgets: s.widgets,
       rawActions: s.rawActions || [],
-      images: s.images.map((im) => ({ name: im.name, dataBase64: im.url.split(',')[1] })),
+      aod: Boolean(s.aod), aodFlag: s.aodFlag >>> 0,
+      previewOffset: s.previewOffset >>> 0, nameBlock: s.nameBlock || null,
+      orphanSec9: s.orphanSec9 || [],
+      images: s.images.map((im) => ({ name: im.name, dataBase64: im.url.split(',')[1], origBlob: im.origBlob || null, rgbaHash: im.rgbaHash || null, listEnc: im.listEnc || null })),
       previewBase64: await slotPreviewB64(i, pvW, pvH),
     });
   }

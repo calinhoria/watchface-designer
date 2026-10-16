@@ -157,7 +157,9 @@ function decodeV2Preview(data, watchType) {
     }
   } else ({ rgba, width: w2 } = decodeGTR(pxls, width, height, type, { blackTransparent: false }));
   // flip already handled inside decodeGTR; ensure height
-  return { width: w2, height, rgba };
+  return { width: w2, height, rgba,
+    OrigBlob: Buffer.from(getByteArray(data, dataOfs, dataLen + 0x0C)).toString('hex'),
+    RgbaHash: sha1Hex(rgba) };
 }
 
 function decodeV2Single(bin, watchType, version) {
@@ -282,8 +284,11 @@ function unpackV2(data, watchType) {
       .map((a) => Buffer.from(a.RawData).toString('hex'));
     const { widgets, rawActions } = buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta);
     const images = new Map();
-    for (const im of lsti) images.set(im.Name, { width: im.Width, height: im.Height, rgba: im.Rgba });
-    for (const il of lstil) for (const n of il.NameList) { const e = il.RgbaMap?.[n]; if (e) images.set(n, e); }
+    for (const im of lsti) images.set(im.Name, { width: im.Width, height: im.Height, rgba: im.Rgba, origBlob: im.OrigBlob, rgbaHash: im.RgbaHash });
+    for (const il of lstil) for (const n of il.NameList) {
+      const e = il.RgbaMap?.[n];
+      if (e) images.set(n, { ...e, listEnc: { blob: il.OrigBlob, hash: il.RgbaHash } });
+    }
     // section 4 = animation table (official SetupAnimation reads dir entry 4);
     // section 5 = app widgets. Both are unsupported on compile, so flag them.
     slots.push({
@@ -501,7 +506,9 @@ function readLists(data, blkCount, blkOff, watchType) {
           }
         }
       }
-      lst.push({ Id: id, Width: width, Height: height, NameList: nameList, RgbaMap: rgbaMap });
+      lst.push({ Id: id, Width: width, Height: height, NameList: nameList, RgbaMap: rgbaMap,
+        OrigBlob: Buffer.from(getByteArray(data, dataOfs, dataLen)).toString('hex'),
+        RgbaHash: sha1Hex(Buffer.concat(nameList.map((n) => rgbaMap[n].rgba))) });
     } catch (e) { }
     o += 0x10;
   }

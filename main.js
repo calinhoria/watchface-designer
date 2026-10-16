@@ -36,6 +36,8 @@ async function handleOpenBin(filePath) {
     role: s.aod ? 'aod' : 'face',
     aod: Boolean(s.aod),
     aodFlag: s.aodFlag >>> 0,
+    previewOffset: s.previewOffset >>> 0,
+    nameBlock: s.nameBlock || null,
     orphanSec9: s.orphanSec9 || [],
     widgets: s.widgets,
     rawActions: s.rawActions || [],
@@ -44,6 +46,7 @@ async function handleOpenBin(filePath) {
       .map(([name, im]) => ({
         name, width: im.width, height: im.height,
         url: 'data:image/png;base64,' + rgbaToPngBuffer(im.width, im.height, im.rgba).toString('base64'),
+        origBlob: im.origBlob || null, rgbaHash: im.rgbaHash || null, listEnc: im.listEnc || null,
       })),
   }));
   let previewUrl = null;
@@ -270,9 +273,12 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
   const slots = payload.slots.map((s) => ({
     widgets: s.widgets,
     rawActions: s.rawActions || [],
+    aod: Boolean(s.aod), aodFlag: s.aodFlag >>> 0,
+    previewOffset: s.previewOffset >>> 0, nameBlock: s.nameBlock || null,
+    orphanSec9: s.orphanSec9 || [],
     images: Object.fromEntries(s.images.map((im) => {
       const png = PNG.sync.read(Buffer.from(im.dataBase64, 'base64'));
-      return [im.name, { width: png.width, height: png.height, data: Buffer.from(png.data) }];
+      return [im.name, { width: png.width, height: png.height, data: Buffer.from(png.data), origBlob: im.origBlob || null, rgbaHash: im.rgbaHash || null, listEnc: im.listEnc || null }];
     })),
     preview: s.previewBase64 ? (() => {
       const png = PNG.sync.read(Buffer.from(s.previewBase64, 'base64'));

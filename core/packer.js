@@ -6,9 +6,15 @@
 // Layout (all LE unless noted):
 //   header 168B | faceHeaders 88B each | entry tables | blobs (4B-aligned on the
 //   old generation, contiguous on the new one; preview last vs mid-stream)
-const { setWord, setDWord, rgbaToBgra, bgraToPal8 } = require('./binutils');
+const { setWord, setDWord, rgbaToBgra, bgraToPal8, bgraToRgba } = require('./binutils');
 const { encodeV10, encodeV20 } = require('./rle');
 const { PreviewSizes } = require('./watch');
+const crypto = require('crypto');
+// hash of an image's decoded RGBA, matching what the unpacker records so an
+// untouched image's original encoded blob (PAL8/LVGL palette order we cannot
+// re-synthesise) can be echoed verbatim.
+function bgraHash(bgra) { return crypto.createHash('sha1').update(bgraToRgba(Buffer.from(bgra))).digest('hex'); }
+function framesHash(frames) { return crypto.createHash('sha1').update(Buffer.concat(frames.map((f) => bgraToRgba(Buffer.from(f.bgra))))).digest('hex'); }
 
 const SUPPORTED = new Set([11, 362, 365, 367, 462, 465, 562, 565]);
 // Devices whose stock faces store images palettized (PAL8 + LVGL, selector
@@ -227,12 +233,17 @@ function compileFaceProject(proj) {
   // preview payload (built once; allocated mid-stream for the new generation)
   const pv = faces[0].preview;
   checkPreviewSize(deviceType, pv.w, pv.h);
-  const pvPay = imagePayload(deviceType, pv.w, pv.h, pv.bgra, 'auto');
-  const pvBlob = Buffer.alloc(12 + pvPay.cpr.length, 0);
-  pvBlob.set([pvPay.rle, 4, 0, 0], 0);
-  setWord(pvBlob, 4, pv.w); setWord(pvBlob, 6, pv.h);
-  setDWord(pvBlob, 8, pvPay.cpr.length);
-  pvPay.cpr.copy(pvBlob, 12);
+  let pvBlob;
+  if (pv.enc && pv.enc.hash === bgraHash(pv.bgra)) {
+    pvBlob = Buffer.from(pv.enc.blob, 'hex'); // untouched: echo the stock preview
+  } else {
+    const pvPay = imagePayload(deviceType, pv.w, pv.h, pv.bgra, 'auto');
+    pvBlob = Buffer.alloc(12 + pvPay.cpr.length, 0);
+    pvBlob.set([pvPay.rle, 4, 0, 0], 0);
+    setWord(pvBlob, 4, pv.w); setWord(pvBlob, 6, pv.h);
+    setDWord(pvBlob, 8, pvPay.cpr.length);
+    pvPay.cpr.copy(pvBlob, 12);
+  }
   // the old generation pads blobs (including the preview) to 4 bytes; the
   // new one appends the preview unpadded. Trailing pad zeros sit outside cprLen
   // and are ignored by the decoder.
@@ -313,12 +324,17 @@ function compileFaceProject(proj) {
     // SINGLES
     const allocSingles = () => {
       f.singles.forEach((s, i) => {
-        const pay = imagePayload(deviceType, s.w, s.h, s.bgra, 'auto');
-        const blob = Buffer.alloc(12 + pay.cpr.length, 0);
-        blob.set([pay.rle, 4, 0, 0], 0); // byte0 = rle selector: 0x00 = v10, 0x10 = LVGL
-        setWord(blob, 4, s.w); setWord(blob, 6, s.h);
-        setDWord(blob, 8, pay.cpr.length);
-        pay.cpr.copy(blob, 12);
+        let blob;
+        if (s.enc && s.enc.hash === bgraHash(s.bgra)) {
+          blob = Buffer.from(s.enc.blob, 'hex'); // untouched: echo verbatim
+        } else {
+          const pay = imagePayload(deviceType, s.w, s.h, s.bgra, 'auto');
+          blob = Buffer.alloc(12 + pay.cpr.length, 0);
+          blob.set([pay.rle, 4, 0, 0], 0); // byte0 = rle selector: 0x00 = v10, 0x10 = LVGL
+          setWord(blob, 4, s.w); setWord(blob, 6, s.h);
+          setDWord(blob, 8, pay.cpr.length);
+          pay.cpr.copy(blob, 12);
+        }
         const al = allocShared(2, blob);
         wEntry(f, 2, i, 2, al.off, blob.length, ord2 + i);
         if (al.fresh) blobParts.push({ off: al.off, buf: blob });
@@ -327,22 +343,27 @@ function compileFaceProject(proj) {
     // LISTS
     const allocLists = () => {
       f.lists.forEach((L, i) => {
-        // one blob, one rle selector: PAL8 only when every frame palettizes
-        const listPal8 = PAL8_DEVICES.has(deviceType) && L.frames.every(fr => bgraToPal8(fr.bgra));
-        const payloads = L.frames.map(fr => imagePayload(deviceType, fr.w, fr.h, fr.bgra, listPal8 ? 'pal8' : 'rgba').cpr);
-        const rle = listPal8 ? 0x10 : 0x00;
-        const total = 12 + 4 * payloads.length + payloads.reduce((a, p) => a + p.length, 0);
-        const blob = Buffer.alloc(total, 0);
-        blob.set([rle, payloads.length, 4, 0], 0); // byte0 = rle selector
-        setWord(blob, 4, L.w); setWord(blob, 6, L.h);
-        // PAL8 lists count the per-frame size table as payload (total-12);
-        // RGBA lists count stream bytes only (total-12-4n). Both verified stock.
-        setDWord(blob, 8, listPal8 ? total - 12 : total - 12 - 4 * payloads.length);
-        payloads.forEach((p, j) => setDWord(blob, 12 + j * 4, p.length));
-        let po = 12 + 4 * payloads.length;
-        for (const p of payloads) { p.copy(blob, po); po += p.length; }
+        let blob;
+        if (L.listEnc && L.listEnc.hash === framesHash(L.frames)) {
+          blob = Buffer.from(L.listEnc.blob, 'hex'); // untouched: echo verbatim
+        } else {
+          // one blob, one rle selector: PAL8 only when every frame palettizes
+          const listPal8 = PAL8_DEVICES.has(deviceType) && L.frames.every(fr => bgraToPal8(fr.bgra));
+          const payloads = L.frames.map(fr => imagePayload(deviceType, fr.w, fr.h, fr.bgra, listPal8 ? 'pal8' : 'rgba').cpr);
+          const rle = listPal8 ? 0x10 : 0x00;
+          const total = 12 + 4 * payloads.length + payloads.reduce((a, p) => a + p.length, 0);
+          blob = Buffer.alloc(total, 0);
+          blob.set([rle, payloads.length, 4, 0], 0); // byte0 = rle selector
+          setWord(blob, 4, L.w); setWord(blob, 6, L.h);
+          // PAL8 lists count the per-frame size table as payload (total-12);
+          // RGBA lists count stream bytes only (total-12-4n). Both verified stock.
+          setDWord(blob, 8, listPal8 ? total - 12 : total - 12 - 4 * payloads.length);
+          payloads.forEach((p, j) => setDWord(blob, 12 + j * 4, p.length));
+          let po = 12 + 4 * payloads.length;
+          for (const p of payloads) { p.copy(blob, po); po += p.length; }
+        }
         const al = allocShared(3, blob);
-        wEntry(f, 3, i, 3, al.off, total, ord3 + i);
+        wEntry(f, 3, i, 3, al.off, blob.length, ord3 + i);
         if (al.fresh) blobParts.push({ off: al.off, buf: blob });
       });
     };
@@ -470,7 +491,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   const getImg = (name) => {
     const im = images[name];
     if (!im || !im.data) throw new Error(`Image not found: ${name}`);
-    return { width: im.width, height: im.height, data: Buffer.from(im.data) };
+    return { width: im.width, height: im.height, data: Buffer.from(im.data), origBlob: im.origBlob, rgbaHash: im.rgbaHash, listEnc: im.listEnc };
   };
   for (const w of widgets) {
     if (![30, 31, 32, 27].includes(w.Shape)) throw new Error(`Widget "${w.Name}": shape ${w.Shape} unsupported in v1 (30/31/32/27 only).`);
@@ -515,7 +536,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   // singles (widget order)
   const pushSingle = (name, assign) => {
     const im = getImg(name);
-    f.singles.push({ name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data), assign });
+    f.singles.push({ name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data), assign, enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null });
   };
   for (const w of widgets) {
     if (w.Shape === 30) pushSingle(w.Bitmap, (id) => { w._ImageId = id; });
@@ -536,13 +557,14 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
     if (!byKey[key]) {
       const frames = bmps.map(b => {
         const im = getImg(b.name);
-        return { name: b.name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data) };
+        return { name: b.name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data), enc: im.listEnc || null };
       });
       for (const fr of frames) {
         if (fr.w !== frames[0].w || fr.h !== frames[0].h) throw new Error(`Widget "${w.Name}": list images must share dimensions.`);
       }
       byKey[key] = {
         key, w: frames[0].w, h: frames[0].h, frames,
+        listEnc: frames[0].enc || null,
         values: bmps.map((b, i) => (b.value == null ? i : b.value)),
         users: [],
       };
@@ -593,7 +615,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   // preview
   const pv = slot.preview;
   if (!pv || !pv.data) throw new Error('Slot needs a preview image.');
-  f.preview = { w: pv.width, h: pv.height, bgra: rgbaToBgra(pv.data) };
+  f.preview = { w: pv.width, h: pv.height, bgra: rgbaToBgra(pv.data), enc: pv.origBlob && pv.rgbaHash ? { blob: pv.origBlob, hash: pv.rgbaHash } : null };
   // orphan images (not referenced by any packed entry) are dropped like official does.
   // NOTE: collected from the pack plan (singles/lists), not by re-scanning widgets.
   const used = new Set();
