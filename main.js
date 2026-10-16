@@ -5,7 +5,7 @@ const fs = require('fs');
 const { PNG } = require('pngjs');
 const { unpack } = require('./core/unpacker');
 const { serializeFaceProject } = require('./core/fprj');
-const { getScreenWidth, getScreenHeight, watchDisplayName } = require('./core/watch');
+const { getScreenWidth, getScreenHeight, watchDisplayName, DeviceCatalog, deviceInfo } = require('./core/watch');
 
 let win = null;
 function createWindow() {
@@ -214,6 +214,44 @@ ipcMain.handle('open-project-path', async (_e, dir) => {
   if (res && !res.error) pushRecent(res.savePath, res.title || res.base, res.watchType);
   return res;
 });
+
+// ---------- imported (custom) fonts: app-wide, persistent ----------
+function customFontsDir() { return path.join(app.getPath('userData'), 'fonts'); }
+ipcMain.handle('pick-font', async () => {
+  const r = await dialog.showOpenDialog(win, {
+    title: 'Import font', properties: ['openFile'],
+    filters: [{ name: 'Fonts', extensions: ['ttf', 'otf', 'woff', 'woff2'] }],
+  });
+  if (r.canceled || !r.filePaths.length) return null;
+  const p = r.filePaths[0];
+  try { return { name: path.basename(p), dataBase64: fs.readFileSync(p).toString('base64') }; } catch (e) { return null; }
+});
+ipcMain.handle('fonts-save', async (_e, { family, fileName, dataBase64 }) => {
+  try {
+    const dir = customFontsDir();
+    fs.mkdirSync(dir, { recursive: true });
+    const ext = path.extname(fileName || '') || '.ttf';
+    const safe = `${String(family).replace(/^Custom-/, '').replace(/[^\w\-]+/g, '_')}${ext}`;
+    fs.writeFileSync(path.join(dir, safe), Buffer.from(dataBase64, 'base64'));
+    return safe;
+  } catch (e) { return null; }
+});
+ipcMain.handle('fonts-list', async () => {
+  try {
+    const dir = customFontsDir();
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir).filter((f) => /\.(ttf|otf|woff2?|TTF|OTF)$/.test(f)).map((f) => ({
+      family: (() => { const b = path.basename(f, path.extname(f)); return b.startsWith('Custom-') ? b : `Custom-${b}`; })(),
+      fileName: f,
+      dataBase64: fs.readFileSync(path.join(dir, f)).toString('base64'),
+    }));
+  } catch (e) { return []; }
+});
+
+// Device catalog (single source of truth: core/watch.js)
+ipcMain.handle('device-catalog', async () => DeviceCatalog);
+// authorative EasyFace tables (data/device-info.json, see tools/gen-deviceinfo.js)
+ipcMain.handle('device-info', async () => deviceInfo());
 
 // Compile current project state to .bin (V2, 8Pro-family watches)
 ipcMain.handle('compile-bin', async (_e, payload) => {

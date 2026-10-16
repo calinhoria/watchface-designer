@@ -13,14 +13,18 @@ to a pure-JS Electron app that runs on **macOS, Windows, Linux**.
   - Tap elements are appended after widget elements in `sec0`, matching stock draw/priority order.
 - **Unused images** are detected continuously and shown dimmed + tagged `unused` in Project images, with a `Remove unused (N)` button. They are removed automatically before **save** and **compile** (undo toast lets you take it back). Hidden layers count as referenced, so hiding a layer never costs its images.
 - `Images` row (image, list and digital layers) opens a helper dialog: the raw filename field is gone — image layers show a `1 image…` button (filename on hover); list/digital layers get indexed entries, custom value per entry (list layers), add from project images or upload new files, drag to reorder
-- **Test data** panel: 24 editable preview values (hour, minute, second, AM/PM, month, day, weekday, steps, steps %, heart rate, HR interval, calories, calories %, distance m/km, activity, stress, sleep, battery, charging, weather °C/°F, weather type, air quality) plus a **Current time** checkbox that drives the time/date fields from the real clock (live, 1 s) while leaving the rest editable. The preview digits and the clock pose both read from it; values persist in `designer.json`
+- **Data sources**: the authoritative EasyFace enum (118 codes: time/date/lunar/weekday-month name strings, step digits, HR zone/min/max, SpO2, stress, blood pressure, sleep score/goal, exercise, vitality, sunrise/sunset, feels-like, humidity, wind, AQI, rain, visibility, UV, dress index, today/tomorrow min–max, battery/charging/DND/BT/WiFi/lock, altitude, alarm) mapped to widget codes, plus legacy vendor codes kept as aliases. Several previously wrong labels were corrected (`0851` = Alarm hour, `0825` = Blood oxygen, `0824` = Stand, `1821` = Distance km, `D031` = °F)
+- **Test data** panel: 39 editable preview values in groups (Time / Date / Health / Weather / System) (hour, minute, second, AM/PM, month, day, weekday, steps, steps %, heart rate, HR interval, calories, calories %, distance m/km, activity, stress, sleep, battery, charging, weather °C/°F, weather type, air quality) plus a **Current time** checkbox that drives the time/date fields from the real clock (live, 1 s) while leaving the rest editable. The preview digits and the clock pose both read from it; values persist in `designer.json`
 - Analog clock: Properties exposes the dial image plus each hand (image + pivot X/Y, with a `Centre` shortcut; picking a hand auto-centres its pivot). The preview renders hands **rotated about their pivots** at the clock centre using a demo pose of 10:09:36, and the geometry matches the compiled elements exactly (`centre − pivot`)
 - Digital-layer fields: `Alignment` (runtime align on the watch, Left/Center/Right), `Spacing` (px between digits), `Blanking` (hide leading zeros) — all three are compiled into the .bin and the preview reflects Spacing and Blanking directly. Blanking is **device-verified**: `Hide leading zeros` checked = the compiled bit4 is clear (08:45 → 8:45); unchecked keeps the zeros. New layers default to hidden zeros
 - Grid mode (toolbar toggle, **on by default**): 20px grid, screen center cues, alignment guides, and drag snapping (left/center/right vs. other layers' edges+centers and the grid)
 - Properties rows are aligned on a fixed label column; `DataSrcValue` is shown as **Shows** (source code on hover); `Delete`/`Backspace` removes the selected layer (undo toast)
 - **Resizing a preset group**: setting the size on the **group** (or on a single child for tweaking) regenerates every child's glyphs — including the 11-frame digit list's minus frame — and **re-flows the layout** so the reading keeps its spacing and short layers (colon, degree) stay vertically centred
-- **Group font editing**: with 2+ layers selected, Properties shows a group box (family, size, colour, bold/italic + `Apply to group`, `Ungroup`, `Lock all`, `Unlock all`) that rewrites every child's font and regenerates its glyphs in one go, **keeping the group selected** afterwards; clicking a member of a selected group keeps the whole group selected (Ctrl/Cmd-click still narrows to single layers for tweaking)
+- **Group font editing**: with 2+ layers selected, Properties shows a group box (family, size, colour, bold/italic + `Apply to group`, `Ungroup`, `Lock all`, `Unlock all`) that rewrites every child's font and regenerates its glyphs in one go, **keeping the group selected** and the panel scrolled to the group controls afterwards (glyph regeneration restores focus without scrolling, so the font box can't be pushed out of view); clicking a member of a selected group keeps the whole group selected (Ctrl/Cmd-click still narrows to single layers for tweaking)
+- **Distance km workaround preset**: the watches can't render km, so EasyFace's approach is an ImageList on the step count with threshold values — `Distance km (workaround)` creates it and the Images dialog's `Distance values` button fills 0, 500, 1000 … 14000
+- **ImageList index origins**: hints in the dialog (weekday index 0 = Sunday, month index 1 = January, percentage = reading thresholds); the clock-driven weekday now follows the 0 = Sunday convention
 - **Value-mapped image lists**: percentage rings (`(0):0% | (10):10% | … | (100):100%`) and similar now pick their frame from the test data — largest value ≤ the reading — instead of always drawing frame 0. Battery/steps percentages preview correctly (10 → "10%", 77 → "70%", 100 → "100%")
+- **Negative-sign frame (mandatory per EasyFace FAQ #9)**: digit presets always build 11 frames — a copy of `0` for normal values, `-` for temperature/altitude/distance — verified against stock faces (a real digital-hour face ships frame 10 as a digit copy; a temperature list ships it as a short bar). `Add sign frame` in the Images dialog converts an existing 10-frame set
 - **Negative values (solved)**: stock digit lists carry **frame 10 = the minus sign** (verified on a stock Redmi Watch 5 face: frame 10's ink box is 13x4, a bar, vs 12x39 digits). The Temperature preset builds an 11-frame list (0-9 + minus) plus the `°` as its own layer, and the preview renders frame 10 for negative test values.
 - **Grouping**: Ctrl/Cmd+click layer rows to multi-select, then `Ctrl+G` (or the ⧉ button) groups them — grouped layers drag as one unit keeping their relative offsets; `Ctrl+Shift+G` ungroups. In the Layers panel a group renders as a **collapsible header** with its members indented beneath: `▾ [name] 3 layers ◉ ⤡`. The name is editable inline (default `Group N`) and persisted in `designer.json` (`groupNames`), clicking the header selects the whole group (same as ◉), and ⤡ ungroups. Groups and the group counter persist in `designer.json` (`groups`, `groupSeq`).
 - **Lock**: the padlock on a layer row prevents dragging, canvas selection and Delete-key removal (unlock to move it again). Persisted too.
@@ -34,7 +38,7 @@ to a pure-JS Electron app that runs on **macOS, Windows, Linux**.
 - Destructive actions (delete layer/image/slot, replacing a BitmapList) are no longer blocking prompts: they apply immediately and offer an undo toast with a close icon, auto-dismissed after 10s (countdown pauses on hover)
 - Open: reopen a saved project folder (`.fprj` + `images/`, plus `AOD/` `AOD2/`…); remembers the folder so Save overwrites in place
 - Images: PNG upload, per-image delete (with usage check)
-- Fonts → digits: pick one of 17 bundled OFL Google fonts (or import .ttf/.otf) on any DigitalNum/ImageList layer to generate the 0-9 BitmapList PNGs on the fly (size + color + faux bold/italic, auto-regenerates on every change, stale files deleted)
+- Fonts → digits: pick one of 17 bundled OFL Google fonts, or import your own `.ttf/.otf/.woff` (`Presets → Import font…`, or `Font → Import custom…` on a layer). Imported fonts are applied immediately (project font and/or the selected layer), sanity-checked for 0-9 glyphs, copied into the app's own font library (`userData/fonts`) so they are available in every session and project, and also saved with a project under `fonts/`. The picker is the native file dialog (no HTML `accept` filtering), and the font list is grouped: `Import font…` on top, then **Bundled** and **Imported**. Digit/tile generation supports size, colour and faux bold/italic, auto-regenerates on change, and removes stale tiles.
 - Save: `images/*.png` + `<name>.fprj` (FaceProject XML, same attrs as C# `Serialize()`) + composed `preview.png`; extra slots go to `AOD/` `AOD2/`… Stale images are pruned on re-save. First save asks for a folder, later saves reuse it.
 - **Save before compile**: compiling saves the project first (folder picker on the first save, silent afterwards) so the `.bin` always matches an on-disk project; cancelling the save aborts the compile
 - **Preview regeneration**: untouched imported faces keep their device-accurate embedded thumbnail; once edited, save/compile recompose the preview from the current canvas (clean render — no grid, guides, selection box or tap markers)
@@ -68,6 +72,97 @@ undo/redo | Import/Open · Save (Ctrl+S) | add-tools group (Img/Digital/List/Clo
 npm run dist        # current OS
 npm run dist-mac / dist-win / dist-linux
 ```
+
+## Project check (lint)
+`Check` in the Project panel runs the EasyFace-derived rules over every slot:
+missing referenced images, frames with mismatched dimensions, digit sets without
+the mandatory negative-sign frame, `btn_` layers with no action, km data sources
+(watches cannot render km), weather lists over 40 icons, layers off-screen,
+`_RGB` on families that always store RGBA, unused images, and AOD flattening for
+multi-slot projects. Results are grouped by severity (✕ error / ⚠ warn / ℹ info).
+Stock faces lint clean apart from genuinely unused images.
+
+## Image formats (`_RGB` / `_RGBA`)
+EasyFace selects the stored format with a `_RGB` / `_RGBA` suffix on the widget
+`Name` (and the preview filename). We keep that convention in the model, write it
+on `.fprj` export, parse it back, and expose an `Image fmt` property on image
+layers. **But** the byte-level format is decided by the watch family, verified
+against the official compressors: Redmi Watch 5/6, Mi Watch S3/S4/S5 and Mi Band
+8/9 Pro (our compilable family) always store 32-bit RGBA — `RepackRgbaToRgb565`
+never runs for them, so `_RGB` there is ignored (the lint says so). RGB565 is used
+by Mi Band 8 / Redmi Watch 3 when alpha is off, and Mi Band 9 uses 3 bytes/px —
+all design-only in this app.
+
+## Weather icons
+`ImageList` on the weather-icon source (`3031`): index = weather type, 0–41.
+
+| | | | |
+|---|---|---|---|
+|0 Clear|1 Cloudy|2 Overcast|3 Showers|
+|4 Thunderstorm|5 Hail|6 Sleet|7 Light rain|
+|8 Moderate rain|9 Heavy rain|10 Thundery rain|11 Downpour|
+|12 Severe storm|13 Snow|14 Light snow|15 Moderate snow|
+|16 Heavy snow|17 Snowstorm|18 Mist|19 Freezing rain|
+|20 Sandstorm|21 Light/moderate rain|22 Moderate/heavy rain|23 Heavy rain/thunder|
+|24 Rainstorm/flood|25 Cloudburst|26 Light/moderate snow|27 Moderate/heavy snow|
+|28 Heavy snow/blizzard|29 Dust|30 Windy|31 Sandstorm|
+|32 Fog|33 Dense fog|34 Light haze|35 Moderate haze|
+|36 Heavy haze|37 Severe haze|38 Fog|39 Severe fog|
+|40 Not reported|41 Rain|||
+
+Mi Band 7 Pro supports at most 40 icons (20 on the global firmware). The Images
+dialog shows the first icons inline for weather lists.
+
+## Device-specific quirks
+- **Mi Band 7 Pro (6) and Mi Band 8 (9)** need **unique images per digit widget**
+  (sharing one set renders readings wrong) and prefer the High/Low data sources.
+  When such a face is open the generator switches to per-widget image sets
+  automatically (`font_<layer>_<font>_<size>…`).
+- **Distance in km** cannot be rendered by any watch; use the `Distance km
+  (workaround)` preset (step-threshold ImageList).
+- **Animations** (`anim_[xx@yy]`) do not work on Mi Band 8 / Mi Band 7 Pro Global.
+
+## Supported devices
+Catalog shared by the app and the compiler (`core/watch.js` → `DeviceCatalog`),
+built from the EasyFace wiki resolution table, the Mi Fitness device list and the
+official `XiaomiWatch.Common` enums. The per-device data-source ids, widget
+shapes and animation/event types come from EasyFace's own `DeviceInfo.db`
+(`npm run deviceinfo` regenerates `data/device-info.json`); the data-source
+picker is filtered to the watch you are designing for, presets are re-pointed
+to that watch's ids, and the project check warns about sources it does not have. `New` shows compilable families first; the
+rest can be designed and exported (compile with EasyFace) — both groups are
+**selectable**; the built-in Compile button is just disabled for those families
+and says why. `npm run masks` regenerates a display mask per device.
+
+| ID | Device | Screen | Preview | Shape | Compile |
+|---|---|---|---|---|---|
+| 1 | Xiaomi Watch Color | 454×454 | 234×234 | round | – |
+| 3 | Xiaomi Watch Color 2 / S1 | 466×466 | 246×246 | round | – |
+| 4 | Xiaomi Watch S1 Pro | 480×480 | 280×280 | round | – |
+| 5 | Redmi Watch 2 | 320×360 | 178×200 | rounded | – |
+| 6 | Mi Band 7 Pro | 280×456 | 220×358 | rounded | – |
+| 7 | Redmi Watch 3 | 390×450 | 234×270 | rounded | – |
+| 8 | Redmi Band Pro | 368×456 | 110×208 | rounded | – |
+| 9 | Mi Band 8 | 192×490 | 122×310 | rounded | – |
+| 10 | Redmi Watch 2 Lite | 320×360 | 178×200 | rounded | – |
+| 11 | Mi Band 8 Pro | 336×480 | 230×328 | rounded | ✅ |
+| 12 | Redmi Watch 3 Active | 240×280 | 156×182 | rounded | – |
+| 362 | Mi Watch S3 | 466×466 | 326×326 | round | ✅ |
+| 365 | Redmi Watch 4 | 390×450 | 234×270 | rounded | ✅ |
+| 366 | Mi Band 9 | 192×490 | 122×310 | rounded | – |
+| 367 | Mi Band 9 Pro | 336×480 | 230×328 | rounded | ✅ |
+| 462 | Mi Watch S4 | 466×466 | 326×326 | round | ✅ |
+| 465 | Redmi Watch 5 | 432×514 | 432×514 | rounded | ✅ |
+| 466 | Mi Band 10 | 212×520 | 212×520 | rounded | – |
+| 562 | Mi Watch S5 | 480×480 | 480×480 | round | ✅ |
+| 565 | Redmi Watch 6 | 432×514 | 259×308 | rounded | ✅ |
+| 567 | Mi Band 10 Pro | 336×480 | 230×328 | rounded | – |
+| 3651 | Redmi Watch 5 Active | 320×385 | 180×216 | rounded | – |
+| 3652 | Redmi Watch 5 Lite | 410×502 | 244×298 | rounded | – |
+
+Testing without a watch: EasyFace ships an emulator (m0tral/MiWatchEmulator —
+a cut-down Watch S3 system image) that EasyFace pushes builds to over adb; our
+compiled `.bin` files can be pushed the same way.
 
 ## Finding animated faces
 Many stock faces are animated, but neither of the two reference faces is, so the

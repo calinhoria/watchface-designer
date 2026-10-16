@@ -12,6 +12,8 @@
     "dist-linux": "electron-builder --linux",
     "css": "tailwindcss -i styles-src.css -o styles.css --minify",
     "masks": "node tools/gen-masks.js",
+    "deviceinfo": "node tools/gen-deviceinfo.js",
+    "roundtrip": "node tools/roundtrip.js",
     "inspect": "node tools/inspect.js"
   },
   "devDependencies": {

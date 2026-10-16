@@ -1,9 +1,81 @@
 {
+  "0": {
+    "kind": "circle",
+    "w": 454,
+    "h": 454,
+    "radius": 227
+  },
+  "1": {
+    "kind": "circle",
+    "w": 454,
+    "h": 454,
+    "radius": 227
+  },
+  "2": {
+    "kind": "rounded",
+    "w": 368,
+    "h": 448,
+    "radius": 60
+  },
+  "3": {
+    "kind": "circle",
+    "w": 466,
+    "h": 466,
+    "radius": 233
+  },
+  "4": {
+    "kind": "circle",
+    "w": 480,
+    "h": 480,
+    "radius": 240
+  },
+  "5": {
+    "kind": "rounded",
+    "w": 320,
+    "h": 360,
+    "radius": 60
+  },
+  "6": {
+    "kind": "rounded",
+    "w": 280,
+    "h": 456,
+    "radius": 28
+  },
+  "7": {
+    "kind": "rounded",
+    "w": 390,
+    "h": 450,
+    "radius": 80
+  },
+  "8": {
+    "kind": "rounded",
+    "w": 368,
+    "h": 456,
+    "radius": 28
+  },
+  "9": {
+    "kind": "rounded",
+    "w": 192,
+    "h": 490,
+    "radius": 90
+  },
+  "10": {
+    "kind": "rounded",
+    "w": 320,
+    "h": 360,
+    "radius": 60
+  },
   "11": {
     "kind": "rounded",
     "w": 336,
     "h": 480,
-    "radius": 92
+    "radius": 28
+  },
+  "12": {
+    "kind": "rounded",
+    "w": 240,
+    "h": 280,
+    "radius": 55
   },
   "362": {
     "kind": "circle",
@@ -15,13 +87,19 @@
     "kind": "rounded",
     "w": 390,
     "h": 450,
-    "radius": 92
+    "radius": 80
+  },
+  "366": {
+    "kind": "rounded",
+    "w": 192,
+    "h": 490,
+    "radius": 90
   },
   "367": {
     "kind": "rounded",
     "w": 336,
     "h": 480,
-    "radius": 92
+    "radius": 28
   },
   "462": {
     "kind": "circle",
@@ -33,7 +111,13 @@
     "kind": "rounded",
     "w": 432,
     "h": 514,
-    "radius": 104
+    "radius": 80
+  },
+  "466": {
+    "kind": "rounded",
+    "w": 212,
+    "h": 520,
+    "radius": 106
   },
   "562": {
     "kind": "circle",
@@ -45,6 +129,24 @@
     "kind": "rounded",
     "w": 432,
     "h": 514,
-    "radius": 104
+    "radius": 80
+  },
+  "567": {
+    "kind": "rounded",
+    "w": 336,
+    "h": 480,
+    "radius": 28
+  },
+  "3651": {
+    "kind": "rounded",
+    "w": 320,
+    "h": 385,
+    "radius": 80
+  },
+  "3652": {
+    "kind": "rounded",
+    "w": 410,
+    "h": 502,
+    "radius": 110
   }
 }

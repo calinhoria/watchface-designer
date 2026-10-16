@@ -1,0 +1,7973 @@
+{
+ "source": "EasyFace Compiler.exe DeviceInfo.db",
+ "generatedFrom": "DeviceInfo.db",
+ "devices": [
+  {
+   "type": 0,
+   "name": "Mi Color",
+   "screen": [
+    454,
+    454
+   ],
+   "radius": 227,
+   "pixelFormat": 0,
+   "shape": "Roundness",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.4.269)|(3/100/1.3.243)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "8",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "9",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "10",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "11",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "12",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of weeks in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "13",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "14",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "15",
+     "name": "Current temperature",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "16",
+     "name": "Air Quality Index ",
+     "faceVersion": 0,
+     "tip": "Air Quality Index"
+    },
+    {
+     "id": "17",
+     "name": "Starting state for weather trends",
+     "faceVersion": 0,
+     "tip": "The starting state of the weather trend, e.g. &quot;sunny to cloudy&quot;, this data source gets the state value of &quot;sunny&quot;"
+    },
+    {
+     "id": "19",
+     "name": "Battery charging status",
+     "faceVersion": 0,
+     "tip": "The value obtained: 0 means discharging state; 1 means charging state"
+    },
+    {
+     "id": "20",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "21",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "22",
+     "name": "Interval herat rate",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "23",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "24",
+     "name": "Step target",
+     "faceVersion": 0,
+     "tip": "Set pedometer target value"
+    },
+    {
+     "id": "25",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "26",
+     "name": "Active calorie target value",
+     "faceVersion": 0,
+     "tip": "Target setting values for active calorie values"
+    },
+    {
+     "id": "27",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "28",
+     "name": "Stand Up target",
+     "faceVersion": 0,
+     "tip": "Target value of the number of stands established"
+    },
+    {
+     "id": "29",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "30",
+     "name": "Remaining energy",
+     "faceVersion": 102,
+     "tip": "Remaining energy"
+    },
+    {
+     "id": "31",
+     "name": "Goal achieve of step ",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "32",
+     "name": "Target calorie achieve",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "33",
+     "name": "Stand up target achieve",
+     "faceVersion": 0,
+     "tip": "Standing target achievement rate (percentage)"
+    },
+    {
+     "id": "34",
+     "name": "Atmospheric pressure",
+     "faceVersion": 102,
+     "tip": "Atmospheric pressure value in kpa"
+    },
+    {
+     "id": "35",
+     "name": "Elevation value",
+     "faceVersion": 102,
+     "tip": "Elevation values in meters"
+    },
+    {
+     "id": "36",
+     "name": "Screen cycle (ON/OFF)",
+     "faceVersion": 0,
+     "tip": "This data source is only used for ImageList component, suppose the number of bitmap value of ImageList is n, then the output of this data source takes the value range: 0 ~ (n-1)"
+    },
+    {
+     "id": "37",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "39",
+     "name": "End state values for weather trends",
+     "faceVersion": 102,
+     "tip": "The end state of the weather trend, e.g. &quot;sunny to cloudy&quot;, this data source obtains the state value &quot;cloudy&quot;"
+    },
+    {
+     "id": "40",
+     "name": "Current maximum temperature",
+     "faceVersion": 102,
+     "tip": "Current maximum temperature"
+    },
+    {
+     "id": "41",
+     "name": "Current minimum temperature",
+     "faceVersion": 102,
+     "tip": "Current minimum temperature"
+    }
+   ]
+  },
+  {
+   "type": 1,
+   "name": "Mi Color Sport",
+   "screen": [
+    454,
+    454
+   ],
+   "radius": 227,
+   "pixelFormat": 0,
+   "shape": "Round",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "8",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "9",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "10",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "11",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "12",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of weeks in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "13",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "14",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "15",
+     "name": "Current temperature",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "16",
+     "name": "Air Quality Index ",
+     "faceVersion": 0,
+     "tip": "Air Quality Index"
+    },
+    {
+     "id": "17",
+     "name": "Starting state for weather trends",
+     "faceVersion": 0,
+     "tip": "The starting state of the weather trend, e.g. &quot;sunny to cloudy&quot;, this data source gets the state value of &quot;sunny&quot;"
+    },
+    {
+     "id": "19",
+     "name": "Battery charging status",
+     "faceVersion": 0,
+     "tip": "The value obtained: 0 means discharging state; 1 means charging state"
+    },
+    {
+     "id": "20",
+     "name": "Battery percente",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "21",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "22",
+     "name": "Interval herat rate",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "23",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "24",
+     "name": "Step target",
+     "faceVersion": 0,
+     "tip": "Set pedometer target value"
+    },
+    {
+     "id": "25",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "26",
+     "name": "Active calorie target value",
+     "faceVersion": 0,
+     "tip": "Target setting values for active calorie values"
+    },
+    {
+     "id": "27",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "28",
+     "name": "Stand Up target",
+     "faceVersion": 0,
+     "tip": "Target value of the number of stands established"
+    },
+    {
+     "id": "29",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "30",
+     "name": "Remaining energy",
+     "faceVersion": 102,
+     "tip": "Remaining energy"
+    },
+    {
+     "id": "31",
+     "name": "Goal achieve of step ",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "32",
+     "name": "Target calorie achieve",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "33",
+     "name": "Stand up target achieve",
+     "faceVersion": 0,
+     "tip": "Standing target achievement rate (percentage)"
+    },
+    {
+     "id": "34",
+     "name": "Atmospheric pressure",
+     "faceVersion": 102,
+     "tip": "Atmospheric pressure value in kpa"
+    },
+    {
+     "id": "35",
+     "name": "Elevation value",
+     "faceVersion": 102,
+     "tip": "Elevation values in meters"
+    },
+    {
+     "id": "36",
+     "name": "Screen cycle (ON/OFF)",
+     "faceVersion": 0,
+     "tip": "This data source is only used for ImageList component, suppose the number of bitmap value of ImageList is n, then the output of this data source takes the value range: 0 ~ (n-1)"
+    },
+    {
+     "id": "37",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "39",
+     "name": "End state values for weather trends",
+     "faceVersion": 102,
+     "tip": "The end state of the weather trend, e.g. &quot;sunny to cloudy&quot;, this data source obtains the state value &quot;cloudy&quot;"
+    },
+    {
+     "id": "40",
+     "name": "Current maximum temperature",
+     "faceVersion": 102,
+     "tip": "Current maximum temperature"
+    },
+    {
+     "id": "41",
+     "name": "Current minimum temperature",
+     "faceVersion": 102,
+     "tip": "Current minimum temperature"
+    }
+   ]
+  },
+  {
+   "type": 3,
+   "name": "Mi Color 2/S1/S2",
+   "screen": [
+    466,
+    466
+   ],
+   "radius": 233,
+   "pixelFormat": 0,
+   "shape": "Round",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "0831",
+     "name": "Weather 3108",
+     "faceVersion": 0,
+     "tip": "Weather"
+    },
+    {
+     "id": "1031",
+     "name": "Weather 3110",
+     "faceVersion": 0,
+     "tip": "Weather"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "2831",
+     "name": "Weather 3128",
+     "faceVersion": 0,
+     "tip": "Weather"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "4831",
+     "name": "Weather Wind",
+     "faceVersion": 0,
+     "tip": "Weather"
+    },
+    {
+     "id": "5031",
+     "name": "Weather AirQA 3150",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "6831",
+     "name": "Weather 3168",
+     "faceVersion": 0,
+     "tip": "Weather"
+    },
+    {
+     "id": "7831",
+     "name": "Weather 3178",
+     "faceVersion": 0,
+     "tip": "Weather"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery charging",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "HRM 2208",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "2022",
+     "name": "HRM 2220",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0851",
+     "name": "Distance, m",
+     "faceVersion": 0,
+     "tip": "Distance in meters"
+    },
+    {
+     "id": "0951",
+     "name": "Distance 1, m,",
+     "faceVersion": 0,
+     "tip": "Distance in meters, 1st digit"
+    },
+    {
+     "id": "10951",
+     "name": "Distance 2, m",
+     "faceVersion": 0,
+     "tip": "Distance in meters, 2nd digit"
+    },
+    {
+     "id": "20951",
+     "name": "Distance 3, m",
+     "faceVersion": 0,
+     "tip": "Distance in meters, 3rd digit"
+    },
+    {
+     "id": "1051",
+     "name": "Distance, km",
+     "faceVersion": 0,
+     "tip": "Distance in km"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Standing count",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Standing 2nd",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "So2",
+     "faceVersion": 102
+    },
+    {
+     "id": "0826",
+     "name": "Stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep, %",
+     "faceVersion": 0,
+     "tip": "Percent of sleep of destination value, by default 8 hours"
+    },
+    {
+     "id": "2828",
+     "name": "Sleep, seconds",
+     "faceVersion": 0,
+     "tip": "Sleep time, seconds"
+    }
+   ]
+  },
+  {
+   "type": 4,
+   "name": "Mi Watch S1 Pro",
+   "screen": [
+    480,
+    480
+   ],
+   "radius": 240,
+   "pixelFormat": 0,
+   "shape": "Round",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 5,
+   "name": "Redmi/Poco Watch",
+   "screen": [
+    320,
+    360
+   ],
+   "radius": 60,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 10,
+   "name": "Redmi Watch 2 Lite",
+   "screen": [
+    320,
+    360
+   ],
+   "radius": 60,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 7,
+   "name": "Redmi Watch 3",
+   "screen": [
+    390,
+    450
+   ],
+   "radius": 80,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 12,
+   "name": "Redmi Watch 3 Active",
+   "screen": [
+    240,
+    280
+   ],
+   "radius": 55,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 3651,
+   "name": "Redmi Watch 5 Active",
+   "screen": [
+    320,
+    385
+   ],
+   "radius": 80,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 3652,
+   "name": "Redmi Watch 5 Lite",
+   "screen": [
+    410,
+    502
+   ],
+   "radius": 110,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "2011",
+     "name": "MiliSecond",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "2111",
+     "name": "MiliSecond (low)",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "2211",
+     "name": "MiliSecond (high)",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 8,
+   "name": "Redmi Band Pro",
+   "screen": [
+    194,
+    368
+   ],
+   "radius": 28,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 9,
+   "name": "Mi Band 8",
+   "screen": [
+    192,
+    490
+   ],
+   "radius": 90,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 366,
+   "name": "Mi Band 9",
+   "screen": [
+    192,
+    490
+   ],
+   "radius": 90,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 466,
+   "name": "Mi Band 10",
+   "screen": [
+    212,
+    520
+   ],
+   "radius": 106,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 567,
+   "name": "Mi Band 10 Pro",
+   "screen": [
+    336,
+    480
+   ],
+   "radius": 28,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0912",
+     "name": "Year 1",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "1000912",
+     "name": "Year 2",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2000912",
+     "name": "Year 3",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3000912",
+     "name": "Year 4",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "20009031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "20009831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "30009031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "30009831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "10009831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 367,
+   "name": "Mi Band 9 Pro",
+   "screen": [
+    336,
+    480
+   ],
+   "radius": 28,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0912",
+     "name": "Year 1",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "1000912",
+     "name": "Year 2",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2000912",
+     "name": "Year 3",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3000912",
+     "name": "Year 4",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "20009031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "20009831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "30009031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "30009831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "10009831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 11,
+   "name": "Mi Band 8 Pro",
+   "screen": [
+    336,
+    480
+   ],
+   "radius": 28,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0912",
+     "name": "Year 1",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "1000912",
+     "name": "Year 2",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2000912",
+     "name": "Year 3",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3000912",
+     "name": "Year 4",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "20009031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "20009831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "30009031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "30009831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "10009831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 6,
+   "name": "Mi Band 7 Pro",
+   "screen": [
+    280,
+    456
+   ],
+   "radius": 28,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Interval HRM",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "5031",
+     "name": "Weather something",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    }
+   ]
+  },
+  {
+   "type": 2,
+   "name": "70mai Saphir",
+   "screen": [
+    368,
+    448
+   ],
+   "radius": 60,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "8",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "9",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "10",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "11",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "12",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of weeks in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "13",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "14",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "15",
+     "name": "Current temperature",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "16",
+     "name": "Air Quality Index ",
+     "faceVersion": 0,
+     "tip": "Air Quality Index"
+    },
+    {
+     "id": "17",
+     "name": "Starting state for weather trends",
+     "faceVersion": 0,
+     "tip": "The starting state of the weather trend, e.g. &quot;sunny to cloudy&quot;, this data source gets the state value of &quot;sunny&quot;"
+    },
+    {
+     "id": "19",
+     "name": "Battery charging status",
+     "faceVersion": 0,
+     "tip": "The value obtained: 0 means discharging state; 1 means charging state"
+    },
+    {
+     "id": "20",
+     "name": "Battery percente",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "21",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "22",
+     "name": "Interval herat rate",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "23",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "24",
+     "name": "Step target",
+     "faceVersion": 0,
+     "tip": "Set pedometer target value"
+    },
+    {
+     "id": "25",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "26",
+     "name": "Active calorie target value",
+     "faceVersion": 0,
+     "tip": "Target setting values for active calorie values"
+    },
+    {
+     "id": "27",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "28",
+     "name": "Stand Up target",
+     "faceVersion": 0,
+     "tip": "Target value of the number of stands established"
+    },
+    {
+     "id": "29",
+     "name": "Sleep score",
+     "faceVersion": 0,
+     "tip": "Sleep score"
+    },
+    {
+     "id": "30",
+     "name": "Remaining energy",
+     "faceVersion": 102,
+     "tip": "Remaining energy"
+    },
+    {
+     "id": "31",
+     "name": "Goal achieve of step ",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "32",
+     "name": "Target calorie achieve",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "33",
+     "name": "Stand up target achieve",
+     "faceVersion": 0,
+     "tip": "Standing target achievement rate (percentage)"
+    },
+    {
+     "id": "34",
+     "name": "Atmospheric pressure",
+     "faceVersion": 102,
+     "tip": "Atmospheric pressure value in kpa"
+    },
+    {
+     "id": "35",
+     "name": "Elevation value",
+     "faceVersion": 102,
+     "tip": "Elevation values in meters"
+    },
+    {
+     "id": "36",
+     "name": "Screen cycle (ON/OFF)",
+     "faceVersion": 0,
+     "tip": "This data source is only used for ImageList component, suppose the number of bitmap value of ImageList is n, then the output of this data source takes the value range: 0 ~ (n-1)"
+    },
+    {
+     "id": "37",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "39",
+     "name": "End state values for weather trends",
+     "faceVersion": 102,
+     "tip": "The end state of the weather trend, e.g. &quot;sunny to cloudy&quot;, this data source obtains the state value &quot;cloudy&quot;"
+    },
+    {
+     "id": "40",
+     "name": "Current maximum temperature",
+     "faceVersion": 102,
+     "tip": "Current maximum temperature"
+    },
+    {
+     "id": "41",
+     "name": "Current minimum temperature",
+     "faceVersion": 102,
+     "tip": "Current minimum temperature"
+    }
+   ]
+  },
+  {
+   "type": 362,
+   "name": "Mi Watch S3",
+   "screen": [
+    466,
+    466
+   ],
+   "radius": 233,
+   "pixelFormat": 0,
+   "shape": "Round",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "209031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "209831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "309031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "309831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "109831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 462,
+   "name": "Mi Watch S4",
+   "screen": [
+    466,
+    466
+   ],
+   "radius": 233,
+   "pixelFormat": 0,
+   "shape": "Round",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "209031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "209831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "309031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "309831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "109831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 365,
+   "name": "Redmi Watch 4",
+   "screen": [
+    390,
+    450
+   ],
+   "radius": 80,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "209031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "209831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "309031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "309831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "109831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 465,
+   "name": "Redmi Watch 5",
+   "screen": [
+    432,
+    514
+   ],
+   "radius": 80,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "209031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "209831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "309031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "309831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "109831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  },
+  {
+   "type": 565,
+   "name": "Redmi Watch 6",
+   "screen": [
+    432,
+    514
+   ],
+   "radius": 80,
+   "pixelFormat": 0,
+   "shape": "RoundedRectangle",
+   "supportedFaces": "(1/0/1.0.0)|(2/101/1.0.0)|(3/100/1.0.0)",
+   "sources": [
+    {
+     "id": "0",
+     "name": "None",
+     "faceVersion": 0,
+     "tip": "No data source used"
+    },
+    {
+     "id": "1",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is invalid, 0 means that the temperature data is valid"
+    },
+    {
+     "id": "2",
+     "name": "invalid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is invalid, 0 means the battery data is valid"
+    },
+    {
+     "id": "3",
+     "name": "invalid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is invalid, 0 means that the health data is valid"
+    },
+    {
+     "id": "4",
+     "name": "invalid temperature data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the temperature data is valid, 0 means that the temperature data is invalid"
+    },
+    {
+     "id": "5",
+     "name": "valid battery data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means the battery data is valid, 0 means the battery data is invalid"
+    },
+    {
+     "id": "6",
+     "name": "valid health data",
+     "faceVersion": 0,
+     "tip": "A value of 1 means that the health data is valid, 0 means that the health data is invalid"
+    },
+    {
+     "id": "0811",
+     "name": "Hour",
+     "faceVersion": 0,
+     "tip": "Hour value of time in 24-hour format, value range 0-23"
+    },
+    {
+     "id": "0911",
+     "name": "Hour Low",
+     "faceVersion": 0,
+     "tip": "Hour value of time, low digit, value range 0..9"
+    },
+    {
+     "id": "1000911",
+     "name": "Hour High",
+     "faceVersion": 0,
+     "tip": "Hour value of time, high digit, value range 0..2"
+    },
+    {
+     "id": "1011",
+     "name": "Minute",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0-59"
+    },
+    {
+     "id": "1111",
+     "name": "Minute Low",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..9"
+    },
+    {
+     "id": "1211",
+     "name": "Minute High",
+     "faceVersion": 0,
+     "tip": "Time minute value, value range 0..5"
+    },
+    {
+     "id": "1811",
+     "name": "Second",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0-59"
+    },
+    {
+     "id": "1911",
+     "name": "Second Low",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..9"
+    },
+    {
+     "id": "1001911",
+     "name": "Second High",
+     "faceVersion": 0,
+     "tip": "Time second value, value range 0..5"
+    },
+    {
+     "id": "1812",
+     "name": "Day",
+     "faceVersion": 0,
+     "tip": "The value of the day in the date, the first day of the month"
+    },
+    {
+     "id": "1912",
+     "name": "Day Low",
+     "faceVersion": 0,
+     "tip": "Day, low digit"
+    },
+    {
+     "id": "1001912",
+     "name": "Day High",
+     "faceVersion": 0,
+     "tip": "Day, high digit"
+    },
+    {
+     "id": "2012",
+     "name": "Week",
+     "faceVersion": 0,
+     "tip": "The number of days in a week, 0 for Sunday, 1 for Monday, and so on"
+    },
+    {
+     "id": "1012",
+     "name": "Month",
+     "faceVersion": 0,
+     "tip": "The value of the month in the date, the first month of the year"
+    },
+    {
+     "id": "1112",
+     "name": "Month Low",
+     "faceVersion": 0,
+     "tip": "Month, low digit"
+    },
+    {
+     "id": "1212",
+     "name": "Month High",
+     "faceVersion": 0,
+     "tip": "Month, high digit"
+    },
+    {
+     "id": "0812",
+     "name": "Year",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "2812",
+     "name": "dateLunarYear",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3012",
+     "name": "dateLunarMounth",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "3812",
+     "name": "dateLunarDay",
+     "faceVersion": 0,
+     "tip": "Gregorian year"
+    },
+    {
+     "id": "0813",
+     "name": "AM/PM",
+     "faceVersion": 0,
+     "tip": "AM/PM"
+    },
+    {
+     "id": "3031",
+     "name": "Weather type (icon)",
+     "faceVersion": 0,
+     "tip": "Weather type"
+    },
+    {
+     "id": "2031",
+     "name": "Weather temp (C)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Celsius"
+    },
+    {
+     "id": "40009031",
+     "name": "Weather temp (F)",
+     "faceVersion": 0,
+     "tip": "Current temperature value in degrees Fahrenheit"
+    },
+    {
+     "id": "209031",
+     "name": "CurrentSunRiseHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "209831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "309031",
+     "name": "CurrentSunSetHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "309831",
+     "name": "CurrentSunRiseMinute",
+     "faceVersion": 0
+    },
+    {
+     "id": "1831",
+     "name": "CurrentTemperatureFeel",
+     "faceVersion": 0
+    },
+    {
+     "id": "2831",
+     "name": "CurrentHumidity",
+     "faceVersion": 0
+    },
+    {
+     "id": "109831",
+     "name": "CurrentWindDirection",
+     "faceVersion": 0
+    },
+    {
+     "id": "3831",
+     "name": "CurrentWindAngle",
+     "faceVersion": 0
+    },
+    {
+     "id": "4031",
+     "name": "CurrentWindSpeed",
+     "faceVersion": 0
+    },
+    {
+     "id": "4831",
+     "name": "CurrentWindLevel",
+     "faceVersion": 0
+    },
+    {
+     "id": "5031",
+     "name": "CurrentAQI",
+     "faceVersion": 0
+    },
+    {
+     "id": "5831",
+     "name": "CurrentAQI Level",
+     "faceVersion": 0
+    },
+    {
+     "id": "6031",
+     "name": "CurrentChanceOfRain",
+     "faceVersion": 0
+    },
+    {
+     "id": "6831",
+     "name": "CurrentPressure",
+     "faceVersion": 0
+    },
+    {
+     "id": "7031",
+     "name": "CurrentVisibility",
+     "faceVersion": 0
+    },
+    {
+     "id": "7831",
+     "name": "CurrentUVIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "8031",
+     "name": "CurrentDressIndex",
+     "faceVersion": 0
+    },
+    {
+     "id": "1832",
+     "name": "TodayTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2032",
+     "name": "TodayTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "1833",
+     "name": "TomorrowTemperatureMax",
+     "faceVersion": 0
+    },
+    {
+     "id": "2033",
+     "name": "TomorrowTemperatureMin",
+     "faceVersion": 0
+    },
+    {
+     "id": "0841",
+     "name": "Battery percent",
+     "faceVersion": 0,
+     "tip": "Get the current battery remaining percentage value"
+    },
+    {
+     "id": "1041",
+     "name": "Battery StatusCharge",
+     "faceVersion": 0
+    },
+    {
+     "id": "1841",
+     "name": "Sleep status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "2041",
+     "name": "BT connection status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "3041",
+     "name": "Screen lock status",
+     "faceVersion": 0,
+     "tip": "0 - off, 1 - on"
+    },
+    {
+     "id": "0821",
+     "name": "Current step count",
+     "faceVersion": 0,
+     "tip": "Current real-time pedometer"
+    },
+    {
+     "id": "1021",
+     "name": "Current step (percent)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (percentage)"
+    },
+    {
+     "id": "1821",
+     "name": "Current step (kilometer)",
+     "faceVersion": 0,
+     "tip": "Pedometry goal achievement rate (kilometer)"
+    },
+    {
+     "id": "0822",
+     "name": "Heart rate",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "1022",
+     "name": "Heart rate Zone",
+     "faceVersion": 0,
+     "tip": "The values obtained range from 1-5 . 1: indicates limit . 2: anaerobic. 3: aerobic. 4: fat burning. 5: warm-up."
+    },
+    {
+     "id": "1822",
+     "name": "Heart rate Min",
+     "faceVersion": 0
+    },
+    {
+     "id": "2022",
+     "name": "Heart rate Max",
+     "faceVersion": 0,
+     "tip": "Get real-time heart rate values"
+    },
+    {
+     "id": "0823",
+     "name": "Active Calorie",
+     "faceVersion": 0,
+     "tip": "Active Calorie"
+    },
+    {
+     "id": "1023",
+     "name": "Active Calorie (percent)",
+     "faceVersion": 0,
+     "tip": "Activity calorie goal achievement rate (percentage)"
+    },
+    {
+     "id": "0824",
+     "name": "Stand Up value",
+     "faceVersion": 0,
+     "tip": "Value of current standing"
+    },
+    {
+     "id": "1024",
+     "name": "Stand Up percent",
+     "faceVersion": 0,
+     "tip": "Percent of current standing"
+    },
+    {
+     "id": "0825",
+     "name": "OxygenSpO2 value",
+     "faceVersion": 0,
+     "tip": "Value of OxygenSpO2"
+    },
+    {
+     "id": "0826",
+     "name": "Psychological stress",
+     "faceVersion": 102,
+     "tip": "Psychological stress value, the value range 0~100"
+    },
+    {
+     "id": "0828",
+     "name": "Sleep Duration",
+     "faceVersion": 0,
+     "tip": "Sleep Duration"
+    },
+    {
+     "id": "1028",
+     "name": "Sleep Score",
+     "faceVersion": 0,
+     "tip": "Sleep Score"
+    },
+    {
+     "id": "1828",
+     "name": "Sleep target progress",
+     "faceVersion": 0,
+     "tip": "Sleep target progress"
+    },
+    {
+     "id": "2028",
+     "name": "Sleep Quality",
+     "faceVersion": 0,
+     "tip": "Sleep Quality"
+    },
+    {
+     "id": "0851",
+     "name": "AlarmHour",
+     "faceVersion": 0
+    },
+    {
+     "id": "1051",
+     "name": "AlarmMinute",
+     "faceVersion": 0
+    }
+   ]
+  }
+ ],
+ "widgets": [
+  {
+   "tag": "AnalogClock",
+   "shape": 27,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "CircleProgress",
+   "shape": 29,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "Image",
+   "shape": 30,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "ImageList",
+   "shape": 31,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    15,
+    35,
+    40,
+    41
+   ]
+  },
+  {
+   "tag": "DigitalNumImage",
+   "shape": 32,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "Container",
+   "shape": 34,
+   "faceVersion": 100,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "SelectList",
+   "shape": 35,
+   "faceVersion": 100,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "SelectItem",
+   "shape": 36,
+   "faceVersion": 100,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "Selector",
+   "shape": 37,
+   "faceVersion": 100,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "CustomBackgroundImage",
+   "shape": 38,
+   "faceVersion": 100,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "Concatenate",
+   "shape": 39,
+   "faceVersion": 102,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "RotationTextureMapper",
+   "shape": 40,
+   "faceVersion": 102,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "ImageCacheList",
+   "shape": 41,
+   "faceVersion": 102,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "CircleProgressPlus",
+   "shape": 42,
+   "faceVersion": 102,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "CircularGauge",
+   "shape": 43,
+   "faceVersion": 102,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "Box",
+   "shape": 44,
+   "faceVersion": 102,
+   "newFileTypeIds": true,
+   "excludeSources": [
+    36
+   ]
+  },
+  {
+   "tag": "WeatherIcon",
+   "shape": 1000,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    15,
+    35,
+    40,
+    41
+   ]
+  },
+  {
+   "tag": "WeekIcon",
+   "shape": 1001,
+   "faceVersion": 0,
+   "newFileTypeIds": false,
+   "excludeSources": [
+    15,
+    35,
+    40,
+    41
+   ]
+  }
+ ],
+ "animations": [
+  {
+   "tag": "TranslateAnimation",
+   "type": 0,
+   "faceVersion": 102
+  },
+  {
+   "tag": "FadeAnimation",
+   "type": 1,
+   "faceVersion": 102
+  },
+  {
+   "tag": "FrameAnimation",
+   "type": 4,
+   "faceVersion": 102
+  }
+ ],
+ "events": [
+  {
+   "tag": "OtherEventTriggerEvent",
+   "type": 0,
+   "faceVersion": 102
+  },
+  {
+   "tag": "ScreenShowEvent",
+   "type": 1,
+   "faceVersion": 102
+  },
+  {
+   "tag": "SourceTriggerEvent",
+   "type": 3,
+   "faceVersion": 102
+  }
+ ]
+}

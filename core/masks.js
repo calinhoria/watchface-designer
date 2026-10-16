@@ -11,18 +11,27 @@
 // radius is expressed in device pixels at the native screen size and scales
 // with the preview.
 
-const MASK_SPECS = {
-  11: { kind: 'rounded', radius: 92, label: 'Mi Band 8 Pro' },
-  362: { kind: 'circle', label: 'Mi Watch S3' },
-  365: { kind: 'rounded', radius: 92, label: 'Redmi Watch 4' },
-  367: { kind: 'rounded', radius: 92, label: 'Mi Band 9 Pro' },
-  462: { kind: 'circle', label: 'Mi Watch S4' },
-  465: { kind: 'rounded', radius: 104, label: 'Redmi Watch 5' },
-  562: { kind: 'circle', label: 'Mi Watch S5' },
-  565: { kind: 'rounded', radius: 104, label: 'Redmi Watch 6' },
-};
-
-// SVG geometry for a device mask (white = visible). Used both to generate
+// Radii come from EasyFace's DeviceInfo.db (data/device-info.json) — round
+// screens are full circles, everything else uses the DB's Radius attribute.
+// The label is only used in generated SVG comments / the device list.
+const { DeviceCatalog, deviceInfo } = require('./watch');
+const MASK_SPECS = (() => {
+  const info = {};
+  for (const d of deviceInfo().devices) info[d.type] = d;
+  const specs = {};
+  for (const dev of DeviceCatalog) {
+    const di = info[dev.type];
+    if (!di) {
+      // not in EasyFace's list (Mi Watch S5): keep the manual shape
+      specs[dev.type] = dev.shape === 'circle' ? { kind: 'circle', label: dev.name } : { kind: 'rounded', radius: 60, label: dev.name };
+      continue;
+    }
+    specs[dev.type] = /rounded/i.test(di.shape || '')
+      ? { kind: 'rounded', radius: di.radius || 60, label: dev.name }
+      : { kind: 'circle', label: dev.name };
+  }
+  return specs;
+})();// SVG geometry for a device mask (white = visible). Used both to generate
 // assets/masks/*.svg and as a runtime fallback.
 function maskSvg(type, w, h) {
   const spec = MASK_SPECS[type];
