@@ -3210,6 +3210,11 @@ function parseCssGradient(str, w, h, ox, oy) {
   const dx = Math.cos(rad) * len / 2, dy = Math.sin(rad) * len / 2;
   return { x0: cx - dx, y0: cy - dy, x1: cx + dx, y1: cy + dy, stops: stops.map((s) => s.split(/\s+/)[0]) };
 }
+// last hex colour in a CSS snippet (used when the text has no linear-gradient)
+function cssSolidColor(str) {
+  const m = String(str || '').match(/#[0-9a-f]{3,8}\b/gi);
+  return m ? m[m.length - 1] : null;
+}
 // paint a background fill (solid / 2-stop gradient / CSS gradient) over a rect
 function drawFill(c, fill, x, y, w, h, alpha) {
   const f = fill || { type: 'solid', color: '#000000' };
@@ -3268,7 +3273,7 @@ function applyGlyphFill(c, f, cellW, h, ox, oy) {
         c.fillStyle = g; ok = true;
       }
     } catch (e) { ok = false; }
-    if (!ok) c.fillStyle = color;
+    if (!ok) c.fillStyle = cssSolidColor(f.cssFill || f.css) || color;
   } else {
     c.fillStyle = color;
   }
@@ -3399,7 +3404,7 @@ function needsUniqueSets() { return Boolean(project && UNIQUE_SET_DEVICES.includ
 
 async function generateFontBitmaps(w, s) {
   const f = w._font = w._font || {};
-  if (!f.family) { alert('Pick a font first.'); return; }
+  if (!f.family) { $('meta').textContent = 'Pick a font first.'; showUndoToast('This layer has no font — pick one in Properties before effects apply.', () => { }, 'OK'); return; }
   const current = (w.BitmapList || '').split('|').filter(Boolean);
   // replacing a hand-made BitmapList is undoable via the toast below
   const replacedForeign = current.length > 0 && !(f.files || []).length;
@@ -3411,7 +3416,7 @@ async function generateFontBitmaps(w, s) {
   let set;
   try {
     set = await ensureGlyphSet(s, f.family, size, color, bold, italic, DIGIT_GLYPHS, { style: f });
-  } catch (err) { $('meta').textContent = String(err.message || err); return; }
+  } catch (err) { $('meta').textContent = String(err.message || err); showUndoToast('Glyph generation failed: ' + String(err.message || err), () => { }, 'OK'); return; }
   pushHistory();
   const names = DIGIT_GLYPHS.map((g) => set.names[g.tag]);
   // drop this layer's previous set, but keep images shared with other layers
@@ -3441,7 +3446,7 @@ async function regenerateWidgetGlyphs(w, s) {
   const spec = f.glyphs;
   const uniq = needsUniqueSets() ? w.Name : null;
   if (!spec || !spec.length) return generateFontBitmaps(w, s);
-  if (!f.family) { $('meta').textContent = 'Pick a font first.'; return; }
+  if (!f.family) { $('meta').textContent = 'Pick a font first.'; showUndoToast('This layer has no font — pick one in Properties before effects apply.', () => { }, 'OK'); return; }
   const size = Math.max(8, f.size || w.Height || 60);
   const color = f.color || '#ffffff';
   $('meta').textContent = `Rendering ${spec.length > 1 ? `${spec.length} frames` : `"${spec[0].char}"`}\u2026`;
@@ -3449,7 +3454,7 @@ async function regenerateWidgetGlyphs(w, s) {
   try {
     // multi-frame sets must share dimensions (the packer requires it)
     set = await ensureGlyphSet(s, f.family, size, color, !!f.bold, !!f.italic, spec, { mono: spec.length > 1, uniqueFor: uniq, style: f });
-  } catch (err) { $('meta').textContent = String(err.message || err); return; }
+  } catch (err) { $('meta').textContent = String(err.message || err); showUndoToast('Glyph generation failed: ' + String(err.message || err), () => { }, 'OK'); return; }
   const names = spec.map((g) => set.names[g.tag]);
   pushHistory();
   if (f.files) for (const n of f.files) {
