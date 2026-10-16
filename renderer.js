@@ -1278,22 +1278,21 @@ function refreshPanels() {
       const head = document.createElement('div');
       head.className = 'group-row' + (collapsed ? ' collapsed' : '');
       head.innerHTML = `<span class="gchev">\u25be</span>`
-        + `<input class="gname" value="${escAttr(groupName(w._group))}" title="Group name" />`
+        + `<span class="gname" title="${escAttr(groupName(w._group))}">${escAttr(groupName(w._group))}</span>`
         + `<span class="gcount">${members.length} layer${members.length > 1 ? 's' : ''}</span>`
         + `<span class="flex-1"></span>`
-        + `<button class="lb gsel" title="Select the whole group">\u25c9</button>`
+        + `<button class="lb gsel" title="Select the whole group (click again to deselect)">\u25c9</button>`
         + `<button class="lb gungroup" title="Ungroup">\u2921</button>`;
+      // Selecting a group selects every member (and the drag moves them as one);
+      // clicking the same group again clears the selection, so a component added
+      // afterwards lands outside the group. The name is edited in Properties.
+      const groupIds = () => s.widgets.map((x, k) => (x._group === w._group ? k : -1)).filter((k) => k >= 0);
       const selectGroup = () => {
-        groupSel = new Set(s.widgets.map((x, k) => (x._group === w._group ? k : -1)).filter((k) => k >= 0));
-        selected = groupSel.size ? [...groupSel][0] : -1;
+        const all = groupIds();
+        const already = all.length > 0 && groupSel.size === all.length && all.every((k) => groupSel.has(k));
+        if (already) { selected = -1; groupSel = new Set(); }
+        else { groupSel = new Set(all); selected = all.length ? all[0] : -1; }
         refreshPanels(); render();
-      };
-      // clicking the header (name, count, empty space) selects the whole group
-      head.querySelector('.gname').onclick = (ev) => ev.stopPropagation();
-      head.querySelector('.gname').onchange = (ev) => {
-        const v = ev.target.value.trim();
-        pushHistory();
-        if (v) groupNames[w._group] = v; else delete groupNames[w._group];
       };
       head.querySelector('.gchev').onclick = (ev) => {
         ev.stopPropagation();
@@ -1302,7 +1301,7 @@ function refreshPanels() {
       };
       head.querySelector('.gcount').onclick = selectGroup;
       head.addEventListener('click', (ev) => {
-        if (ev.target.closest('button') || ev.target.classList.contains('gname') || ev.target.classList.contains('gchev')) return;
+        if (ev.target.closest('button') || ev.target.classList.contains('gchev')) return;
         selectGroup();
       });
       head.querySelector('.gsel').onclick = (ev) => { ev.stopPropagation(); selectGroup(); };
@@ -1376,14 +1375,37 @@ function refreshPanels() {
   const grid = document.createElement('div');
   // group editing: font + bulk actions for a multi-selection
   const selIdx = [...groupSel].filter((i) => s.widgets[i]);
-  if (selIdx.length > 1) {
+  const firstSel = selIdx.length ? s.widgets[selIdx[0]] : null;
+  const selGid = firstSel ? firstSel._group : null;
+  const gidMembers = selGid ? s.widgets.filter((x) => x._group === selGid) : [];
+  // the box shows for a multi-selection and for a whole group (so a group gets
+  // the same Name/Font properties as a layer; its name is edited here)
+  const wholeGroup = Boolean(selGid) && gidMembers.length > 0 && selIdx.length === gidMembers.length;
+  let groupBoxEl = null;
+  if (selIdx.length > 1 || wholeGroup) {
     const gb = document.createElement('div');
     gb.className = 'group-box';
+    groupBoxEl = gb;
     const head = document.createElement('div');
     head.className = 'gb-head';
-    const gid = s.widgets[selIdx[0]]._group;
+    const gid = selGid;
     head.textContent = gid ? `${groupName(gid)} \u00b7 ${selIdx.length} layers` : `${selIdx.length} layers selected`;
     gb.appendChild(head);
+    if (gid) {
+      const nrow = mkRow('Name');
+      const ninp = document.createElement('input');
+      ninp.type = 'text';
+      ninp.value = groupName(gid);
+      ninp.title = 'Group name (shown in the Layers list)';
+      ninp.onchange = () => {
+        const v = ninp.value.trim();
+        pushHistory();
+        if (v) groupNames[gid] = v; else delete groupNames[gid];
+        refreshPanels(); render();
+      };
+      nrow.appendChild(ninp);
+      gb.appendChild(nrow);
+    }
     const withFont = selIdx.filter((i) => s.widgets[i]._font || s.widgets[i].Shape === 30 || s.widgets[i].Shape === 31 || s.widgets[i].Shape === 32);
     const first = withFont.length ? s.widgets[withFont[0]] : s.widgets[selIdx[0]];
     const cur = (first._font && first._font.family) || project.font || '';
@@ -1746,7 +1768,11 @@ function refreshPanels() {
       }
     }
   }
-  P.appendChild(info); P.appendChild(grid);
+  // A group (or any multi-selection) gets its own panel: name + font only.
+  // A member's position/size/source rows describe that one layer, so they are
+  // not mixed in here — click a single layer to edit those.
+  if (groupBoxEl) P.appendChild(groupBoxEl);
+  else { P.appendChild(info); P.appendChild(grid); }
   updatePinfo();
   // capture pre-edit state for undo (dedupe makes repeats harmless)
   grid.querySelectorAll('input,select').forEach((el) => {
@@ -2051,6 +2077,7 @@ async function applyPreset(p) {
     wg.X = anchor.x; wg.Y = anchor.y;
     s.widgets.push(wg);
     selected = s.widgets.length - 1;
+    groupSel = new Set([selected]);
     refreshPanels(); render();
     pushHistory();
     $('meta').textContent = 'Colon added.';
@@ -2062,6 +2089,7 @@ async function applyPreset(p) {
     const wg = { Shape: 30, Name: uniqName(p.id, taken), X: anchor.x, Y: anchor.y, Width: gw, Height: gh, Alpha: 255, Bitmap: set ? set.names['0'] : '' };
     s.widgets.push(wg);
     selected = s.widgets.length - 1;
+    groupSel = new Set([selected]);
     refreshPanels(); render();
     return;
   }
@@ -2077,6 +2105,7 @@ async function applyPreset(p) {
   wg.X = anchor.x; wg.Y = anchor.y;
   s.widgets.push(wg);
   selected = s.widgets.length - 1;
+  groupSel = new Set([selected]);
   refreshPanels(); render();
   if (!font) { $('meta').textContent = `${p.label} added \u2014 choose a font in Properties to generate the digits.`; return; }
   // extras (temperature: \u00b0 and \u2212) become their own layers next to the value
@@ -2132,6 +2161,7 @@ function applyKmPreset() {
   pushHistory();
   s.widgets.push(km);
   selected = s.widgets.length - 1;
+  groupSel = new Set([selected]);
   refreshPanels(); render();
   openImgListDialog(km);   // let the user pick/upload the km images right away
   $('meta').textContent = 'Distance km: add the km images (one per threshold), then Apply — values are filled automatically.';
@@ -2283,6 +2313,7 @@ $('txtCreate').onclick = async () => {
   const anchor = presetAnchor(tw, th);
   s.widgets.push({ Shape: 30, Name: uniqName('text', new Set(s.widgets.map((w) => w.Name))), X: anchor.x, Y: anchor.y, Width: tw, Height: th, Alpha: 255, Bitmap: name });
   selected = s.widgets.length - 1;
+  groupSel = new Set([selected]);
   refreshPanels(); render();
   $('meta').textContent = `Text "${text}" added (${tw}\u00d7${th}).`;
 };
@@ -2442,6 +2473,7 @@ function addWidget(kind) {
   pushHistory();
   s.widgets.push(w);
   selected = s.widgets.length - 1;
+  groupSel = new Set([selected]);
   refreshPanels(); render();
   // inherit the project font: generate (or reuse) the digit PNGs straight away
   if ((kind === 'num' || kind === 'list') && project.font) {

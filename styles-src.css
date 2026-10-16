@@ -101,12 +101,14 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 .group-row .gchev { cursor: pointer; color: var(--color-mut); width: 12px; display: inline-block; }
 .group-row.collapsed .gchev { transform: rotate(-90deg); }
 .group-row .gcount { color: var(--color-mut); text-transform: none; letter-spacing: 0; cursor: pointer; }
+/* group name in the Layers list: a label that selects the group on click
+   (renaming lives in Properties, like any other layer) */
 .group-row .gname {
-  width: 120px; padding: 1px 4px; font-size: 11px; text-transform: none; letter-spacing: 0;
-  background: transparent; border: 1px solid transparent; border-radius: 4px; color: #cdd9ff;
+  max-width: 150px; padding: 1px 4px; font-size: 11px; text-transform: none; letter-spacing: 0;
+  border: 1px solid transparent; border-radius: 4px; color: #cdd9ff; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .group-row .gname:hover { border-color: var(--color-line); background: #0b0d12; }
-.group-row .gname:focus { border-color: var(--color-acc); background: #0b0d12; }
 .group-row .lb { width: 20px; height: 20px; border-radius: 5px; background: transparent; border: 0; color: var(--color-mut); cursor: pointer; }
 .group-row .lb:hover { background: #ffffff12; color: var(--color-ink); }
 .layer.ingroup { margin-left: 14px; }
