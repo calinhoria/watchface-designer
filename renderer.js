@@ -893,27 +893,49 @@ const JUMP_APPS = ['weather', 'activities', 'heartrate'];
 // Bundled OFL digit fonts (assets/fonts, all verified to contain 0-9).
 // Names are the FontFace families we register, so they can be friendlier than
 // the fonts' internal names.
+// Bundled digit fonts, grouped by look. One weight per family (the editor has a
+// faux-bold toggle), chosen so 0-9 are unmistakable at watch size.
 const BUNDLED_FONTS = [
-  // first batch: techy display faces
-  { family: 'Orbitron', file: 'assets/fonts/Orbitron-Bold.ttf' },
-  { family: 'Oswald', file: 'assets/fonts/Oswald-SemiBold.ttf' },
-  { family: 'Bebas Neue', file: 'assets/fonts/BebasNeue-Regular.ttf' },
-  { family: 'Share Tech Mono', file: 'assets/fonts/ShareTechMono-Regular.ttf' },
-  { family: 'Roboto Condensed', file: 'assets/fonts/RobotoCondensed-Bold.ttf' },
-  // most-used faces (excellent for watch digits)
-  { family: 'Inter', file: 'assets/fonts/Inter-Bold.ttf' },
-  { family: 'Open Sans', file: 'assets/fonts/OpenSans-Bold.ttf' },
-  { family: 'Lato', file: 'assets/fonts/Lato-Bold.ttf' },
-  { family: 'Montserrat', file: 'assets/fonts/Montserrat-Bold.ttf' },
-  { family: 'Roboto Mono', file: 'assets/fonts/RobotoMono-Bold.ttf' },
-  { family: 'Barlow Condensed', file: 'assets/fonts/BarlowCondensed-SemiBold.ttf' },
-  { family: 'Anton', file: 'assets/fonts/Anton-Regular.ttf' },
-  { family: 'Rajdhani', file: 'assets/fonts/Rajdhani-SemiBold.ttf' },
-  { family: 'Teko', file: 'assets/fonts/Teko-SemiBold.ttf' },
-  // segmented / matrix / pixel clock faces
-  { family: 'Doto', file: 'assets/fonts/Doto-Black.ttf' },
-  { family: 'Handjet', file: 'assets/fonts/Handjet-Bold.ttf' },
-  { family: 'Silkscreen', file: 'assets/fonts/Silkscreen-Regular.ttf' },
+  // --- clean digital / modern ---
+  { family: 'Orbitron', file: 'assets/fonts/Orbitron-Bold.ttf', cat: 'Clean digital' },
+  { family: 'Rajdhani', file: 'assets/fonts/Rajdhani-SemiBold.ttf', cat: 'Clean digital' },
+  { family: 'Exo 2', file: 'assets/fonts/Exo2-SemiBold.ttf', cat: 'Clean digital' },
+  { family: 'Space Grotesk', file: 'assets/fonts/SpaceGrotesk-Medium.ttf', cat: 'Clean digital' },
+  { family: 'Saira Condensed', file: 'assets/fonts/SairaCondensed-SemiBold.ttf', cat: 'Clean digital' },
+  // --- retro LCD / terminal ---
+  { family: 'DSEG7 Classic', file: 'assets/fonts/DSEG7Classic-Bold.ttf', cat: 'Retro LCD' },
+  { family: 'DSEG14 Classic', file: 'assets/fonts/DSEG14Classic-Bold.ttf', cat: 'Retro LCD' },
+  { family: 'VT323', file: 'assets/fonts/VT323-Regular.ttf', cat: 'Retro LCD' },
+  { family: 'Share Tech Mono', file: 'assets/fonts/ShareTechMono-Regular.ttf', cat: 'Retro LCD' },
+  { family: 'Major Mono Display', file: 'assets/fonts/MajorMonoDisplay-Regular.ttf', cat: 'Retro LCD' },
+  { family: 'Press Start 2P', file: 'assets/fonts/PressStart2P-Regular.ttf', cat: 'Retro LCD' },
+  { family: 'Silkscreen', file: 'assets/fonts/Silkscreen-Regular.ttf', cat: 'Retro LCD' },
+  // --- segmented / dot matrix ---
+  { family: 'Doto', file: 'assets/fonts/Doto-Black.ttf', cat: 'Segmented' },
+  { family: 'Handjet', file: 'assets/fonts/Handjet-Bold.ttf', cat: 'Segmented' },
+  // --- bold & sporty ---
+  { family: 'Bebas Neue', file: 'assets/fonts/BebasNeue-Regular.ttf', cat: 'Bold sporty' },
+  { family: 'Oswald', file: 'assets/fonts/Oswald-SemiBold.ttf', cat: 'Bold sporty' },
+  { family: 'Anton', file: 'assets/fonts/Anton-Regular.ttf', cat: 'Bold sporty' },
+  { family: 'Barlow Condensed', file: 'assets/fonts/BarlowCondensed-SemiBold.ttf', cat: 'Bold sporty' },
+  { family: 'Teko', file: 'assets/fonts/Teko-SemiBold.ttf', cat: 'Bold sporty' },
+  // --- elegant / classic ---
+  { family: 'Cormorant Garamond', file: 'assets/fonts/CormorantGaramond-SemiBold.ttf', cat: 'Elegant' },
+  { family: 'Playfair Display', file: 'assets/fonts/PlayfairDisplay-SemiBold.ttf', cat: 'Elegant' },
+  { family: 'Cinzel', file: 'assets/fonts/Cinzel-SemiBold.ttf', cat: 'Elegant' },
+  { family: 'Marcellus', file: 'assets/fonts/Marcellus-Regular.ttf', cat: 'Elegant' },
+  // --- minimal / thin ---
+  { family: 'Inter', file: 'assets/fonts/Inter-Bold.ttf', cat: 'Minimal' },
+  { family: 'Inter Thin', file: 'assets/fonts/Inter-Thin.ttf', cat: 'Minimal' },
+  { family: 'Montserrat', file: 'assets/fonts/Montserrat-Bold.ttf', cat: 'Minimal' },
+  { family: 'Montserrat Thin', file: 'assets/fonts/Montserrat-Thin.ttf', cat: 'Minimal' },
+  { family: 'Poppins', file: 'assets/fonts/Poppins-Regular.ttf', cat: 'Minimal' },
+  { family: 'Josefin Sans', file: 'assets/fonts/JosefinSans-SemiBold.ttf', cat: 'Minimal' },
+  // --- neutral workhorses ---
+  { family: 'Roboto Condensed', file: 'assets/fonts/RobotoCondensed-Bold.ttf', cat: 'General' },
+  { family: 'Roboto Mono', file: 'assets/fonts/RobotoMono-Bold.ttf', cat: 'General' },
+  { family: 'Open Sans', file: 'assets/fonts/OpenSans-Bold.ttf', cat: 'General' },
+  { family: 'Lato', file: 'assets/fonts/Lato-Bold.ttf', cat: 'General' },
 ];
 // variable-font instances we want (Handjet's element grid/shape make the
 // segmented look); applied while measuring and drawing glyphs
@@ -945,10 +967,15 @@ function fillFontSelect(sel, noneLabel) {
   const imp = document.createElement('option');
   imp.value = '__import'; imp.textContent = 'Import font…';
   sel.appendChild(imp);
-  const bundled = document.createElement('optgroup');
-  bundled.label = 'Bundled';
-  for (const f of BUNDLED_FONTS) { const o = document.createElement('option'); o.value = f.family; o.textContent = f.family; bundled.appendChild(o); }
-  sel.appendChild(bundled);
+  // bundled fonts, grouped by look (the custom dropdown renders optgroups as
+  // section headers)
+  const cats = [];
+  for (const f of BUNDLED_FONTS) {
+    const cat = f.cat || 'Bundled';
+    let g = cats.find((x) => x.label === cat);
+    if (!g) { g = document.createElement('optgroup'); g.label = cat; cats.push(g); sel.appendChild(g); }
+    const o = document.createElement('option'); o.value = f.family; o.textContent = f.family; g.appendChild(o);
+  }
   if (customFonts.length) {
     const mine = document.createElement('optgroup');
     mine.label = 'Imported';
