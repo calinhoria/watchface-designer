@@ -546,7 +546,7 @@ function closeProject() {
   past = []; future = []; dirty = false; imgCache.clear();
   $('inpTitle').value = '';
   ctx.clearRect(0, 0, cv.width, cv.height);
-  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = true;
+  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnComponents', 'btnUpload', 'btnPresets']) $(id).disabled = true;
   updateHistoryButtons();
   $('meta').textContent = '';
   setEmptyState();
@@ -1065,8 +1065,11 @@ function ilmRender() {
     grip.className = 'grip'; grip.draggable = true; grip.title = 'Drag to reorder';
     grip.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor">${SVG.grip}</svg>`;
     row.appendChild(grip);
-    const idx = document.createElement('span'); idx.className = 'idx'; idx.textContent = String(i);
-    row.appendChild(idx);
+    // image components show one image: no index column (and no "0" prefix)
+    if (!(ilmState.widget.Shape === 30 || ilmState.singleKey != null)) {
+      const idx = document.createElement('span'); idx.className = 'idx'; idx.textContent = String(i);
+      row.appendChild(idx);
+    }
     const img = document.createElement('img');
     img.src = urlByName.get(e.name) || '';
     img.alt = '';
@@ -1199,9 +1202,12 @@ $('ilmUpload').onchange = async () => {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
     try { await img.decode(); } catch (e) { continue; }
-    const name = uniqName(file.name, taken); taken.add(name);
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const name = uniqName(file.name.replace(/\.[^.]+$/, '') + '.png', taken); taken.add(name);
     imgCache.delete(name);
-    s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url });
+    s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url: c.toDataURL('image/png') });
     if (ilmState.widget.Shape === 30 || ilmState.singleKey != null) ilmState.entries = [{ value: null, name }];
     else ilmState.entries.push({ value: null, name });
   }
@@ -1377,7 +1383,26 @@ async function render() {
     try {
       if (w.Shape === 30 && w.Bitmap && urlByName.has(w.Bitmap)) {
         const img = await loadImage(w.Bitmap, urlByName.get(w.Bitmap));
-        ctx.drawImage(img, (w.X || 0) * scale, (w.Y || 0) * scale, (w.Width || img.naturalWidth) * scale, (w.Height || img.naturalHeight) * scale);
+        const bx = (w.X || 0) * scale, by = (w.Y || 0) * scale;
+        const bw = (w.Width || img.naturalWidth) * scale, bh = (w.Height || img.naturalHeight) * scale;
+        const fit = w._fit || 'stretch';
+        const prevAlpha = ctx.globalAlpha;
+        ctx.globalAlpha = Math.max(0, Math.min(1, (w.Alpha == null ? 255 : w.Alpha) / 255));
+        if (fit === 'stretch') {
+          ctx.drawImage(img, bx, by, bw, bh);
+        } else {
+          const iw = img.naturalWidth, ih = img.naturalHeight;
+          const s2 = fit === 'cover' ? Math.max(bw / iw, bh / ih) : Math.min(bw / iw, bh / ih);
+          const dw = iw * s2, dh = ih * s2;
+          ctx.save();
+          ctx.beginPath(); ctx.rect(bx, by, bw, bh); ctx.clip(); // cover/contain stay in the box
+          ctx.drawImage(img, bx + (bw - dw) / 2, by + (bh - dh) / 2, dw, dh);
+          ctx.restore();
+        }
+        ctx.globalAlpha = prevAlpha;
+      } else if (w.Shape === 30 && w._background) {
+        // background with no image: paint the fill
+        drawFill(ctx, w._fill, (w.X || 0) * scale, (w.Y || 0) * scale, (w.Width || W) * scale, (w.Height || H) * scale, (w.Alpha == null ? 255 : w.Alpha) / 255);
       } else if (w.Shape === 31) {
         const entries = listEntries(w);
         if (!entries.length) continue;
@@ -1884,6 +1909,60 @@ function refreshPanels() {
     lrow.appendChild(btn);
     grid.appendChild(lrow);
   }
+  // image layers: fit + opacity. backgrounds: fill (solid/gradient/CSS)
+  if (w.Shape === 30) {
+    const fitRow = mkRow('Fit', 'How the image fills the layer box');
+    const fitSel = document.createElement('select');
+    for (const [v, l] of [['cover', 'Cover'], ['stretch', 'Stretch'], ['contain', 'Contain']]) {
+      const o = document.createElement('option'); o.value = v; o.textContent = l; fitSel.appendChild(o);
+    }
+    fitSel.value = w._fit || 'stretch';
+    fitSel.onchange = () => { w._fit = fitSel.value; render(); };
+    fitRow.appendChild(fitSel);
+    grid.appendChild(fitRow);
+    const orow = mkRow('Opacity', 'Layer opacity');
+    const orng = document.createElement('input');
+    orng.type = 'range'; orng.min = '0'; orng.max = '100'; orng.value = String(Math.round((w.Alpha == null ? 255 : w.Alpha) / 2.55));
+    orng.oninput = () => { w.Alpha = Math.round(parseFloat(orng.value) * 2.55); render(); };
+    orow.appendChild(orng);
+    grid.appendChild(orow);
+    if (w._background) {
+      const f = w._fill = w._fill || { type: 'solid', color: '#000000' };
+      const tRow = mkRow('Fill', 'Background fill (also used when no image is set)');
+      const tSel = document.createElement('select');
+      for (const [v, l] of [['solid', 'Solid'], ['gradient', 'Gradient (2 stops)'], ['css', 'Gradient from CSS']]) {
+        const o = document.createElement('option'); o.value = v; o.textContent = l; tSel.appendChild(o);
+      }
+      tSel.value = f.type || 'solid';
+      tSel.onchange = () => { f.type = tSel.value; regenerateBgFill(w); refreshPanels(); render(); };
+      tRow.appendChild(tSel);
+      grid.appendChild(tRow);
+      const regen = (re) => { regenerateBgFill(w); if (re) refreshPanels(); render(); };
+      if ((f.type || 'solid') === 'solid') {
+        const row = mkRow('Colour');
+        const inp = document.createElement('input'); inp.type = 'color'; inp.value = f.color || '#000000';
+        inp.oninput = () => { f.color = inp.value; regen(false); };
+        row.appendChild(inp); grid.appendChild(row);
+      } else if (f.type === 'gradient') {
+        for (const [key, label, def] of [['from', 'From', '#1b1f2a'], ['to', 'To', '#000000']]) {
+          const row = mkRow(label);
+          const inp = document.createElement('input'); inp.type = 'color'; inp.value = f[key] || def;
+          inp.oninput = () => { f[key] = inp.value; regen(false); };
+          row.appendChild(inp); grid.appendChild(row);
+        }
+        const row = mkRow('Angle');
+        const inp = document.createElement('input'); inp.type = 'number'; inp.value = f.angle == null ? 90 : f.angle;
+        inp.oninput = () => { f.angle = parseInt(inp.value, 10) || 0; regen(false); };
+        row.appendChild(inp); grid.appendChild(row);
+      } else {
+        const row = mkRow('CSS');
+        const inp = document.createElement('input'); inp.type = 'text';
+        inp.value = f.css || 'linear-gradient(180deg, #1b1f2a, #000000)';
+        inp.oninput = () => { f.css = inp.value; regen(false); };
+        row.appendChild(inp); grid.appendChild(row);
+      }
+    }
+  }
   for (const [k, t] of fields) {
     if (w[k] === undefined && k !== 'imgfmt') continue;
     if (k === 'imgfmt' && w.Shape !== 30) continue;
@@ -2068,7 +2147,22 @@ function refreshPanels() {
         const o = document.createElement('option'); o.value = v; o.textContent = l; fSel.appendChild(o);
       }
       fSel.value = f.fill || 'solid';
-      fSel.onchange = () => { f.fill = fSel.value; refreshPanels(); queueFontGen(w); };
+      fSel.onchange = async () => {
+        f.fill = fSel.value;
+        // sensible defaults so the style is always complete (and colours valid)
+        if (f.fill === 'gradient') {
+          if (!f.gradFrom) f.gradFrom = f.color || '#ffffff';
+          if (!f.gradTo) f.gradTo = '#000000';
+          if (f.gradAngle == null) f.gradAngle = 90;
+        } else if (f.fill === 'css') {
+          if (!f.cssFill) f.cssFill = 'linear-gradient(180deg, #ffcc00, #ff5500)';
+        } else if (f.fill === 'outline') {
+          if (!f.outlineColor) f.outlineColor = f.color || '#ffffff';
+          if (f.outlineWidth == null) f.outlineWidth = 2;
+        }
+        refreshPanels();
+        await regenerateWidgetGlyphs(w, slot());
+      };
       fRow.appendChild(fSel);
       grid.appendChild(fRow);
       const fillT = f.fill || 'solid';
@@ -2256,15 +2350,17 @@ function uniqName(base, taken) {
 const PRESET_SIZE = 100;
 const PRESETS = [
   { group: 'Time' },
-  { id: 'hour', label: 'Hour', sub: '2 digits', src: '0811', digits: 2 },
-  { id: 'minute', label: 'Minutes', sub: '2 digits', src: '1011', digits: 2 },
-  { id: 'second', label: 'Seconds', sub: '2 digits', src: '1811', digits: 2 },
+  // clock fields show leading zeros on the watch (stock: bit clear = show), so
+  // blanking defaults off for time/date; counters hide them
+  { id: 'hour', label: 'Hour', sub: '2 digits', src: '0811', digits: 2, blanking: 0 },
+  { id: 'minute', label: 'Minutes', sub: '2 digits', src: '1011', digits: 2, blanking: 0 },
+  { id: 'second', label: 'Seconds', sub: '2 digits', src: '1811', digits: 2, blanking: 0 },
   { id: 'clock', label: 'Digital clock', sub: '12:45 \u00b7 grouped' },
   { id: 'clocksec', label: 'Digital clock + seconds', sub: '12:45:28 \u00b7 grouped' },
   { id: 'ampm', label: 'AM / PM', sub: 'text', src: '0813', digits: 2, text: 'AM' },
   { group: 'Date' },
-  { id: 'day', label: 'Day', src: '1812', digits: 2 },
-  { id: 'month', label: 'Month', src: '1012', digits: 2 },
+  { id: 'day', label: 'Day', src: '1812', digits: 2, blanking: 0 },
+  { id: 'month', label: 'Month', src: '1012', digits: 2, blanking: 0 },
   { id: 'weekday', label: 'Weekday', src: '2012', digits: 1, text: '3' },
   { group: 'Health & weather' },
   { id: 'steps', label: 'Steps', src: '0821', digits: 5 },
@@ -2341,7 +2437,8 @@ async function applyClockPreset(withSeconds) {
   const parts = [];
   const digitLayer = (src, digitCount) => ({
     Shape: 32, Name: '', X: 0, Y: 0, Width: digits.width, Height: digits.height, Alpha: 255,
-    Digits: digitCount, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: toDeviceSource(project.watchType, src),
+    // clock digits show leading zeros (stock: hour/minute bit clear)
+    Digits: digitCount, Alignment: 0, Spacing: 0, Blanking: 0, DataSrcValue: toDeviceSource(project.watchType, src),
     _srcCanonical: src,
     BitmapList: names.join('|'), _font: fontMeta(),
   });
@@ -2470,7 +2567,7 @@ async function applyPreset(p) {
   const names = set ? glyphs.map((g) => set.names[g.tag]) : [];
   const wg = {
     Shape: 32, Name: uniqName(p.id, taken), X: 0, Y: 0, Width: gw, Height: gh, Alpha: 255,
-    Digits: p.digits || 2, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: toDeviceSource(project.watchType, p.src), _srcCanonical: p.src,
+    Digits: p.digits || 2, Alignment: 0, Spacing: 0, Blanking: p.blanking == null ? 1 : p.blanking, DataSrcValue: toDeviceSource(project.watchType, p.src), _srcCanonical: p.src,
     BitmapList: names.join('|'),
     _preset: p.id,   // marks the layer as preset-built (re-flow + glyph behaviour)
     _font: font ? { family: font, size: PRESET_SIZE, color: '#ffffff', glyphs: font && glyphs !== DIGIT_GLYPHS ? glyphs.slice() : undefined, files: names.slice() } : null,
@@ -2856,7 +2953,8 @@ function addWidget(kind) {
   const firstImg = s.images.length ? s.images[0].name : '';
   const cx = Math.round(W / 2), cy = Math.round(H / 2);
   let w;
-  if (kind === 'img') w = { Shape: 30, Name: uniqName('image_new', taken), X: cx - 50, Y: cy - 50, Width: 100, Height: 100, Alpha: 255, Bitmap: firstImg };
+  if (kind === 'img') w = { Shape: 30, Name: uniqName('image_new', taken), X: cx - 50, Y: cy - 50, Width: 100, Height: 100, Alpha: 255, Bitmap: firstImg, _fit: 'stretch' };
+  else if (kind === 'bg') w = { Shape: 30, Name: uniqName('background', taken), _background: true, X: 0, Y: 0, Width: W, Height: H, Alpha: 255, Bitmap: '', _fit: 'cover', _fill: { type: 'solid', color: '#000000', from: '#1b1f2a', to: '#000000', angle: 90, css: 'linear-gradient(180deg, #1b1f2a, #000000)' } };
   else if (kind === 'num') w = { Shape: 32, Name: uniqName('widget_new', taken), X: cx - 40, Y: cy - 30, Width: 40, Height: 60, Alpha: 255, Digits: 2, Alignment: 0, Spacing: 0, Blanking: 1, DataSrcValue: toDeviceSource(project.watchType, '0811'), _srcCanonical: '0811', BitmapList: '' };
   else if (kind === 'list') w = { Shape: 31, Name: uniqName('widget_new', taken), X: cx - 30, Y: cy - 20, Width: 60, Height: 40, Alpha: 255, DataSrcIndex: toDeviceSource(project.watchType, '2012'), DefaultIndex: 0, BitmapList: '' };
   else if (kind === 'clock') w = { Shape: 27, Name: uniqName('analogClock_new', taken), X: 0, Y: 0, Width: W, Height: H, Alpha: 255, HourHandImage: '', HourImageRotateX: 0, HourImageRotateY: 0, MinuteHandImage: '', MinuteImageRotateX: 0, MinuteImageRotateY: 0, SecondHandImage: '', SecondImageRotateX: 0, SecondImageRotateY: 0 };
@@ -2864,6 +2962,7 @@ function addWidget(kind) {
   else return;
   pushHistory();
   s.widgets.push(w);
+  if (kind === 'bg') regenerateBgFill(w);
   selected = s.widgets.length - 1;
   groupSel = new Set([selected]);
   refreshPanels(); render();
@@ -2893,7 +2992,7 @@ function fontStyleKey(f) {
   return parts.filter(Boolean).join('-');
 }
 // parse a CSS linear-gradient(...) into a canvas gradient (2..n stops)
-function parseCssGradient(str, w, h) {
+function parseCssGradient(str, w, h, ox, oy) {
   const m = /linear-gradient\s*\(([\s\S]*)\)/i.exec(String(str || ''));
   if (!m) return null;
   const parts = m[1].split(',').map((s) => s.trim()).filter(Boolean);
@@ -2906,36 +3005,97 @@ function parseCssGradient(str, w, h) {
   const stops = parts.slice(i0);
   if (stops.length < 2) return null;
   const rad = angle * Math.PI / 180;
-  const cx = w / 2, cy = h / 2;
+  const cx = (ox || 0) + w / 2, cy = (oy || 0) + h / 2;
   const len = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
   const dx = Math.cos(rad) * len / 2, dy = Math.sin(rad) * len / 2;
   return { x0: cx - dx, y0: cy - dy, x1: cx + dx, y1: cy + dy, stops: stops.map((s) => s.split(/\s+/)[0]) };
+}
+// paint a background fill (solid / 2-stop gradient / CSS gradient) over a rect
+function drawFill(c, fill, x, y, w, h, alpha) {
+  const f = fill || { type: 'solid', color: '#000000' };
+  const t = f.type || 'solid';
+  const prev = c.globalAlpha;
+  c.globalAlpha = prev * (alpha == null ? 1 : alpha);
+  if (t === 'gradient') {
+    const ang = ((f.angle == null ? 90 : f.angle) * Math.PI) / 180;
+    const cx = x + w / 2, cy = y + h / 2;
+    const len = Math.abs(w * Math.cos(ang)) + Math.abs(h * Math.sin(ang));
+    const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
+    const g = c.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+    g.addColorStop(0, f.from || f.color || '#000000');
+    g.addColorStop(1, f.to || '#000000');
+    c.fillStyle = g;
+  } else if (t === 'css') {
+    const p = parseCssGradient(f.css, w, h, x, y);
+    if (p) {
+      const g = c.createLinearGradient(p.x0, p.y0, p.x1, p.y1);
+      p.stops.forEach((col, i) => g.addColorStop(p.stops.length === 1 ? 0 : i / (p.stops.length - 1), col));
+      c.fillStyle = g;
+    } else c.fillStyle = f.color || '#000000';
+  } else {
+    c.fillStyle = f.color || '#000000';
+  }
+  c.fillRect(x, y, w, h);
+  c.globalAlpha = prev;
 }
 // set the glyph canvas fill/stroke for the chosen fill type
 function applyGlyphFill(c, f, cellW, h) {
   const t = f.fill || 'solid';
   const color = f.color || '#ffffff';
+  const safe = (col, fb) => { try { const p = document.createElement('canvas').getContext('2d'); p.fillStyle = fb; p.fillStyle = col; return p.fillStyle; } catch (e) { return fb; } };
   c.strokeStyle = color;
   if (t === 'gradient') {
-    const ang = ((f.gradAngle == null ? 90 : f.gradAngle) * Math.PI) / 180;
-    const cx = cellW / 2, cy = h / 2;
-    const len = Math.abs(cellW * Math.cos(ang)) + Math.abs(h * Math.sin(ang));
-    const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
-    const g = c.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
-    g.addColorStop(0, f.gradFrom || color);
-    g.addColorStop(1, f.gradTo || '#000000');
-    c.fillStyle = g;
-  } else if (t === 'css') {
-    const parsed = parseCssGradient(f.cssFill, cellW, h);
-    if (parsed) {
-      const g = c.createLinearGradient(parsed.x0, parsed.y0, parsed.x1, parsed.y1);
-      parsed.stops.forEach((col, i) => g.addColorStop(parsed.stops.length === 1 ? 0 : i / (parsed.stops.length - 1), col));
+    try {
+      const ang = ((f.gradAngle == null ? 90 : f.gradAngle) * Math.PI) / 180;
+      const cx = cellW / 2, cy = h / 2;
+      const len = Math.abs(cellW * Math.cos(ang)) + Math.abs(h * Math.sin(ang));
+      const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
+      const g = c.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+      g.addColorStop(0, safe(f.gradFrom || color, color));
+      g.addColorStop(1, safe(f.gradTo || '#000000', '#000000'));
       c.fillStyle = g;
-    } else c.fillStyle = color;
+    } catch (e) { c.fillStyle = color; }
+  } else if (t === 'css') {
+    let ok = false;
+    try {
+      const parsed = parseCssGradient(f.cssFill, cellW, h);
+      if (parsed) {
+        const g = c.createLinearGradient(parsed.x0, parsed.y0, parsed.x1, parsed.y1);
+        parsed.stops.forEach((col, i) => g.addColorStop(parsed.stops.length === 1 ? 0 : i / (parsed.stops.length - 1), safe(col, color)));
+        c.fillStyle = g; ok = true;
+      }
+    } catch (e) { ok = false; }
+    if (!ok) c.fillStyle = color;
   } else {
     c.fillStyle = color;
   }
   if (t === 'outline') c.strokeStyle = f.outlineColor || color;
+}
+// background fill -> full-screen PNG so a fill-only background still compiles
+function bgFillName(f) {
+  const clean = (s) => String(s || '').replace(/[^a-z0-9]/gi, '');
+  const t = f.type || 'solid';
+  const parts = [t, clean(f.color), clean(f.from), clean(f.to), String(f.angle == null ? 90 : f.angle), String(f.css || '').replace(/[^a-z0-9%.,#]/gi, '').slice(0, 32)];
+  return `bg_fill_${parts.filter(Boolean).join('-').slice(0, 80)}.png`;
+}
+function regenerateBgFill(w) {
+  if (!project || !w || !w._background) return;
+  const s = slot();
+  const W = project.screenW || 432, H = project.screenH || 514;
+  const f = w._fill || {};
+  const name = bgFillName(f);
+  if (!s.images.some((im) => im.name === name)) {
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    drawFill(c.getContext('2d'), f, 0, 0, W, H, 1);
+    s.images.push({ name, width: W, height: H, url: c.toDataURL('image/png') });
+  }
+  if (w.Bitmap && w.Bitmap.startsWith('bg_fill_') && w.Bitmap !== name) {
+    const i = s.images.findIndex((im) => im.name === w.Bitmap);
+    if (i >= 0) s.images.splice(i, 1);
+    imgCache.delete(w.Bitmap);
+  }
+  imgCache.delete(name);
+  w.Bitmap = name; w.X = 0; w.Y = 0; w.Width = W; w.Height = H;
 }
 function fontSetNames(f, i) {
   const b = f._base || fontSetBase(f.family, f.size, f.color, f.bold, f.italic, null, fontStyleKey(f));
@@ -3383,7 +3543,7 @@ function createNewFace() {
   updateHistoryButtons();
   $('inpTitle').value = title;
   setUseCurrentTime(true);
-  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
+  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnComponents', 'btnUpload', 'btnPresets']) $(id).disabled = false;
   const dc = deviceByType(project.watchType);
   if (dc && dc.compilable === false) $('btnCompile').disabled = true;
   refreshPanels(); render();
@@ -3442,17 +3602,46 @@ async function loadProject(res) {
   $('meta').textContent = `${res.base} · v${res.version} · ${res.watchName} · ${res.screenW}×${res.screenH} · ${res.slots.length} slot(s)`
     + (res.animationCount ? ` · ⚠ ${res.animationCount} animation entr${res.animationCount === 1 ? 'y' : 'ies'} (not supported — compile would drop them)` : '')
     + (res.appCount ? ` · ⚠ ${res.appCount} app widget(s)` : '');
-  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
+  for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnComponents', 'btnUpload', 'btnPresets']) $(id).disabled = false;
   const dc = deviceByType(project.watchType);
   if (dc && dc.compilable === false) $('btnCompile').disabled = true;
   if (res.version !== 2) $('btnCompile').disabled = true;
   refreshPanels(); render();
 }
-$('btnAddImg').onclick = () => addWidget('img');
-$('btnAddNum').onclick = () => addWidget('num');
-$('btnAddList').onclick = () => addWidget('list');
-$('btnAddClock').onclick = () => addWidget('clock');
-$('btnAddBtn').onclick = () => addWidget('btn');
+// Components menu (collapses the add-tool buttons; icons kept)
+const COMPONENTS = [
+  ['bg', 'Background', 'Full-screen, not movable — fill and/or image', '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18"/>'],
+  ['img', 'Image', 'Picture layer (fit: cover / stretch / contain)', '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m5 19 5-5 3 3 3-3 3 3"/>'],
+  ['num', 'Digital', 'Number from digit images', '<path d="M10 3 8 21M16 3l-2 18M4 9h17M3 15h17"/>'],
+  ['list', 'List', 'Image list picked by value', '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="5" cy="18" r="1.2"/>'],
+  ['clock', 'Clock', 'Analog clock (hands + pivot)', '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'],
+  ['btn', 'Button', 'Image layer with a tap action', '<path d="M13 2 4 14h6l-1 8 9-12h-6z"/>'],
+];
+let componentsOpen = false;
+function buildComponentsMenu() {
+  const m = $('componentsMenu');
+  if (!m) return;
+  m.innerHTML = '';
+  for (const [kind, label, sub, path] of COMPONENTS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.innerHTML = `<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+    const nm = document.createElement('span'); nm.textContent = label;
+    b.appendChild(nm);
+    const sb = document.createElement('span'); sb.className = 'pm-sub'; sb.textContent = sub;
+    b.appendChild(sb);
+    b.onclick = () => { toggleComponents(false); addWidget(kind); };
+    m.appendChild(b);
+  }
+}
+function toggleComponents(open) {
+  componentsOpen = open == null ? !componentsOpen : open;
+  $('componentsMenu').hidden = !componentsOpen;
+  $('btnComponents').classList.toggle('on', componentsOpen);
+}
+$('btnComponents').onclick = (e) => { e.stopPropagation(); toggleComponents(); };
+document.addEventListener('click', (e) => { if (componentsOpen && !e.target.closest('#btnComponents') && !e.target.closest('#componentsMenu')) toggleComponents(false); });
+buildComponentsMenu();
 $('btnUpload').onclick = () => $('fileUpload').click();
 $('btnPruneImages').onclick = () => pruneUnusedImages('removing', true);
 $('fileUpload').onchange = async () => {
@@ -3464,9 +3653,14 @@ $('fileUpload').onchange = async () => {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
     try { await img.decode(); } catch (e) { continue; }
-    const name = uniqName(file.name, taken); taken.add(name);
+    // any source format -> PNG so the project only ever stores PNG
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const pngUrl = c.toDataURL('image/png');
+    const name = uniqName(file.name.replace(/\.[^.]+$/, '') + '.png', taken); taken.add(name);
     imgCache.delete(name);
-    s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url });
+    s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url: pngUrl });
   }
   $('fileUpload').value = '';
   refreshPanels(); render();
@@ -3738,7 +3932,7 @@ cv.addEventListener('mousedown', (e) => {
   const s = slot();
   let hit = -1;
   for (let i = s.widgets.length - 1; i >= 0; i--) {
-    if (s.widgets[i]._hidden) continue;
+    if (s.widgets[i]._hidden || s.widgets[i]._background) continue; // background is not movable/clickable
     const vb = visualBox(s.widgets[i]);
     const x = vb.x * sc, y = vb.y * sc, ww = vb.w * sc, hh = vb.h * sc;
     if (mx >= x && mx <= x + ww && my >= y && my <= y + hh) { hit = i; break; }
