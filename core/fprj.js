@@ -3,8 +3,14 @@
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+// EasyFace image-format convention: a `_RGB` / `_RGBA` suffix on the widget
+// Name (Image widgets and the preview filename) selects rgb565 vs 32-bit RGBA.
+function withFmt(name, fmt) {
+  const clean = String(name || '').replace(/_(RGB|RGBA)$/i, '');
+  return fmt ? `${clean}_${fmt}` : clean;
+}
 function widgetAttrs(w) {
-  const base = ` Shape="${w.Shape}" Name="${esc(w.Name)}" X="${w.X || 0}" Y="${w.Y || 0}" Width="${w.Width || 0}" Height="${w.Height || 0}" Alpha="${w.Alpha ?? 255}" Visible_Src="0"`;
+  const base = ` Shape="${w.Shape}" Name="${esc(withFmt(w.Name, w._fmt))}" X="${w.X || 0}" Y="${w.Y || 0}" Width="${w.Width || 0}" Height="${w.Height || 0}" Alpha="${w.Alpha ?? 255}" Visible_Src="0"`;
   switch (w.Shape) {
     case 30: return base + ` Bitmap="${esc(w.Bitmap || '')}"`;
     case 31: return base + ` Index_Src="${esc(w.DataSrcIndex || '')}" DefaultIndex="${w.DefaultIndex ?? 0}" BitmapList="${esc(w.BitmapList || '')}"`;
@@ -49,8 +55,10 @@ function parseFprj(xml) {
   while ((m = re.exec(xml))) {
     const s = m[1];
     const Shape = parseInt(get(s, 'Shape') ?? '30', 10);
+    const rawName = get(s, 'Name') ?? `widget_${widgets.length}`;
+    const fmt = /_(RGB|RGBA)$/i.exec(rawName);
     const w = {
-      Shape, Name: get(s, 'Name') ?? `widget_${widgets.length}`,
+      Shape, Name: fmt ? rawName.replace(/_(RGB|RGBA)$/i, '') : rawName, _fmt: fmt ? fmt[1].toUpperCase() : undefined,
       X: parseInt(get(s, 'X') ?? '0', 10), Y: parseInt(get(s, 'Y') ?? '0', 10),
       Width: parseInt(get(s, 'Width') ?? '0', 10), Height: parseInt(get(s, 'Height') ?? '0', 10),
       Alpha: parseInt(get(s, 'Alpha') ?? '255', 10),
