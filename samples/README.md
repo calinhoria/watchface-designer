@@ -82,6 +82,14 @@ Model URNs seen: `m66`/`m66gl` (Mi Band 9), `n66cn`/`n66nfc` (Mi Band 9),
 - Remaining DIFF is structural and shared across families: sec0/7/9 group
   flattening (76-byte group containers become flat layers) and re-encoded
   singles/lists.
+- AOD is marked in header byte 0x1E bit 2 (`aod ? 4 : 0`, official
+  SetupHeader); bit 1 means "more than one non-AOD face". Without bit 2 the
+  watch shows the AOD slot as a regular style. The compiler now derives both
+  bits from the slots.
+- Layer tap zones: the 565-family 52-byte name zone repeats the ordinal at +36
+  and +48; the older 465 layout is 56 bytes with the tap box W/H at +52/+54.
+  The compiler emits the right size per device (app codes verified for the
+  52-byte form).
 - Shape 43 gauges are supported now: the widget's 32-byte sec7 blob (same family
   as the clock hands) is echoed verbatim with the pointer image id patched, and
   the pointer image is emitted as a single. `moonbeam` compiles (its gauge blobs

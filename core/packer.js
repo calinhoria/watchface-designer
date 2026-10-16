@@ -50,19 +50,28 @@ const ACTION_BLOB_SIZE = 56;
 // byte-verified templates (harvested from stock faces); other apps must use an
 // image layer (button format), which is what the official packer emits.
 const ACTION_ZONE_SIZE = 52;
+// 565-family (and the newer generation) uses 52-byte name zones whose +36 and
+// +48 dwords both carry the ordinal; the older generation (465) uses 56 bytes
+// with the tap box W/H at +52/+54. Only the 52-byte layout has byte-verified
+// app codes (harvested from stock 565 faces).
+const ZONE_NEW = new Set([362, 366, 367, 462, 562, 565]);
 const ZONE_CODE = {
   music: '010c5f01', timer: '010c6f02', alarm: '010c8f02', flashlight: '010caf01',
   steps: '03023f01', calories: '03033f01', hrm: '03065f00', spo2: '0307ef00',
   weather: '030b1f02',
 };
 const ZONE_APPS = Object.keys(ZONE_CODE);
-function zoneBlob(app, ordinal) {
+function zoneBlob(app, ordinal, w, h, deviceType) {
   const code = ZONE_CODE[String(app).toLowerCase()];
   if (!code) throw new Error(`tap app "${app}" has no verified zone template — use an image layer for it`);
-  const blob = Buffer.alloc(ACTION_ZONE_SIZE, 0);
+  const size = ZONE_NEW.has(deviceType) ? 52 : 56;
+  const blob = Buffer.alloc(size, 0);
   Buffer.from(String(app).toLowerCase(), 'ascii').copy(blob, 0, 0, 15);
   Buffer.from(code, 'hex').copy(blob, 40);
-  setDWord(blob, 48, (ordinal | 0x02000000) >>> 0);
+  const ref = (ordinal | 0x02000000) >>> 0;
+  if (size === 52) setDWord(blob, 36, ref); // newer layout repeats the ordinal at +36
+  setDWord(blob, 48, ref);
+  if (size === 56) { setWord(blob, 52, w || 0); setWord(blob, 54, h || 0); }
   return blob;
 }
 
@@ -145,6 +154,15 @@ function compileFaceProject(proj) {
   // 465 faces carry 0. New projects default the same way (PAL8 devices -> 1).
   let subVer = proj.subVersion;
   if (subVer == null) subVer = slots.length > 1 ? 2 : (PAL8_DEVICES.has(deviceType) ? 1 : 0);
+  // Header byte 0x1E carries the AOD / multi-style flags in its low bits
+  // (official SetupHeader: byte30 = (hasAod ? 4 : 0) | (nonAodFaces > 1 ? 2 : 0)).
+  // Without bit 2 the watch treats the AOD slot as another regular style.
+  {
+    const hasAod = slots.some((s) => s.aod);
+    const nonAodFaces = slots.filter((s) => !s.aod).length;
+    if (hasAod) subVer |= 4; else subVer &= ~4;
+    if (nonAodFaces > 1) subVer |= 2; else subVer &= ~2;
+  }
   setWord(header, 30, subVer);
   // Faces can carry a per-face tail after the 88-byte header+dir (a 72-byte
   // name block, sometimes with an extra record) — the unpacker records it.
@@ -387,7 +405,7 @@ function compileFaceProject(proj) {
         const w = a.widget;
         const box = tapBox(w);
         const isZone = a.kind === 'zone';
-        const blob = isZone ? zoneBlob(tapApp(w), i + 1)
+        const blob = isZone ? zoneBlob(tapApp(w), i + 1, box.w, box.h, deviceType)
           : (w._actionRaw ? (() => {
             const b2 = Buffer.from(w._actionRaw, 'hex');
             setDWord(b2, 48, (w._ImageId || 0) >>> 0);   // keep the stock layout
