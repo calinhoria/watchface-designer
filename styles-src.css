@@ -287,6 +287,8 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 }
 /* mask disabled: no placeholder at all, just the flat preview */
 .cv-device.plain { padding: 0; background: none; box-shadow: none; border-radius: 0; }
+/* real artwork present: the PNG supplies the body */
+.cv-device.framed { background: transparent; }
 
 /* empty state (no project) */
 main.empty { grid-template-columns: minmax(0, 1fr); align-content: center; }

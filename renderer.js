@@ -391,7 +391,7 @@ const TEST_DEFAULTS = {
 const TIME_FIELDS = ['hour', 'minute', 'second', 'centi', 'month', 'day', 'year'];
 const WEEKDAY_ZERO_SUNDAY = true;
 let TEST_DATA = { ...TEST_DEFAULTS };
-let useCurrentTime = false;
+let useCurrentTime = true;
 // numeric value a value-mapped list should index by: the same as testNumeric but
 // with the (ones)/(tens) sources reduced to the digit they actually carry, so a
 // list keyed on e.g. the seconds digit picks frames 0..9 and not the whole value.
@@ -1194,6 +1194,29 @@ async function loadMaskMeta() {
   } catch (e) { maskMeta = {}; }
   return maskMeta;
 }
+// optional per-device bezel artwork: assets/frames/<type>.png replaces the
+// CSS placeholder frame (the PNG should show the real device body with a
+// transparent screen cut-out, sized to the screen aspect). Missing -> CSS.
+const frameArt = new Map(); // type -> url|null
+function applyFrameArt(dev, type) {
+  const set = (url) => {
+    if (url) {
+      dev.style.backgroundImage = `url("${url}")`;
+      dev.style.backgroundSize = '100% 100%';
+      dev.style.backgroundRepeat = 'no-repeat';
+      dev.classList.add('framed');
+    } else {
+      dev.style.backgroundImage = '';
+      dev.classList.remove('framed');
+    }
+  };
+  if (frameArt.has(type)) { set(frameArt.get(type)); return; }
+  const url = `assets/frames/${type}.png`;
+  const im = new Image();
+  im.onload = () => { frameArt.set(type, url); set(url); };
+  im.onerror = () => { frameArt.set(type, null); set(null); };
+  im.src = url;
+}
 function applyDeviceMask() {
   const dev = document.getElementById('cvDevice');
   const m = maskMeta && maskMeta[project.watchType];
@@ -1209,9 +1232,12 @@ function applyDeviceMask() {
   cv.style.webkitMaskImage = url; cv.style.maskImage = url;
   cv.style.webkitMaskSize = cv.style.maskSize = '100% 100%';
   cv.style.webkitMaskRepeat = cv.style.maskRepeat = 'no-repeat';
-  // bezel radius follows the canvas scale so the frame matches the clip
+  // bezel radius = screen radius + frame padding so the two curves are
+  // concentric (screen sits inset by the padding, edges stay parallel)
   const scale = cv.width / (m.w || cv.width);
-  dev.style.borderRadius = `${Math.round(m.radius * scale)}px`;
+  const pad = parseFloat(getComputedStyle(dev).paddingTop) || 0;
+  dev.style.borderRadius = `${Math.round(m.radius * scale + pad)}px`;
+  applyFrameArt(dev, project.watchType);
 }
 $('btnMask').classList.toggle('on', showMask);
 $('btnMask').onclick = () => {
@@ -2552,8 +2578,9 @@ function syncTestDataInputs() {
     inp.disabled = useCurrentTime && TIME_FIELDS.includes(k);
   });
 }
-$('tdCurrent').onchange = () => {
-  useCurrentTime = $('tdCurrent').checked;
+function setUseCurrentTime(on) {
+  useCurrentTime = !!on;
+  const cb = $('tdCurrent'); if (cb) cb.checked = useCurrentTime;
   if (useCurrentTime) {
     applyCurrentTime();
     if (!testTicker) testTicker = setInterval(() => { applyCurrentTime(); syncTestDataInputs(); render(); }, 1000);
@@ -2561,8 +2588,8 @@ $('tdCurrent').onchange = () => {
     clearInterval(testTicker); testTicker = null;
   }
   syncTestDataInputs();
-  render();
-};
+}
+$('tdCurrent').onchange = () => { setUseCurrentTime($('tdCurrent').checked); render(); };
 
 // ---------- unused images ----------
 // every image name a layer can display
@@ -3122,6 +3149,7 @@ function createNewFace() {
   dirty = false;
   updateHistoryButtons();
   $('inpTitle').value = title;
+  setUseCurrentTime(true);
   for (const id of ['btnExport', 'btnCompile', 'btnConvert', 'btnAddSlot', 'btnAddImg', 'btnAddNum', 'btnAddList', 'btnAddClock', 'btnAddBtn', 'btnUpload', 'btnPresets']) $(id).disabled = false;
   const dc = deviceByType(project.watchType);
   if (dc && dc.compilable === false) $('btnCompile').disabled = true;
@@ -3157,10 +3185,7 @@ async function loadProject(res) {
   if (res.groupSeq) groupSeq = res.groupSeq;
   if (res.groupNames) Object.assign(groupNames, res.groupNames);
   if (res.testData) TEST_DATA = { ...TEST_DEFAULTS, ...res.testData };
-  useCurrentTime = !!res.useCurrentTime;
-  $('tdCurrent').checked = useCurrentTime;
-  if (useCurrentTime) { applyCurrentTime(); if (!testTicker) testTicker = setInterval(() => { applyCurrentTime(); syncTestDataInputs(); render(); }, 1000); }
-  else if (testTicker) { clearInterval(testTicker); testTicker = null; }
+  setUseCurrentTime(res.useCurrentTime == null ? true : !!res.useCurrentTime);
   project = res; slotIndex = 0; selected = -1; imgCache.clear();
   setEmptyState();
   $('imagesPanel').classList.add('collapsed'); // Images always opens collapsed
