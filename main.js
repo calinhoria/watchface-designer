@@ -55,6 +55,7 @@ async function handleOpenBin(filePath) {
     filePath, base,
     animationCount: res.animationCount || 0,
     appCount: res.appCount || 0,
+    subVersion: res.subVersion || 0,
     version: res.version, watchType: res.watchType,
     watchName: watchDisplayName(res.watchType),
     screenW, screenH,
@@ -197,6 +198,7 @@ function openProjectDir(root) {
     groupNames: (designer && designer.groupNames) || null,
     testData: (designer && designer.testData) || null,
     useCurrentTime: !!(designer && designer.useCurrentTime),
+    subVersion: (designer && designer.subVersion != null) ? designer.subVersion : null,
     customFonts: usedCustom,
     slots: clean,
   };
@@ -281,7 +283,7 @@ ipcMain.handle('compile-bin', async (_e, payload) => {
   try {
     compiled = compileFaceProject({
       deviceType: payload.deviceType, title: payload.title,
-      faceId: payload.faceId, slots,
+      faceId: payload.faceId, subVersion: payload.subVersion, slots,
     });
   } catch (err) {
     return { ok: false, error: String(err.message || err) };
@@ -351,7 +353,7 @@ ipcMain.handle('export-project', async (_e, payload) => {
   }
   // designer-only metadata (font settings, hidden layers) — never part of .fprj
   const designer = { format: 'watchface-designer', version: 1, font: payload.projectFont || null, groupSeq: Number(payload.groupSeq) || 1, groupNames: payload.groupNames || null,
-    testData: payload.testData || null, useCurrentTime: !!payload.useCurrentTime, slots: [] };
+    testData: payload.testData || null, useCurrentTime: !!payload.useCurrentTime, subVersion: payload.subVersion != null ? payload.subVersion : null, slots: [] };
   for (let i = 0; i < slots.length; i++) {
     const s = slots[i];
     const dir = i === 0 ? outDir : path.join(outDir, i === 1 ? 'AOD' : `AOD${i}`);

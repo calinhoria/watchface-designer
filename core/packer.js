@@ -4,12 +4,19 @@
 // { 11, 362, 365, 367, 462, 465, 562, 565 }.
 // Input: designer project model. Output: .bin Buffer + warnings.
 // Layout (all LE unless noted):
-//   header 168B | faceHeaders 88B each | entry tables | blobs (4B-aligned)
-const { setWord, setDWord, rgbaToBgra } = require('./binutils');
-const { encodeV10 } = require('./rle');
+//   header 168B | faceHeaders 88B each | entry tables | blobs (4B-aligned on the
+//   old generation, contiguous on the new one; preview last vs mid-stream)
+const { setWord, setDWord, rgbaToBgra, bgraToPal8 } = require('./binutils');
+const { encodeV10, encodeV20 } = require('./rle');
 const { PreviewSizes } = require('./watch');
 
 const SUPPORTED = new Set([11, 362, 365, 367, 462, 465, 562, 565]);
+// Devices whose stock faces store images palettized (PAL8 + LVGL, selector
+// 0x10) whenever they fit in 256 colors: Watch 6 verified byte-for-byte;
+// S3 / Mi Band 9 decode the same way (see unpacker) but have no stock sample
+// here, so they share the rule. The 465 family stores RGBA even for 15-color
+// images, so it is deliberately excluded.
+const PAL8_DEVICES = new Set([362, 366, 565]);
 const V2048 = new Set([4, 6, 7, 9, 11, 362, 365, 366, 367, 462, 465, 466, 562, 565, 567, 3651, 3652]);
 
 const HEADER_HEX = '5AA5341200000000000000000000000001070000000000000000000001000000FFFFFFFF000000003136373231303036350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
@@ -127,7 +134,11 @@ function compileFaceProject(proj) {
   const header = Buffer.from(HEADER_HEX, 'hex');
   setDWord(header, 28, slots.length);
   if (V2048.has(deviceType)) setDWord(header, 16, 2048);
-  if (slots.length > 1) header[30] = 2;
+  // subVersion echo: stock 565 faces carry 1, dual-slot 465 faces carry 2, plain
+  // 465 faces carry 0. New projects default the same way (PAL8 devices -> 1).
+  let subVer = proj.subVersion;
+  if (subVer == null) subVer = slots.length > 1 ? 2 : (PAL8_DEVICES.has(deviceType) ? 1 : 0);
+  setWord(header, 30, subVer);
   const titleBuf = Buffer.from(String(title || ''), 'utf8');
   if (titleBuf.length > 64) throw new Error(`Title too long (${titleBuf.length}B, max 64).`);
   titleBuf.copy(header, 104);
@@ -137,6 +148,35 @@ function compileFaceProject(proj) {
   idBuf.copy(header, 40);
 
   const faces = slots.map((s, fi) => prepareFace(deviceType, s, fi, warnings));
+  // file-wide ordinals for sec 2/3/7 (stock keeps counting across faces)
+  {
+    const run = { 2: 0, 3: 0, 7: 0 };
+    for (const f of faces) {
+      f.ordBase = { 2: run[2], 3: run[3], 7: run[7] };
+      run[2] += f.counts[2]; run[3] += f.counts[3]; run[7] += f.counts[7];
+    }
+  }
+  // entry ids are fully determined by the ordinals, so assign every
+  // cross-reference up front: the blob allocation order below can then follow
+  // stock (which differs per generation) without breaking the links
+  for (const f of faces) {
+    f.singles.forEach((s, i) => {
+      const id = (0x02000000 | ((f.ordBase[2] + i) & 0xFF)) >>> 0;
+      s.entryId = id; s.assign(id);
+    });
+    f.lists.forEach((L, i) => {
+      const id = (0x03000000 | ((f.ordBase[3] + i) & 0xFF)) >>> 0;
+      L.users.forEach(u => u(id));
+    });
+    f.widgets7.forEach((w7, i) => {
+      const id = (0x07000000 | ((f.ordBase[7] + i) & 0xFF)) >>> 0;
+      if (w7.hand) w7.widget['_' + w7.hand.replace('HandImage', '') + 'TargetId'] = id;
+      else w7.widget._TargetId = id;
+    });
+    f.actions.forEach((a, i) => {
+      if (a.kind === 'button') a.widget._ActionId = (0x09000000 | (i & 0xFF)) >>> 0;
+    });
+  }
 
   // table layout: contiguous per face, sections 0..9 in order
   let tableCursor = 168 + slots.length * 88;
@@ -152,20 +192,72 @@ function compileFaceProject(proj) {
   const tablesBase = 168 + slots.length * 88;
   let blobCursor = tableCursor;
   const blobParts = [];
+  // the old generation pads every blob to 4 bytes (gaps of 1-3 zeros between
+  // blobs); the new one packs blobs contiguously with no padding
+  const padBlobs = !PAL8_DEVICES.has(deviceType);
   const alloc = (size) => {
     const off = blobCursor;
-    blobCursor += (size + 3) & ~3;
+    blobCursor += padBlobs ? (size + 3) & ~3 : size;
     return off;
   };
   const entryAt = (f, sec, idx) => f.secTable[sec] + idx * 16 - tablesBase;
-  const wEntry = (f, sec, idx, marker, blobOff, blobSize) => {
+  // Entry ids carry a per-section ordinal, not just the table position: image /
+  // list / widget entries (sec 2/3/7) keep counting across the faces of a
+  // multi-slot file (slot 1 of a 2-slot face starts at 16/4/10), while elements
+  // and actions (sec 0/9) restart at 0 per face. Pass ordinal for the former,
+  // omit it for the latter.
+  const wEntry = (f, sec, idx, marker, blobOff, blobSize, ordinal) => {
+    const ord = ordinal == null ? idx : ordinal;
     const p = entryAt(f, sec, idx);
-    tables[p] = idx & 0xFF;
+    tables[p] = ord & 0xFF;
     tables[p + 3] = marker;
     setDWord(tables, p + 8, blobOff);
     setDWord(tables, p + 12, blobSize);
-    return ((idx & 0xFF) | (marker << 24)) >>> 0;
+    return ((ord & 0xFF) | (marker << 24)) >>> 0;
   };
+
+  // preview payload (built once; allocated mid-stream for the new generation)
+  const pv = faces[0].preview;
+  checkPreviewSize(deviceType, pv.w, pv.h);
+  const pvPay = imagePayload(deviceType, pv.w, pv.h, pv.bgra, 'auto');
+  const pvBlob = Buffer.alloc(12 + pvPay.cpr.length, 0);
+  pvBlob.set([pvPay.rle, 4, 0, 0], 0);
+  setWord(pvBlob, 4, pv.w); setWord(pvBlob, 6, pv.h);
+  setDWord(pvBlob, 8, pvPay.cpr.length);
+  pvPay.cpr.copy(pvBlob, 12);
+  // the old generation pads blobs (including the preview) to 4 bytes; the
+  // new one appends the preview unpadded. Trailing pad zeros sit outside cprLen
+  // and are ignored by the decoder.
+  const pvPadded = padBlobs ? Buffer.alloc((pvBlob.length + 3) & ~3, 0) : pvBlob;
+  if (padBlobs) pvBlob.copy(pvPadded, 0);
+  let previewOff = 0;
+  const allocPreview = () => {
+    previewOff = alloc(pvPadded.length);
+    blobParts.push({ off: previewOff, buf: pvPadded });
+  };
+  // stock shares one data blob between entries whose image content is identical
+  // (same section only — never observed across sections), but only in the new
+  // generation: 465 stock keeps identical blobs at separate offsets, while
+  // Watch 6 stock points the second entry at the first blob
+  const crypto = require('crypto');
+  const dedupImages = PAL8_DEVICES.has(deviceType);
+  const sharedBlobs = new Map();
+  const allocShared = (sec, blob) => {
+    if (!dedupImages) {
+      const off = alloc(blob.length);
+      return { off, fresh: true };
+    }
+    const key = sec + ':' + crypto.createHash('sha1').update(blob).digest('hex');
+    const hit = sharedBlobs.get(key);
+    if (hit != null) return { off: hit, fresh: false };
+    const off = alloc(blob.length);
+    sharedBlobs.set(key, off);
+    return { off, fresh: true };
+  };
+  // stock blob order differs per generation: the new one (Watch 6) packs
+  // elements, widgets, actions, then the preview, then the image data; the old
+  // one packs all image data first and the preview last
+  const newOrder = PAL8_DEVICES.has(deviceType);
 
   faces.forEach((f, fi) => {
     // face header + section dir
@@ -177,96 +269,117 @@ function compileFaceProject(proj) {
       else if (k === 6) { /* count stays template 0 */ setDWord(fh, 12 + k * 8, f.secTable[7]); }
       else setDWord(fh, 12 + k * 8, f.secTable[k]);
     }
+    // ordinals for this face: sec 2/3/7 continue the file-wide counters so a
+    // second slot's images/lists/widgets keep stock numbering
+    const ord2 = f.ordBase[2], ord3 = f.ordBase[3], ord7 = f.ordBase[7];
+    const zoneTotal = f.actions.filter(a => a.kind === 'zone').length;
     // ELEMENTS
-    f.elements.forEach((el, i) => {
-      const bo = alloc(16);
-      wEntry(f, 0, i, 0, bo, 16);
-      const blob = Buffer.alloc(16, 0);
-      blobParts.push({ off: bo, buf: blob, el });
-    });
+    const allocElements = () => {
+      f.elements.forEach((el, i) => {
+        const bo = alloc(16);
+        wEntry(f, 0, i, 0, bo, 16);
+        const blob = Buffer.alloc(16, 0);
+        blobParts.push({ off: bo, buf: blob, el });
+      });
+    };
     // WIDGETS (reserve; content in fillWidget)
-    f.widgets7.forEach((w7, i) => {
-      const bo = alloc(w7.blobSize);
-      const id = wEntry(f, 7, i, 7, bo, w7.blobSize);
-      if (w7.hand) w7.widget['_' + w7.hand.replace('HandImage', '') + 'TargetId'] = id;
-      else w7.widget._TargetId = id;
-      const blob = Buffer.alloc(w7.blobSize, 0);
-      blobParts.push({ off: bo, buf: blob, w7 });
-    });
+    const allocWidgets = () => {
+      f.widgets7.forEach((w7, i) => {
+        const bo = alloc(w7.blobSize);
+        wEntry(f, 7, i, 7, bo, w7.blobSize, ord7 + i);
+        const blob = Buffer.alloc(w7.blobSize, 0);
+        blobParts.push({ off: bo, buf: blob, w7 });
+      });
+    };
     // SINGLES
-    f.singles.forEach((s, i) => {
-      const id = 0x02000000 | (i & 0xFF);
-      s.entryId = id;
-      const cpr = singlePayload(s.w, s.h, s.bgra);
-      const bo = alloc(12 + cpr.length);
-      wEntry(f, 2, i, 2, bo, 12 + cpr.length);
-      const blob = Buffer.alloc(12 + cpr.length, 0);
-      blob.set([0, 4, 0, 0], 0); // byte0 = rle selector: 0x00 = v10 (matches GetHeader 00040000)
-      setWord(blob, 4, s.w); setWord(blob, 6, s.h);
-      setDWord(blob, 8, cpr.length);
-      cpr.copy(blob, 12);
-      blobParts.push({ off: bo, buf: blob });
-      s.assign(id);
-    });
+    const allocSingles = () => {
+      f.singles.forEach((s, i) => {
+        const pay = imagePayload(deviceType, s.w, s.h, s.bgra, 'auto');
+        const blob = Buffer.alloc(12 + pay.cpr.length, 0);
+        blob.set([pay.rle, 4, 0, 0], 0); // byte0 = rle selector: 0x00 = v10, 0x10 = LVGL
+        setWord(blob, 4, s.w); setWord(blob, 6, s.h);
+        setDWord(blob, 8, pay.cpr.length);
+        pay.cpr.copy(blob, 12);
+        const al = allocShared(2, blob);
+        wEntry(f, 2, i, 2, al.off, blob.length, ord2 + i);
+        if (al.fresh) blobParts.push({ off: al.off, buf: blob });
+      });
+    };
     // LISTS
-    f.lists.forEach((L, i) => {
-      const id = 0x03000000 | (i & 0xFF);
-      const payloads = L.frames.map(fr => singlePayload(fr.w, fr.h, fr.bgra));
-      const total = 12 + 4 * payloads.length + payloads.reduce((a, p) => a + p.length, 0);
-      const bo = alloc(total);
-      wEntry(f, 3, i, 3, bo, total);
-      const blob = Buffer.alloc(total, 0);
-      blob.set([0, payloads.length, 4, 0], 0); // byte0 = rle selector: 0x00 = v10
-      setWord(blob, 4, L.w); setWord(blob, 6, L.h);
-      setDWord(blob, 8, total - 12 - 4 * payloads.length); // payload bytes only (excl. sizes)
-      payloads.forEach((p, j) => setDWord(blob, 12 + j * 4, p.length));
-      let po = 12 + 4 * payloads.length;
-      for (const p of payloads) { p.copy(blob, po); po += p.length; }
-      blobParts.push({ off: bo, buf: blob });
-      L.users.forEach(u => u(id));
-    });
-    // ACTIONS (built here: button ImageIds are assigned above)
-    let zoneCount = 0;
-    f.actions.forEach((a, i) => {
-      const w = a.widget;
-      const box = tapBox(w);
-      const isZone = a.kind === 'zone';
-      const blob = isZone ? zoneBlob(tapApp(w), i + 1)
-        : (w._actionRaw ? (() => {
-          const b2 = Buffer.from(w._actionRaw, 'hex');
-          setDWord(b2, 48, (w._ImageId || 0) >>> 0);   // keep the stock layout
-          return b2;
-        })()
-          : (w._action ? actionFromHeads(w._action, w._ImageId, box.w, box.h)
-            : actionFromTemplate(tapApp(w), w._ImageId, box.w, box.h)));
-      const blobLen = blob.length;
-      const bo = alloc(blobLen);
-      const id = wEntry(f, 9, i, 9, bo, blobLen);
-      blobParts.push({ off: bo, buf: blob });
-      if (a.kind === 'button') w._ActionId = id;
-      else {
-        // zone: extra element at the layer's top-left targeting the action
+    const allocLists = () => {
+      f.lists.forEach((L, i) => {
+        // one blob, one rle selector: PAL8 only when every frame palettizes
+        const listPal8 = PAL8_DEVICES.has(deviceType) && L.frames.every(fr => bgraToPal8(fr.bgra));
+        const payloads = L.frames.map(fr => imagePayload(deviceType, fr.w, fr.h, fr.bgra, listPal8 ? 'pal8' : 'rgba').cpr);
+        const rle = listPal8 ? 0x10 : 0x00;
+        const total = 12 + 4 * payloads.length + payloads.reduce((a, p) => a + p.length, 0);
+        const blob = Buffer.alloc(total, 0);
+        blob.set([rle, payloads.length, 4, 0], 0); // byte0 = rle selector
+        setWord(blob, 4, L.w); setWord(blob, 6, L.h);
+        // PAL8 lists count the per-frame size table as payload (total-12);
+        // RGBA lists count stream bytes only (total-12-4n). Both verified stock.
+        setDWord(blob, 8, listPal8 ? total - 12 : total - 12 - 4 * payloads.length);
+        payloads.forEach((p, j) => setDWord(blob, 12 + j * 4, p.length));
+        let po = 12 + 4 * payloads.length;
+        for (const p of payloads) { p.copy(blob, po); po += p.length; }
+        const al = allocShared(3, blob);
+        wEntry(f, 3, i, 3, al.off, total, ord3 + i);
+        if (al.fresh) blobParts.push({ off: al.off, buf: blob });
+      });
+    };
+    // ACTIONS (button ImageIds were assigned up front)
+    const allocActions = () => {
+      let zoneCount = 0;
+      f.actions.forEach((a, i) => {
+        const w = a.widget;
+        const box = tapBox(w);
+        const isZone = a.kind === 'zone';
+        const blob = isZone ? zoneBlob(tapApp(w), i + 1)
+          : (w._actionRaw ? (() => {
+            const b2 = Buffer.from(w._actionRaw, 'hex');
+            setDWord(b2, 48, (w._ImageId || 0) >>> 0);   // keep the stock layout
+            return b2;
+          })()
+            : (w._action ? actionFromHeads(w._action, w._ImageId, box.w, box.h)
+              : actionFromTemplate(tapApp(w), w._ImageId, box.w, box.h)));
+        const blobLen = blob.length;
+        const bo = alloc(blobLen);
+        const id = wEntry(f, 9, i, 9, bo, blobLen);
+        blobParts.push({ off: bo, buf: blob });
+        if (a.kind !== 'button') {
+          // zone: extra element at the layer's top-left targeting the action
+          const eb = Buffer.alloc(16, 0);
+          const ebo = alloc(16);
+          wEntry(f, 0, f.elements.length + zoneCount, 0, ebo, 16);
+          zoneCount += 1;
+          blobParts.push({ off: ebo, buf: eb, el: { widget: { X: box.x, Y: box.y }, face: f, tidOverride: id } });
+        }
+      });
+    };
+    // orphan tap zones: verbatim blobs + elements (stock order: after widgets)
+    const allocRaw = () => {
+      f.rawActions.forEach((r, j) => {
+        const blob = Buffer.from(r.blob, 'hex');
+        const bo = alloc(blob.length);
+        const id = wEntry(f, 9, f.actions.length + j, 9, bo, blob.length);
+        blobParts.push({ off: bo, buf: blob });
         const eb = Buffer.alloc(16, 0);
         const ebo = alloc(16);
-        wEntry(f, 0, f.elements.length + zoneCount, 0, ebo, 16);
-        zoneCount += 1;
-        blobParts.push({ off: ebo, buf: eb, el: { widget: { X: box.x, Y: box.y }, face: f, tidOverride: id } });
-      }
-    });
-    // orphan tap zones: verbatim blobs + elements (stock order: after widgets)
-    f.rawActions.forEach((r, j) => {
-      const blob = Buffer.from(r.blob, 'hex');
-      const bo = alloc(blob.length);
-      const id = wEntry(f, 9, f.actions.length + j, 9, bo, blob.length);
-      blobParts.push({ off: bo, buf: blob });
-      const eb = Buffer.alloc(16, 0);
-      const ebo = alloc(16);
-      wEntry(f, 0, f.elements.length + j, 0, ebo, 16);
-      blobParts.push({ off: ebo, buf: eb, el: { widget: { X: r.x, Y: r.y }, face: f, tidOverride: id } });
-    });
+        wEntry(f, 0, f.elements.length + zoneTotal + j, 0, ebo, 16);
+        blobParts.push({ off: ebo, buf: eb, el: { widget: { X: r.x, Y: r.y }, face: f, tidOverride: id } });
+      });
+    };
+    if (newOrder) {
+      allocElements(); allocWidgets(); allocActions(); allocRaw();
+      if (fi === 0) allocPreview();
+      allocSingles(); allocLists();
+    } else {
+      allocElements(); allocWidgets(); allocSingles(); allocLists(); allocActions(); allocRaw();
+    }
     for (const bp of blobParts) if (bp.el && bp.el.face === f) fillElement(bp.buf, bp.el);
     for (const bp of blobParts) if (bp.w7 && bp.w7.face === f) fillWidget(bp.buf, bp.w7);
   });
+  if (!newOrder) allocPreview();
 
   // assemble
   const parts = [header];
@@ -277,29 +390,47 @@ function compileFaceProject(proj) {
   let pos = 0;
   for (const part of parts) { part.copy(bin, pos); pos += part.length; }
   for (const bp of blobParts) bp.buf.copy(bin, bp.off);
-  // PREVIEW (main face only, like official)
-  const pv = faces[0].preview;
-  checkPreviewSize(deviceType, pv.w, pv.h);
-  const cpr = singlePayload(pv.w, pv.h, pv.bgra);
-  const pvBlob = Buffer.alloc(12 + cpr.length, 0);
-  pvBlob.set([0, 4, 0, 0], 0);
-  setWord(pvBlob, 4, pv.w); setWord(pvBlob, 6, pv.h);
-  setDWord(pvBlob, 8, cpr.length);
-  cpr.copy(pvBlob, 12);
-  const grow = Buffer.concat([bin, pvBlob]);
-  setDWord(grow, 32, bin.length);
-  setDWord(grow, 168 + 4, bin.length);
-  return { bin: grow, warnings };
+  // preview location recorded at allocation time (mid-stream for the new
+  // generation, at the end otherwise)
+  setDWord(bin, 32, previewOff);
+  setDWord(bin, 168 + 4, previewOff);
+  return { bin, warnings };
 }
 
-// compressed payload shared by singles/lists/preview: [magic][(len<<4)|4][v10(BGRA)]
-function singlePayload(w, h, bgra) {
+// compressed payload shared by singles/lists/preview: [magic][(len<<4)|type][stream]
+function rgbaPayload(w, h, bgra) {
   if (bgra.length !== w * h * 4) throw new Error(`Pixel data ${bgra.length} mismatches ${w}x${h}.`);
   const payload = encodeV10(bgra, 4);
   const head = Buffer.alloc(8, 0);
   MAGIC.copy(head, 0);
   setDWord(head, 4, ((bgra.length << 4) | 4) >>> 0);
   return Buffer.concat([head, payload]);
+}
+// PAL8 payload for the 565 family (and S3 / Mi Band 9): [magic][(decLen<<4)|1]
+// followed by the LVGL stream over (1024B palette + indices). Returns null when
+// the image has more than 256 colors — caller falls back to RGBA.
+function pal8Payload(w, h, bgra) {
+  if (bgra.length !== w * h * 4) throw new Error(`Pixel data ${bgra.length} mismatches ${w}x${h}.`);
+  const pal = bgraToPal8(bgra);
+  if (!pal) return null;
+  const raw = Buffer.concat([pal.palette, pal.indices]);
+  if (raw.length !== 1024 + w * h) return null;
+  const stream = encodeV20(raw);
+  const head = Buffer.alloc(8, 0);
+  MAGIC.copy(head, 0);
+  setDWord(head, 4, (((raw.length << 4) | 1) >>> 0));
+  return Buffer.concat([head, stream]);
+}
+// mode 'auto': PAL8 on PAL8 devices when the image fits, else RGBA.
+// 'pal8'/'rgba' force the codec (pal8 falls back to RGBA when impossible).
+function imagePayload(deviceType, w, h, bgra, mode) {
+  const wantPal8 = mode === 'pal8' || (mode !== 'rgba' && PAL8_DEVICES.has(deviceType));
+  if (wantPal8) {
+    const p = pal8Payload(w, h, bgra);
+    if (p) return { rle: 0x10, cpr: p };
+    if (mode === 'pal8') throw new Error(`Image ${w}x${h} has more than 256 colors, cannot store as PAL8.`);
+  }
+  return { rle: 0x00, cpr: rgbaPayload(w, h, bgra) };
 }
 
 // ---- face preparation: validate + expand model into pack plan ----

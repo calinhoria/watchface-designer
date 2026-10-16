@@ -188,7 +188,8 @@ Drop a few into a folder and run `npm run inspect` over them to find an animated
 one to work from.
 
 ### Fidelity notes
-Recompiling a stock face is byte-identical (sections 0/7/9) because anything the
+Recompiling a stock face is byte-identical for all five reference faces
+(`node tools/roundtrip.js`), because anything the
 model does not author is echoed back: opaque widget words at +4/+6 (Watch 6 ships
 `1000`, Watch 5 ships `0`), value-driven image widgets (widget TypeId 4, kept with
 their original blobs), action blobs (re-emitted verbatim, image id patched) and
@@ -203,10 +204,21 @@ whether an image list shipped a values array even when it matches the indices.
 ## Compiler (core/packer.js)
 Pure-JS port of the official `Compiler.exe` `DefaultPacker` for the
 MiBand8ProRleCompressor watch family: **11, 362, 365, 367, 462, 465, 562, 565**.
-Image payloads are BGRA/RLE-v10 (`type 4`, header `00040000`); the editor
-preview and all widget/element tables were verified byte-identical against the
-official packer (element/widget blobs, analog-clock hands, digital alignment /
-spacing / blanking, ImageList custom values, RW4 button actions).
+Image payloads are BGRA/RLE-v10 (`type 4`, header `00040000`); on the
+565/362/366 devices images with ≤256 colors are stored palettized PAL8+RLE-v20
+(`type 1`, selector `0x10`) exactly like stock, larger ones fall back to RGBA.
+The editor preview and all widget/element tables were verified byte-identical
+against the official packer (element/widget blobs, analog-clock hands, digital
+alignment / spacing / blanking, ImageList custom values, RW4 button actions).
+
+Stock round-trips (`node tools/roundtrip.js`) are byte-identical for all five
+reference faces (2× Watch 6, 3× Watch 5 incl. a 2-slot face). Per-generation
+details reproduced from stock: file-wide image/list/widget ordinals across
+slots (sec 2/3/7 keep counting, sec 0/9 restart per face), blob order
+(elements, widgets, actions, preview, images on the new generation; preview
+last on the old one), 4-byte blob padding on the old generation only,
+content-shared image blobs on the new generation only, and the header
+subVersion (1 / 0 / 2-slot dual = 2, echoed on reimport).
 
 Round-trip on `redmi_watch_6_test_wtchface.bin`: section 0/7 blobs
 byte-identical, all 145 packed images + preview pixel-identical, 0 widget

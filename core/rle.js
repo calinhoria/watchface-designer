@@ -124,4 +124,38 @@ function encodeV10(src, recordSize = 4) {
   }
   return Buffer.from(out);
 }
-module.exports = { uncompressRLE, uncompressRLEv20, uncompressRLEv10, uncompressRLEv11, encodeV10 };
+// RLE v20 (LVGL, byte-oriented) encoder. Verified byte-identical against stock
+// Watch 6 blobs (320/320 singles, list frames and previews): runs of 3+
+// identical bytes become (count, byte), everything else goes out as literal
+// chunks of up to 127 bytes ((0x80|count), bytes...). Short runs of 1-2 stay
+// inside the literals — unlike v10, which also run-codes length-2+ runs.
+function encodeV20(src) {
+  src = Buffer.from(src);
+  const out = [];
+  let i = 0;
+  const n = src.length;
+  const runLen = (p) => {
+    let r = 1;
+    while (r < 127 && p + r < n && src[p + r] === src[p]) r++;
+    return r;
+  };
+  while (i < n) {
+    const r = runLen(i);
+    if (r >= 3) {
+      out.push(r);
+      out.push(src[i]);
+      i += r;
+    } else {
+      let j = i;
+      while (j < n && j - i < 127) {
+        if (runLen(j) >= 3) break;
+        j++;
+      }
+      out.push(0x80 | (j - i));
+      for (let k = i; k < j; k++) out.push(src[k]);
+      i = j;
+    }
+  }
+  return Buffer.from(out);
+}
+module.exports = { uncompressRLE, uncompressRLEv20, uncompressRLEv10, uncompressRLEv11, encodeV10, encodeV20 };

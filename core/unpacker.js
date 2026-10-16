@@ -740,6 +740,7 @@ function unpack(buffer) {
     if (r.preview) allImages.set('preview.png', r.preview);
     return { version, watchType, title: r.title, slots: r.slots, preview: r.preview, allImages,
       animationCount: r.animationCount || 0, appCount: r.appCount || 0,
+      subVersion: r.subVersion || 0,
       rawName: name, faceId: getAsciiString(data, 40) };
   }
   const r = unpackV3(data, watchType);

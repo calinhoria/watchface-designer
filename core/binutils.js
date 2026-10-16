@@ -61,6 +61,31 @@ function convertToRGBA(src) {
   for (let i = 0; i < idx.length; i++) pal.copy(out, i * 4, idx[i] * 4, idx[i] * 4 + 4);
   return out; // BGRA order (matches BMP expectation)
 }
+// Inverse of convertToRGBA: BGRA quadruples -> { palette (1024B BGRA), indices }.
+// Palette order is first-appearance in pixel order, which is what stock Watch 6
+// blobs use (verified: rebuilt palettes match byte-for-byte). Returns null when
+// the image has more than 256 distinct colors and cannot be palettized.
+function bgraToPal8(bgra) {
+  const src = Buffer.from(bgra);
+  if (src.length % 4 !== 0) return null;
+  const indexOf = new Map();
+  const palette = [];
+  const indices = Buffer.alloc(src.length / 4);
+  for (let p = 0; p < src.length; p += 4) {
+    const key = src.readUInt32LE(p);
+    let ix = indexOf.get(key);
+    if (ix === undefined) {
+      if (palette.length >= 256) return null;
+      ix = palette.length;
+      indexOf.set(key, ix);
+      palette.push(src.subarray(p, p + 4));
+    }
+    indices[p / 4] = ix;
+  }
+  const pal = Buffer.alloc(1024, 0);
+  palette.forEach((q, i) => q.copy(pal, i * 4));
+  return { palette: pal, indices };
+}
 // 3 bytes/pixel [lo, hi, alpha] RGB565+alpha -> BGRA
 function rgb565AlphaToRGBA(data) {
   data = Buffer.from(data);
@@ -95,4 +120,4 @@ function setDWord(data, offset, val, bigEndian = 0) {
   if (bigEndian) { data[offset] = (val >>> 24) & 0xFF; data[offset + 1] = (val >>> 16) & 0xFF; data[offset + 2] = (val >>> 8) & 0xFF; data[offset + 3] = val & 0xFF; }
   else { data[offset] = val & 0xFF; data[offset + 1] = (val >>> 8) & 0xFF; data[offset + 2] = (val >>> 16) & 0xFF; data[offset + 3] = (val >>> 24) & 0xFF; }
 }
-module.exports = { getDWord, getWord, getByte, getByteArray, getAsciiString, getUTF8String, getUnicodeString, dwordAligned, reverseWord, convertToRGBA, rgb565AlphaToRGBA, bgraToRgba, rgbaToBgra, setByte, setWord, setDWord };
+module.exports = { getDWord, getWord, getByte, getByteArray, getAsciiString, getUTF8String, getUnicodeString, dwordAligned, reverseWord, convertToRGBA, bgraToPal8, rgb565AlphaToRGBA, bgraToRgba, rgbaToBgra, setByte, setWord, setDWord };

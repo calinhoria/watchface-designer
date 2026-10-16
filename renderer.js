@@ -2741,7 +2741,7 @@ function createNewFace() {
     base: title.replace(/[^\w\-]+/g, '_'), filePath: null,
     version: 2, watchType: dev.type, watchName: dev.name,
     screenW: dev.screen[0], screenH: dev.screen[1], title, faceId: '', compilable: dev.compilable !== false,
-    previewUrl: null,
+    previewUrl: null, subVersion: null,
     slots: [{ index: 0, role: 'face', widgets: [], rawActions: [], images: [] }],
   };
   setEmptyState();
@@ -2991,6 +2991,7 @@ $('btnCompile').onclick = async () => {
     defaultBase: project.base, title: $('inpTitle').value || project.title || project.base,
     deviceType: project.watchType, faceId: project.faceId || '',
     animationCount: project.animationCount || 0, appCount: project.appCount || 0,
+    subVersion: project.subVersion != null ? project.subVersion : null,
     slots,
   });
   if (!res || !res.ok) {
@@ -3045,7 +3046,7 @@ async function saveProject() {
     defaultBase: project.base, title, deviceType: project.watchType,
     savePath: project.savePath || null, slots: outs,
     customFonts: usedCustomFonts(), projectFont: project.font || null, groupSeq, groupNames,
-    testData: TEST_DATA, useCurrentTime,
+    testData: TEST_DATA, useCurrentTime, subVersion: project.subVersion != null ? project.subVersion : null,
   });
   if (!out) return null;
   project.savePath = out;
