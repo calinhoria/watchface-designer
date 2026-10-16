@@ -2543,8 +2543,9 @@ function distributeSelection(mode) {
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   } else {
     // evenly: spread across the DEVICE — equal gaps *and* equal device margins,
-    // so the row ends up centred on the device (consistent with Align X/Y)
-    const gap = span / (gaps + 1);
+    // so the row ends up centred on the device (consistent with Align X/Y).
+    // n items have n-1 gaps plus one margin at each end, hence n+1 shares.
+    const gap = span / (items.length + 1);
     let x = gap;
     for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   }
