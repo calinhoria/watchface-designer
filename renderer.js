@@ -800,7 +800,7 @@ function applyLayerOrder() {
     items.push({ w, gid: body ? body.dataset.gid : null });
   }
   if (items.length !== s.widgets.length) { refreshPanels(); return; }
-  const next = items.map((o) => o.w); // the list is shown in creation order
+  const next = items.map((o) => o.w).reverse(); // the list is shown top-most first
   const moved = next.some((w, k) => w !== s.widgets[k]);
   const regrouped = items.some((o) => (o.w._group || null) !== o.gid);
   if (!moved && !regrouped) { $('meta').textContent = 'Nothing changed \u2014 dropped in the same place.'; refreshPanels(); return; }
@@ -1647,11 +1647,13 @@ function refreshPanels() {
     }
     sl.appendChild(wrap);
   });
-  // layers — listed in CREATION order: the first widget in the file is the first
-  // row, so a clock preset reads hour, colon, minute top-to-bottom and Distribute
-  // lays them out left-to-right in that same order. A group is a block with a
-  // collapsible header and its own Sortable body, so dragging a layer in or out
-  // of that body is what changes its group.
+  // layers — listed in Z-ORDER: the row at the top is the widget drawn LAST, i.e.
+  // the one in front, so the bottom row is the backmost layer (drag a row down to
+  // push it behind). Presets create their layers in reverse so an assembly still
+  // reads top-to-bottom (hour, colon, minute) and Distribute lays the selection
+  // out left-to-right in that same order. A group is a block with a collapsible
+  // header and its own Sortable body, so dragging a layer in or out of that body
+  // is what changes its group.
   const L = $('layers'); L.innerHTML = '';
   // NB: must not be called mkRow — that name is the Properties row helper
   const mkLayerRow = (i) => {
@@ -1666,7 +1668,7 @@ function refreshPanels() {
     return d;
   };
   const seenGroups = new Set();
-  for (let i = 0; i < s.widgets.length; i++) {
+  for (let i = s.widgets.length - 1; i >= 0; i--) {
     const w = s.widgets[i];
     if (!w._group) { mkLayerRow(i); continue; }
     if (seenGroups.has(w._group)) continue;
@@ -1706,7 +1708,7 @@ function refreshPanels() {
     const body = document.createElement('div');
     body.className = 'group-body';
     body.dataset.gid = gid;
-    for (const m of members) body.appendChild(mkLayerRow(m.k));
+    for (const m of members.slice().reverse()) body.appendChild(mkLayerRow(m.k));
     block.appendChild(body);
     L.appendChild(block);
     sortable(body, {
@@ -2525,7 +2527,7 @@ function distributeSelection(mode) {
   // the reading order (hour, colon, minute…).
   const order = new Map(s.widgets.map((w, i) => [w, i]));
   const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) }))
-    .sort((a, b) => order.get(a.w) - order.get(b.w));
+    .sort((a, b) => order.get(b.w) - order.get(a.w)); // top of the list first
   const totalW = items.reduce((a, o) => a + o.b.w, 0);
   const gaps = items.length - 1;
   const span = W - totalW;
@@ -2722,6 +2724,7 @@ async function applyClockPreset(withSeconds) {
   const gid = `g${groupSeq++}`;
   pushHistory();
   let x = cx;
+  const placed = [];
   for (const part of parts) {
     const w2 = part.layer;
     w2.X = Math.round(x);
@@ -2732,9 +2735,12 @@ async function applyClockPreset(withSeconds) {
     taken.add(w2.Name);
     w2._preset = 'clock';
     w2._group = gid;
-    s.widgets.push(w2);
+    placed.push(w2);
     x += (part.kind === 'digits' ? w2.Width * 2 : w2.Width) + gap;
   }
+  // reverse: the layer list is z-ordered (top row drawn last), so the hour must
+  // be added last to sit at the top of the list and read hour, colon, minute
+  for (const w2 of placed.slice().reverse()) s.widgets.push(w2);
   selected = s.widgets.length - 1;
   groupSel = new Set(s.widgets.map((w2, i) => (w2._group === gid ? i : -1)).filter((i) => i >= 0));
   refreshPanels(); render();
@@ -2855,7 +2861,8 @@ async function applyPreset(p) {
     if (!wg._group) wg._group = `g${groupSeq++}`;
     ew._group = wg._group;
     if (tag === 'minus') ew.X = wg.X - ex.width;
-    s.widgets.push(ew);
+    // behind the value: the list is z-ordered, so the value must end up on top
+    s.widgets.splice(s.widgets.indexOf(wg), 0, ew);
     taken.add(ew.Name);
   }
   pushHistory();

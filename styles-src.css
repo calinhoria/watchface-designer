@@ -83,6 +83,9 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
 
 /* layer rows */
 #layers { display: flex; flex-direction: column; gap: 2px; }
+/* droppable area below the last row: without it you cannot drop a layer at the
+   very bottom of the list (it would land inside the last group instead) */
+#layers { padding-bottom: 16px; }
 .layer {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
   padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 13px;
