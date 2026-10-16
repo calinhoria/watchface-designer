@@ -2061,6 +2061,53 @@ function refreshPanels() {
       srow.appendChild(mkCheck('bold', 'Faux bold')); srow.appendChild(mkCheck('italic', 'Faux italic'));
       srow.appendChild(gen);
       grid.appendChild(srow);
+      // fill type: solid / gradient (2 stops) / gradient from CSS / outline
+      const fRow = mkRow('Fill type', 'How the glyphs are painted');
+      const fSel = document.createElement('select');
+      for (const [v, l] of [['solid', 'Solid'], ['gradient', 'Gradient (2 stops)'], ['css', 'Gradient from CSS'], ['outline', 'Outline']]) {
+        const o = document.createElement('option'); o.value = v; o.textContent = l; fSel.appendChild(o);
+      }
+      fSel.value = f.fill || 'solid';
+      fSel.onchange = () => { f.fill = fSel.value; refreshPanels(); queueFontGen(w); };
+      fRow.appendChild(fSel);
+      grid.appendChild(fRow);
+      const fillT = f.fill || 'solid';
+      if (fillT === 'gradient') {
+        for (const [key, label, def] of [['gradFrom', 'From', f.color || '#ffffff'], ['gradTo', 'To', '#000000']]) {
+          const row = mkRow(label);
+          const inp = document.createElement('input'); inp.type = 'color'; inp.value = f[key] || def;
+          inp.title = `Gradient ${label.toLowerCase()} colour`;
+          inp.oninput = () => { f[key] = inp.value; queueFontGen(w); };
+          row.appendChild(inp); grid.appendChild(row);
+        }
+        const row = mkRow('Angle');
+        const inp = document.createElement('input'); inp.type = 'number'; inp.value = f.gradAngle == null ? 90 : f.gradAngle;
+        inp.title = 'Gradient direction in degrees (0 = left→right, 90 = top→bottom)';
+        inp.oninput = () => { f.gradAngle = parseInt(inp.value, 10) || 0; queueFontGen(w); };
+        row.appendChild(inp); grid.appendChild(row);
+      } else if (fillT === 'css') {
+        const row = mkRow('CSS');
+        const inp = document.createElement('input'); inp.type = 'text';
+        inp.value = f.cssFill || 'linear-gradient(180deg, #ffcc00, #ff5500)';
+        inp.title = 'Paste a CSS linear-gradient, e.g. linear-gradient(180deg, #ffcc00, #ff5500)';
+        inp.oninput = () => { f.cssFill = inp.value; queueFontGen(w); };
+        row.appendChild(inp); grid.appendChild(row);
+        const h = document.createElement('div'); h.className = 'muted'; h.style.fontSize = '11px';
+        h.textContent = 'angle or "to bottom", then colour stops';
+        grid.appendChild(h);
+      } else if (fillT === 'outline') {
+        const row = mkRow('Outline');
+        const inp = document.createElement('input'); inp.type = 'color'; inp.value = f.outlineColor || f.color || '#ffffff';
+        inp.title = 'Outline colour';
+        inp.oninput = () => { f.outlineColor = inp.value; queueFontGen(w); };
+        row.appendChild(inp); grid.appendChild(row);
+        const row2 = mkRow('Width');
+        const inp2 = document.createElement('input'); inp2.type = 'number'; inp2.min = '1'; inp2.max = '20';
+        inp2.value = f.outlineWidth == null ? 2 : f.outlineWidth;
+        inp2.title = 'Outline thickness (px)';
+        inp2.oninput = () => { f.outlineWidth = Math.max(1, parseInt(inp2.value, 10) || 2); queueFontGen(w); };
+        row2.appendChild(inp2); grid.appendChild(row2);
+      }
       if (f.glyphs && f.glyphs.length === 1) {
         const grow = mkRow('Glyph', 'Character this layer renders from the font');
         const ginp = document.createElement('input');
@@ -2828,14 +2875,70 @@ function addWidget(kind) {
 }
 // Shared digit sets: identical font parameters reuse the same PNGs across
 // layers, so a project font is generated once and every layer points at it.
-function fontSetBase(family, size, color, bold, italic, uniqueFor) {
+function fontSetBase(family, size, color, bold, italic, uniqueFor, styleKey) {
   const fam = String(family).replace(/[^\w]+/g, '-');
   const col = String(color || '#ffffff').replace('#', '');
   const uniq = uniqueFor ? `${String(uniqueFor).replace(/[^\w]+/g, '-')}_` : '';
-  return `font_${uniq}${fam}_${size}${bold ? 'b' : ''}${italic ? 'i' : ''}_${col}`;
+  return `font_${uniq}${fam}_${size}${bold ? 'b' : ''}${italic ? 'i' : ''}_${col}` + (styleKey ? `_${styleKey}` : '');
+}
+// short key describing the fill style so glyph PNG names change with it
+function fontStyleKey(f) {
+  const t = f.fill || 'solid';
+  if (t === 'solid') return '';
+  const clean = (s) => String(s || '').replace(/[^a-z0-9]/gi, '');
+  const parts = [t];
+  if (t === 'gradient') parts.push(clean(f.gradFrom || f.color), clean(f.gradTo));
+  else if (t === 'css') parts.push(String(f.cssFill || '').replace(/[^a-z0-9%.,#]/gi, '').slice(0, 40));
+  else if (t === 'outline') parts.push(clean(f.outlineColor || f.color), String(f.outlineWidth == null ? 2 : f.outlineWidth));
+  return parts.filter(Boolean).join('-');
+}
+// parse a CSS linear-gradient(...) into a canvas gradient (2..n stops)
+function parseCssGradient(str, w, h) {
+  const m = /linear-gradient\s*\(([\s\S]*)\)/i.exec(String(str || ''));
+  if (!m) return null;
+  const parts = m[1].split(',').map((s) => s.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+  let angle = 180, i0 = 0;
+  const a = /^(-?[\d.]+)deg$/i.exec(parts[0]);
+  const to = /^to\s+(top|bottom|left|right)$/i.exec(parts[0]);
+  if (a) { angle = parseFloat(a[1]); i0 = 1; }
+  else if (to) { angle = ({ bottom: 180, top: 0, right: 90, left: 270 })[to[1].toLowerCase()]; i0 = 1; }
+  const stops = parts.slice(i0);
+  if (stops.length < 2) return null;
+  const rad = angle * Math.PI / 180;
+  const cx = w / 2, cy = h / 2;
+  const len = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
+  const dx = Math.cos(rad) * len / 2, dy = Math.sin(rad) * len / 2;
+  return { x0: cx - dx, y0: cy - dy, x1: cx + dx, y1: cy + dy, stops: stops.map((s) => s.split(/\s+/)[0]) };
+}
+// set the glyph canvas fill/stroke for the chosen fill type
+function applyGlyphFill(c, f, cellW, h) {
+  const t = f.fill || 'solid';
+  const color = f.color || '#ffffff';
+  c.strokeStyle = color;
+  if (t === 'gradient') {
+    const ang = ((f.gradAngle == null ? 90 : f.gradAngle) * Math.PI) / 180;
+    const cx = cellW / 2, cy = h / 2;
+    const len = Math.abs(cellW * Math.cos(ang)) + Math.abs(h * Math.sin(ang));
+    const dx = Math.cos(ang) * len / 2, dy = Math.sin(ang) * len / 2;
+    const g = c.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
+    g.addColorStop(0, f.gradFrom || color);
+    g.addColorStop(1, f.gradTo || '#000000');
+    c.fillStyle = g;
+  } else if (t === 'css') {
+    const parsed = parseCssGradient(f.cssFill, cellW, h);
+    if (parsed) {
+      const g = c.createLinearGradient(parsed.x0, parsed.y0, parsed.x1, parsed.y1);
+      parsed.stops.forEach((col, i) => g.addColorStop(parsed.stops.length === 1 ? 0 : i / (parsed.stops.length - 1), col));
+      c.fillStyle = g;
+    } else c.fillStyle = color;
+  } else {
+    c.fillStyle = color;
+  }
+  if (t === 'outline') c.strokeStyle = f.outlineColor || color;
 }
 function fontSetNames(f, i) {
-  const b = f._base || fontSetBase(f.family, f.size, f.color, f.bold, f.italic);
+  const b = f._base || fontSetBase(f.family, f.size, f.color, f.bold, f.italic, null, fontStyleKey(f));
   return Array.from({ length: i == null ? 10 : i }, (_, d) => `${b}_${d}.png`);
 }
 // is this generated image still referenced by another layer?
@@ -2848,8 +2951,10 @@ function fontImageUsedElsewhere(s, name, exceptWidget) {
 // Draw a set of glyphs from one font into transparent PNGs.
 // mono=true shares one cell width (needed for even digit spacing); otherwise each
 // glyph gets its natural width (used for °, -, : and custom text).
-async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mono = true, uniqueFor = null } = {}) {
-  const base = fontSetBase(family, size, color, bold, italic, uniqueFor);
+async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mono = true, uniqueFor = null, style = null } = {}) {
+  const f = style || { color };
+  const styleKey = fontStyleKey(f);
+  const base = fontSetBase(family, size, color, bold, italic, uniqueFor, styleKey);
   const names = {};
   const missing = glyphs.filter((g) => !s.images.some((im) => im.name === `${base}_${g.tag}.png`));
   const first = s.images.find((im) => im.name === `${base}_${glyphs[0].tag}.png`);
@@ -2889,15 +2994,22 @@ async function ensureGlyphSet(s, family, size, color, bold, italic, glyphs, { mo
     const c2 = document.createElement('canvas'); c2.width = cw; c2.height = H;
     const c = c2.getContext('2d');
     setFontOn(c, family, size);
-    c.fillStyle = color; c.strokeStyle = color;
+    applyGlyphFill(c, f, cw, H);
+    const fillType = f.fill || 'solid';
     // place the measured INK box inside the cell: origin at pad+left, baseline at
     // pad+ascent, with the italic shear compensated by the added slant width.
     c.textAlign = 'left'; c.textBaseline = 'alphabetic';
     c.save();
     c.translate(pad + i.left + slant, pad + ascent);
     if (italic) c.transform(1, 0, -0.212, 1, 0, 0);
-    if (bold) { c.lineWidth = stroke; c.strokeText(i.g.char, 0, 0); }
-    c.fillText(i.g.char, 0, 0);
+    if (fillType === 'outline') {
+      c.lineWidth = Math.max(1, f.outlineWidth == null ? 2 : f.outlineWidth);
+      if (f.color && String(f.color) !== 'none') c.fillText(i.g.char, 0, 0);
+      c.strokeText(i.g.char, 0, 0);
+    } else {
+      if (bold) { c.lineWidth = stroke; c.strokeText(i.g.char, 0, 0); }
+      c.fillText(i.g.char, 0, 0);
+    }
     c.restore();
     const uniq = uniqName(name, taken); taken.add(uniq);
     s.images.push({ name: uniq, width: cw, height: H, url: c2.toDataURL('image/png') });
@@ -2932,7 +3044,7 @@ async function generateFontBitmaps(w, s) {
   $('meta').textContent = `Loading font ${f.family}\u2026`;
   let set;
   try {
-    set = await ensureGlyphSet(s, f.family, size, color, bold, italic, DIGIT_GLYPHS);
+    set = await ensureGlyphSet(s, f.family, size, color, bold, italic, DIGIT_GLYPHS, { style: f });
   } catch (err) { $('meta').textContent = String(err.message || err); return; }
   pushHistory();
   // drop this layer's previous set, but keep images shared with other layers
@@ -2969,7 +3081,7 @@ async function regenerateWidgetGlyphs(w, s) {
   let set;
   try {
     // multi-frame sets must share dimensions (the packer requires it)
-    set = await ensureGlyphSet(s, f.family, size, color, !!f.bold, !!f.italic, spec, { mono: spec.length > 1, uniqueFor: uniq });
+    set = await ensureGlyphSet(s, f.family, size, color, !!f.bold, !!f.italic, spec, { mono: spec.length > 1, uniqueFor: uniq, style: f });
   } catch (err) { $('meta').textContent = String(err.message || err); return; }
   const names = spec.map((g) => set.names[g.tag]);
   pushHistory();
