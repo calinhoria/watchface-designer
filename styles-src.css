@@ -204,6 +204,15 @@ input[type="checkbox"] { accent-color: var(--color-acc); }
   width: 36px; height: 36px; object-fit: contain; border-radius: 6px; flex: none;
   background: repeating-conic-gradient(#15181f 0 25%, #0d0f14 0 50%) 0 0/12px 12px;
 }
+/* single-image picker row (analog clock hands/background): dropdown + thumbnail + … button */
+.imgpick { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.imgpick select { flex: 1; min-width: 0; }
+.imgthumb {
+  width: 36px; height: 36px; object-fit: contain; border-radius: 6px; flex: none;
+  border: 1px solid var(--color-line);
+  background: repeating-conic-gradient(#15181f 0 25%, #0d0f14 0 50%) 0 0/12px 12px;
+}
+.imgpick .grow-btn { flex: none; padding-left: 10px; padding-right: 10px; }
 .ilm-row .idx { width: 22px; text-align: right; font-size: 11px; color: var(--color-mut); flex: none; }
 .ilm-row .nm { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ilm-row .val { width: 62px; flex: none; }

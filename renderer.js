@@ -864,7 +864,10 @@ $('btnGrid').onclick = () => {
 
 // ---------- Images (BitmapList) dialog ----------
 // entries: { value: number|null, name }
-function listEntries(w) {
+// key: optional single-image widget field (analog clock hands/background).
+// With a key the dialog manages exactly that one image, like a Shape-30 layer.
+function listEntries(w, key) {
+  if (key) return w[key] ? [{ value: null, name: w[key] }] : [];
   if (w.Shape === 30) return w.Bitmap ? [{ value: null, name: w.Bitmap }] : [];
   return String(w.BitmapList || '').split('|').map((x) => x.trim()).filter(Boolean).map((x) => {
     const m = /^\(([^)]*)\):([\s\S]*)$/.exec(x);
@@ -910,6 +913,13 @@ function ilmRender() {
     list.appendChild(row);
   });
   $('ilmCount').textContent = `(${ilmState.entries.length})`;
+  // single-image fields (analog hands/background) reuse this dialog; the
+  // reorder/index copy does not apply to them
+  const singleImg = ilmState.singleKey != null;
+  $('ilmTitle').textContent = singleImg ? 'Image' : 'Images';
+  $('ilmSub').textContent = singleImg
+    ? 'Pick or upload one image for this field'
+    : 'Drag the handle to reorder \u00b7 first entry is index 0';
   // index-origin hints (EasyFace: weekday Index0 = Sunday, month Index1 = January)
   const hintEl = $('ilmHint');
   const src = String(ilmState.widget.DataSrcIndex || ilmState.widget.DataSrcValue || '');
@@ -940,7 +950,7 @@ function ilmRender() {
   const signBtn = $('ilmSign');
   kmBtn.hidden = !(ilmState.widget._kmValues || /^0?821$/.test(String(ilmState.widget.DataSrcIndex || '')));
   signBtn.hidden = !(ilmState.widget.Shape === 31 || ilmState.widget.Shape === 32);
-  const single = ilmState.widget.Shape === 30;
+  const single = ilmState.widget.Shape === 30 || ilmState.singleKey != null;
   if (single && ilmState.entries.length) {
     // an image layer shows exactly one image: replace via the row's ✕ then Add
     $('ilmPick').disabled = true;
@@ -952,8 +962,8 @@ function ilmRender() {
     $('ilmUploadBtn').textContent = 'Upload…';
   }
 }
-function openImgListDialog(w) {
-  ilmState = { widget: w, entries: listEntries(w) };
+function openImgListDialog(w, key) {
+  ilmState = { widget: w, entries: listEntries(w, key), singleKey: key || null };
   ilmRender();
   enableDragSort($('ilmList'), {
     rowSel: '.ilm-row', handleSel: '.grip',
@@ -980,7 +990,7 @@ $('ilmSign').onclick = async () => {
 $('ilmAdd').onclick = () => {
   const n = $('ilmPick').value;
   if (!n) return;
-  if (ilmState.widget.Shape === 30) ilmState.entries = [{ value: null, name: n }];
+  if (ilmState.widget.Shape === 30 || ilmState.singleKey != null) ilmState.entries = [{ value: null, name: n }];
   else ilmState.entries.push({ value: null, name: n });
   ilmRender();
 };
@@ -995,7 +1005,7 @@ $('ilmUpload').onchange = async () => {
     const name = uniqName(file.name, taken); taken.add(name);
     imgCache.delete(name);
     s.images.push({ name, width: img.naturalWidth, height: img.naturalHeight, url });
-    if (ilmState.widget.Shape === 30) ilmState.entries = [{ value: null, name }];
+    if (ilmState.widget.Shape === 30 || ilmState.singleKey != null) ilmState.entries = [{ value: null, name }];
     else ilmState.entries.push({ value: null, name });
   }
   $('ilmUpload').value = '';
@@ -1003,7 +1013,17 @@ $('ilmUpload').onchange = async () => {
 };
 $('ilmSave').onclick = () => {
   const w = ilmState.widget;
-  if (w.Shape === 30) {
+  if (ilmState.singleKey != null) {
+    w[ilmState.singleKey] = ilmState.entries.length ? ilmState.entries[0].name : '';
+    // same convenience as picking from the dropdown: first image centres the pivot
+    const hand = CLOCK_HANDS.find((h) => h[0] === ilmState.singleKey);
+    if (hand && w[ilmState.singleKey]) {
+      if (!w[hand[1]] && !w[hand[2]]) {
+        const im = slot().images.find((x) => x.name === w[ilmState.singleKey]);
+        if (im) { w[hand[1]] = Math.round(im.width / 2); w[hand[2]] = Math.round(im.height / 2); }
+      }
+    }
+  } else if (w.Shape === 30) {
     w.Bitmap = ilmState.entries.length ? ilmState.entries[0].name : '';
   } else {
     const custom = ilmState.entries.some((e, i) => e.value != null && e.value !== i);
@@ -1535,7 +1555,23 @@ function refreshPanels() {
         pushHistory();
         refreshPanels(); render();
       };
-      row.appendChild(sel);
+      // thumbnail + the same image picker the digital layers use, so the
+      // image is visible and can be picked/uploaded with a preview
+      const wrap = document.createElement('div');
+      wrap.className = 'imgpick';
+      const thumb = document.createElement('img');
+      thumb.className = 'imgthumb';
+      const cur = s.images.find((im) => im.name === w[key]);
+      thumb.src = cur ? cur.url : '';
+      thumb.alt = '';
+      thumb.title = w[key] || '(none)';
+      const pick = document.createElement('button');
+      pick.className = 'grow-btn';
+      pick.textContent = '…';
+      pick.title = 'Choose image (with preview)…';
+      pick.onclick = () => openImgListDialog(w, key);
+      wrap.appendChild(sel); wrap.appendChild(thumb); wrap.appendChild(pick);
+      row.appendChild(wrap);
       return row;
     };
     grid.appendChild(imgRow('Background', 'BackgroundImage', 'Optional dial image, centred on the clock'));
