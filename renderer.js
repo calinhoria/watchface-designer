@@ -106,6 +106,7 @@ const selObserver = new MutationObserver((muts) => {
   }
 });
 selObserver.observe(document.documentElement, { childList: true, subtree: true });
+enhanceAllSelects(document); // selects present at load (observer only sees new ones)
 
 // Human-readable DataSrc mapping (XiaomiWatch.Common FaceItemDataSrc).
 // 4-char codes = shape+display hex bytes, shared across all devices.
