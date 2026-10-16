@@ -1859,7 +1859,7 @@ function refreshPanels() {
       if (pb) pb.scrollTop = 0;
       $('meta').textContent = `Font applied to ${ids.length} layers.`;
     };
-    srow.appendChild(sizeInp); srow.appendChild(colInp); srow.appendChild(bC.l); srow.appendChild(iC.l); srow.appendChild(apply);
+    srow.appendChild(sizeInp); srow.appendChild(colInp); srow.appendChild(bC.l); srow.appendChild(iC.l);
     gb.appendChild(srow);
     // effect (fill) — same options as a single layer, applied to the selection
     const gfRow = mkRow('Fill type', 'Effect applied to every selected layer (with Apply)');
@@ -1935,23 +1935,12 @@ function refreshPanels() {
       ['Pack left', '<rect x="3" y="6" width="4" height="12" rx="1"/><rect x="8" y="6" width="4" height="12" rx="1"/><rect x="13" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('left')],
       ['Pack right', '<rect x="7" y="6" width="4" height="12" rx="1"/><rect x="12" y="6" width="4" height="12" rx="1"/><rect x="17" y="6" width="4" height="12" rx="1"/>', () => distributeSelection('right')],
     ]);
-    const arow = document.createElement('div'); arow.className = 'row rowcontrols';
-    const ungroup = document.createElement('button'); ungroup.textContent = 'Ungroup';
-    ungroup.onclick = () => ungroupSelection();
-    const lockAll = document.createElement('button'); lockAll.textContent = 'Lock all';
-    lockAll.onclick = () => {
-      pushHistory();
-      for (const i of selIdx) s.widgets[i]._locked = true;
-      refreshPanels(); render();
-    };
-    const unlockAll = document.createElement('button'); unlockAll.textContent = 'Unlock all';
-    unlockAll.onclick = () => {
-      pushHistory();
-      for (const i of selIdx) delete s.widgets[i]._locked;
-      refreshPanels(); render();
-    };
-    arow.appendChild(ungroup); arow.appendChild(lockAll); arow.appendChild(unlockAll);
-    gb.appendChild(arow);
+    // Apply sits at the bottom of the box (full width)
+    const applyRow = document.createElement('div');
+    applyRow.className = 'row rowcontrols';
+    applyRow.style.marginTop = '8px';
+    applyRow.appendChild(apply);
+    gb.appendChild(applyRow);
     grid.appendChild(gb);
   }
 
