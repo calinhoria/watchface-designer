@@ -2625,8 +2625,9 @@ function unusedImages(s) {
   const used = usedImageNames(s);
   return s.images.filter((im) => !used.has(im.name));
 }
-// Remove unused images. Called before save/compile and from the panel button.
-function pruneUnusedImages(reason) {
+// Remove unused images. Called before save/compile (whole project) and from
+// the panel button (current slot only, so the button count matches the panel).
+function pruneUnusedImages(reason, slotOnly) {
   if (!project) return 0;
   // animation frames are not represented as widgets, so pruning would eat them
   if (project.animationCount || project.appCount) {
@@ -2634,7 +2635,8 @@ function pruneUnusedImages(reason) {
     return 0;
   }
   let removed = 0;
-  project.slots.forEach((s) => {
+  const targets = slotOnly ? [slot()] : project.slots;
+  targets.forEach((s) => {
     const un = unusedImages(s);
     if (!un.length) return;
     if (!removed) pushHistory();
@@ -2654,9 +2656,12 @@ function pruneUnusedImages(reason) {
 function updatePruneButton() {
   const btn = $('btnPruneImages');
   if (!btn) return;
-  const n = project ? project.slots.reduce((a, s) => a + unusedImages(s).length, 0) : 0;
+  // count only the current slot so the button agrees with the panel below it;
+  // save/compile still clean the whole project
+  const n = project ? unusedImages(slot()).length : 0;
   btn.disabled = !n;
   btn.textContent = n ? `Remove unused (${n})` : 'Remove unused';
+  btn.title = 'Delete images no layer in this slot references (save/compile clean every slot)';
 }
 function imageUsers(s, name) {
   const out = [];
@@ -3230,7 +3235,7 @@ $('btnAddList').onclick = () => addWidget('list');
 $('btnAddClock').onclick = () => addWidget('clock');
 $('btnAddBtn').onclick = () => addWidget('btn');
 $('btnUpload').onclick = () => $('fileUpload').click();
-$('btnPruneImages').onclick = () => pruneUnusedImages('removing');
+$('btnPruneImages').onclick = () => pruneUnusedImages('removing', true);
 $('fileUpload').onchange = async () => {
   if (!project) return;
   pushHistory();
