@@ -1103,11 +1103,13 @@ function ilmRender() {
   }
   hintEl.textContent = hintText;
   hintEl.hidden = !hintText;
-  // picker of project images not already in the list
+  // picker of project images; single-image fields list every image (picking
+  // replaces), multi-image fields hide the ones already in the list
+  const single = ilmState.widget.Shape === 30 || ilmState.singleKey != null;
   const used = new Set(ilmState.entries.map((e) => e.name));
   const pick = $('ilmPick');
   pick.innerHTML = '';
-  const avail = s.images.map((i) => i.name).filter((n) => !used.has(n));
+  const avail = s.images.map((i) => i.name).filter((n) => single || !used.has(n));
   const urlOf = new Map(s.images.map((i) => [i.name, i.url]));
   for (const n of avail) {
     const o = document.createElement('option'); o.value = n; o.textContent = n;
@@ -1119,10 +1121,11 @@ function ilmRender() {
   const signBtn = $('ilmSign');
   kmBtn.hidden = !(ilmState.widget._kmValues || /^0?821$/.test(String(ilmState.widget.DataSrcIndex || '')));
   signBtn.hidden = !(ilmState.widget.Shape === 31 || ilmState.widget.Shape === 32);
-  const single = ilmState.widget.Shape === 30 || ilmState.singleKey != null;
-  // single-image field: one button, labelled Replace; multiple: Add (+ Upload)
-  $('ilmAdd').textContent = single ? (ilmState.entries.length ? 'Replace' : 'Choose') : 'Add';
+  // single-image field: the dropdown alone is the control (picking applies on
+  // Apply); multiple: Add (+ Upload)
+  $('ilmAdd').hidden = single;
   $('ilmUploadBtn').hidden = single;
+  if (!single) $('ilmAdd').textContent = 'Add';
   pick.disabled = !avail.length;
   $('ilmAdd').disabled = !avail.length;
   // live preview of the highlighted option so images are identifiable
@@ -1133,7 +1136,16 @@ function ilmRender() {
     prev.hidden = !u.has(pick.value);
     prev.title = pick.value || '';
   };
-  pick.onchange = showPrev;
+  pick.onchange = () => {
+    // single-image field: choosing in the dropdown immediately becomes the
+    // one entry, so Apply (without the extra Choose click) does the right thing
+    if (single && pick.value) {
+      ilmState.entries = [{ value: null, name: pick.value }];
+      ilmRender();
+      return;
+    }
+    showPrev();
+  };
   showPrev();
 }
 function openImgListDialog(w, key) {
@@ -1188,7 +1200,8 @@ $('ilmUpload').onchange = async () => {
 $('ilmSave').onclick = () => {
   const w = ilmState.widget;
   if (ilmState.singleKey != null) {
-    w[ilmState.singleKey] = ilmState.entries.length ? ilmState.entries[0].name : '';
+    const pickVal = $('ilmPick') ? $('ilmPick').value : '';
+    w[ilmState.singleKey] = ilmState.entries.length ? ilmState.entries[0].name : (pickVal || '');
     // same convenience as picking from the dropdown: first image centres the pivot
     const hand = CLOCK_HANDS.find((h) => h[0] === ilmState.singleKey);
     if (hand && w[ilmState.singleKey]) {
@@ -1198,7 +1211,7 @@ $('ilmSave').onclick = () => {
       }
     }
   } else if (w.Shape === 30) {
-    w.Bitmap = ilmState.entries.length ? ilmState.entries[0].name : '';
+    w.Bitmap = ilmState.entries.length ? ilmState.entries[0].name : ($('ilmPick') ? ($('ilmPick').value || '') : '');
   } else {
     const custom = ilmState.entries.some((e, i) => e.value != null && e.value !== i);
     w.BitmapList = ilmState.entries.map((e, i) => (custom ? `(${e.value == null ? i : e.value}):${e.name}` : e.name)).join('|');
