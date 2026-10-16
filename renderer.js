@@ -1774,9 +1774,18 @@ function refreshPanels() {
       return { l, c };
     };
     const bC = mkCheck('bold', 'Faux bold'), iC = mkCheck('italic', 'Faux italic');
+    // effect (fill) values for the whole selection, read by Apply below
+    const gf = first._font || {};
+    let gFill = gf.fill || 'solid';
+    let gFrom = gf.gradFrom || colInp.value || '#ffffff';
+    let gTo = gf.gradTo || '#000000';
+    let gAngle = gf.gradAngle == null ? 90 : gf.gradAngle;
+    let gCss = gf.cssFill || 'linear-gradient(180deg, #ffcc00, #ff5500)';
+    let gOutline = gf.outlineColor || colInp.value || '#ffffff';
+    let gOutlineW = gf.outlineWidth == null ? 2 : gf.outlineWidth;
     const apply = document.createElement('button');
     apply.className = 'grow-btn'; apply.textContent = 'Apply to group';
-    apply.title = 'Set this font/size/colour on every selected layer and regenerate its glyphs';
+    apply.title = 'Set this font/size/colour/effect on every selected layer and regenerate its glyphs';
     apply.onclick = async () => {
       const ids = [...groupSel].filter((i) => s.widgets[i]);
       const keepSel = selected;                 // regeneration rebuilds the panels
@@ -1791,6 +1800,11 @@ function refreshPanels() {
         w2._font.color = colInp.value;
         w2._font.bold = bC.c.checked;
         w2._font.italic = iC.c.checked;
+        // effect (solid / gradient / css gradient / outline)
+        w2._font.fill = gFill;
+        if (gFill === 'gradient') { w2._font.gradFrom = gFrom; w2._font.gradTo = gTo; w2._font.gradAngle = gAngle; }
+        else if (gFill === 'css') { w2._font.cssFill = gCss; }
+        else if (gFill === 'outline') { w2._font.outlineColor = gOutline; w2._font.outlineWidth = gOutlineW; }
         await regenerateWidgetGlyphs(w2, s);
       }
       const touched = new Set(selIdx.map((i) => s.widgets[i] && s.widgets[i]._group).filter(Boolean));
@@ -1806,6 +1820,49 @@ function refreshPanels() {
     };
     srow.appendChild(sizeInp); srow.appendChild(colInp); srow.appendChild(bC.l); srow.appendChild(iC.l); srow.appendChild(apply);
     gb.appendChild(srow);
+    // effect (fill) — same options as a single layer, applied to the selection
+    const gfRow = mkRow('Fill type', 'Effect applied to every selected layer (with Apply)');
+    const gfSel = document.createElement('select');
+    for (const [v, l] of [['solid', 'Solid'], ['gradient', 'Gradient (2 stops)'], ['css', 'Gradient from CSS'], ['outline', 'Outline']]) {
+      const o = document.createElement('option'); o.value = v; o.textContent = l; gfSel.appendChild(o);
+    }
+    gfSel.value = gFill;
+    const gfBody = document.createElement('div');
+    const renderGroupFill = () => {
+      gfBody.innerHTML = '';
+      if (gFill === 'gradient') {
+        for (const [key, label] of [['from', 'From'], ['to', 'To']]) {
+          const row = mkRow(label);
+          const inp = document.createElement('input'); inp.type = 'color';
+          inp.value = key === 'from' ? gFrom : gTo;
+          inp.oninput = () => { if (key === 'from') gFrom = inp.value; else gTo = inp.value; };
+          row.appendChild(inp); gfBody.appendChild(row);
+        }
+        const row = mkRow('Angle');
+        const inp = document.createElement('input'); inp.type = 'number'; inp.value = gAngle;
+        inp.oninput = () => { gAngle = parseInt(inp.value, 10) || 0; };
+        row.appendChild(inp); gfBody.appendChild(row);
+      } else if (gFill === 'css') {
+        const row = mkRow('CSS');
+        const inp = document.createElement('input'); inp.type = 'text'; inp.value = gCss;
+        inp.oninput = () => { gCss = inp.value; };
+        row.appendChild(inp); gfBody.appendChild(row);
+      } else if (gFill === 'outline') {
+        const row = mkRow('Outline');
+        const inp = document.createElement('input'); inp.type = 'color'; inp.value = gOutline;
+        inp.oninput = () => { gOutline = inp.value; };
+        row.appendChild(inp); gfBody.appendChild(row);
+        const row2 = mkRow('Width');
+        const inp2 = document.createElement('input'); inp2.type = 'number'; inp2.min = '1'; inp2.max = '20'; inp2.value = gOutlineW;
+        inp2.oninput = () => { gOutlineW = Math.max(1, parseInt(inp2.value, 10) || 2); };
+        row2.appendChild(inp2); gfBody.appendChild(row2);
+      }
+    };
+    gfSel.onchange = () => { gFill = gfSel.value; renderGroupFill(); };
+    gfRow.appendChild(gfSel);
+    gb.appendChild(gfRow);
+    gb.appendChild(gfBody);
+    renderGroupFill();
     const arow = document.createElement('div'); arow.className = 'row rowcontrols';
     const ungroup = document.createElement('button'); ungroup.textContent = 'Ungroup';
     ungroup.onclick = () => ungroupSelection();
