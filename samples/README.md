@@ -16,6 +16,9 @@ project is self-contained.
 | `120917368969_tetris.bin` | 120917368969 "Tetris" (Xiaomi) | Redmi Watch 5 (465) | 32 | 1 | digits + lists |
 | `266211405_shark-doodle.bin` | 266211405 (Xiaomi, model `miwear.watch.m66`) | Mi Band 9 (366) | 4 | 2 | **first Mi Band 9 face** (192×490, PAL8/LVGL) |
 | `266269338_eco-neon.bin` | 266269338 "ECO NEON" (conversmod) | Mi Band 9 (366) | 4 | 2 | Mi Band 9, 22 widgets |
+| `366150013_colordynamics.bin` | 366150013 "Colordynamics" (Xiaomi, `n66cn`) | Mi Band 9 (366) | 4 | 5 | Mi Band 9, 5 variants |
+| `367701406_strava-8-ru.bin` | 367701406 "Strava 8 RU" (m0tral, `n67cn`) | Mi Band 9 Pro (367) | 4 | 6 | **first Mi Band 9 Pro face** (336×480) |
+| `120917383973_explorer.bin` | 120917383973 "Explorer" (Xiaomi, `p62`) | Mi Watch S5 (562) | 4 | 5 | **first Mi Watch S5 face** (480×480 round) |
 
 The `.mwz` files are the original store packages (editor project metadata:
 `capability.json`, `description.xml`, `editor.config.json`, previews). The
@@ -70,3 +73,12 @@ URLs, which work with plain `curl` while fresh.
   unpacker). 366 is also in the compiler's supported set again. `266211405`
   compiles; remaining DIFF is the usual sec0/2/7 (group flattening + single
   re-encode).
+- Detection: many families share a screen/preview size (Mi Band 8/9 both
+  192×490; Mi Band 8 Pro / 9 Pro / 10 Pro all 336×480). Device-coded store ids
+  (`367701406` → 367) now win over the size table when they resolve to a device
+  with a matching preview/screen. Global ids (`120917383973`) have no device
+  code and still resolve by size.
+- New families import + compile: Mi Band 9 Pro (367) and Mi Watch S5 (562)
+  round-trip through the compiler without error; their DIFF is structural
+  (sec0/2/7 — group flattening and re-encoded singles/lists), not a codec
+  failure.
