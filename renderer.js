@@ -568,6 +568,17 @@ function slotName(i) {
   return i === 0 ? 'Face' : (s.aod ? `AOD ${i}` : `Style ${i + 1}`);
 }
 $('btnAddSlot').onclick = () => { if (project) { $('slotCopyMain').checked = false; $('slotModal').hidden = false; } };
+// change the current slot's role after creation (Face <-> AOD)
+$('slotRoleSel').onchange = () => {
+  if (!project) return;
+  const sl = slot();
+  if (!sl) return;
+  pushHistory();
+  sl.role = $('slotRoleSel').value === 'aod' ? 'aod' : 'face';
+  sl.aod = sl.role === 'aod';
+  sl.aodFlag = sl.aod ? 0x80000000 : 0;
+  refreshPanels(); render();
+};
 function removeSlot(i) {
   if (!project || project.slots.length <= 1) return; // keep at least one
   const s = project.slots[i];
@@ -1555,6 +1566,8 @@ function refreshPanels() {
   $('icount').textContent = `(${s.images.length})`;
   $('screenInfo').textContent = `v${project.version} · ${project.watchName} · ${project.screenW}×${project.screenH} · ${slotName(slotIndex)}`;
   updateProjFontSelect();
+  const roleSel = $('slotRoleSel');
+  if (roleSel) roleSel.value = (project.slots[slotIndex] && project.slots[slotIndex].aod) ? 'aod' : 'face';
   renderTestDataPanel();
   $('watchTitle').textContent = project.watchName || 'Unknown watch';
   $('watchSub').textContent = `${project.title || project.base || ''} · ${project.screenW}×${project.screenH} · ${slotName(slotIndex)}`;
@@ -2851,7 +2864,12 @@ function lintProject() {
           }
         }
         if (w.Shape === 32 && frames.length === 10) {
-          push('warn', `${where}"${nm}": no negative-sign frame — EasyFace requires one (usually a copy of "0"; "-" for temperature).`);
+          // clock/date fields are never negative, so a sign frame is pointless
+          // there (EasyFace asks for one anyway; only warn where it matters)
+          const fld = (CODE_FIELD[String(w.DataSrcValue || '')] || [])[0];
+          if (!TIME_FIELDS.includes(fld)) {
+            push('warn', `${where}"${nm}": no negative-sign frame — EasyFace requires one (usually a copy of "0"; "-" for temperature).`);
+          }
         }
         // a list keyed on a single digit ((ones)/(tens)) needs all 10 frames: the
         // watch shows frame = digit, falling back to the last frame for the rest
