@@ -101,7 +101,7 @@ for (const file of process.argv.slice(2)) {
   }));
   let compiled;
   try {
-    compiled = compileFaceProject({ deviceType: u.watchType, title: u.title, faceId: u.faceId, slots });
+    compiled = compileFaceProject({ deviceType: u.watchType, title: u.title, faceId: u.faceId, subVersion: u.subVersion, slots });
   } catch (e) {
     console.log(`FAIL ${name}: compile: ${e.message}`);
     fails++;

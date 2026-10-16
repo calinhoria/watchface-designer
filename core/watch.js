@@ -121,7 +121,10 @@ function getWatchType(data, version) {
     let wt = getWatchTypeBySize(w, h);
     if (wt === WatchType.RedmiWatch3 && name.startsWith('365')) wt = WatchType.RedmiWatch4;
     else if (wt === WatchType.MiBand8 && name.startsWith('366')) wt = WatchType.MiBand9;
-    if (name.startsWith('1209')) wt = WatchType.MiBand9;
+    // NOTE: no prefix rule for '1209' — those are global store face IDs, not
+    // device codes (a 432x514 Redmi Watch 5 face was once misdetected as
+    // Mi Band 9 because its id starts with 1209). m0tral/community ids ARE
+    // device-coded (e.g. 465700750) and already resolve via preview size.
     return { watchType: wt, imageW: w, imageH: h, name };
   }
   if (version === 3) {
