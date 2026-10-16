@@ -1856,8 +1856,8 @@ function refreshPanels() {
         else if (gFill === 'outline') { w2._font.outlineColor = gOutline; w2._font.outlineWidth = gOutlineW; }
         await regenerateWidgetGlyphs(w2, s);
       }
-      const touched = new Set(selIdx.map((i) => s.widgets[i] && s.widgets[i]._group).filter(Boolean));
-      for (const g of touched) relayoutPresetGroup(g);
+      // NOTE: applying a font must not move anything — no automatic re-flow.
+      // Layout is the user's; use the Align/Distribute buttons for spacing.
       // keep the selection so the group stays selected for further tweaking
       groupSel = new Set([...keepGroup].filter((i) => s.widgets[i]));
       selected = s.widgets[keepSel] ? keepSel : (groupSel.size ? [...groupSel][0] : keepSel);
@@ -1865,7 +1865,7 @@ function refreshPanels() {
       // keep the group's font controls in view after the panel rebuilds
       const pb = $('props');
       if (pb) pb.scrollTop = 0;
-      $('meta').textContent = `Font applied to ${ids.length} layers.`;
+      $('meta').textContent = `Font applied to ${ids.length} layers \u2014 positions unchanged.`;
     };
     const sRow = mkRow('Size', 'Font size (px)');
     sRow.appendChild(sizeInp); gb.appendChild(sRow);
@@ -2460,30 +2460,46 @@ function distributeSelection(mode) {
     return;
   }
   const W = project.screenW || 432;
-  pushHistory();
   const items = ids.map((i) => ({ w: s.widgets[i], b: visualBox(s.widgets[i]) })).sort((a, b) => a.b.x - b.b.x);
   const totalW = items.reduce((a, o) => a + o.b.w, 0);
   const gaps = items.length - 1;
   const span = W - totalW;
+  const targets = new Map();
   if (mode === 'left') {
     let x = 0;
-    for (const o of items) { o.w.X = Math.round(x); x += o.b.w; }
+    for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w; }
   } else if (mode === 'right') {
     let x = W;
-    for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; o.w.X = Math.round(x); }
+    for (let i = items.length - 1; i >= 0; i--) { const o = items[i]; x -= o.b.w; targets.set(o.w, Math.round(x)); }
   } else if (mode === 'between') {
     const gap = span / gaps;
     let x = 0;
-    for (const o of items) { o.w.X = Math.round(x); x += o.b.w + gap; }
+    for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   } else {
     // evenly: keep the ends, equalise the gaps in between
     const left = items[0].b.x;
     const right = items[items.length - 1].b.x + items[items.length - 1].b.w;
     const gap = ((right - left) - totalW) / gaps;
     let x = left;
-    for (const o of items) { o.w.X = Math.round(x); x += o.b.w + gap; }
+    for (const o of items) { targets.set(o.w, Math.round(x)); x += o.b.w + gap; }
   }
+  // say something when the layout is already correct, otherwise the button
+  // looks dead
+  const changed = items.filter((o) => (o.w.X || 0) !== targets.get(o.w)).length;
+  if (!changed) {
+    const why = {
+      evenly: 'gaps already equal',
+      between: 'already spread edge to edge',
+      left: 'already packed left',
+      right: 'already packed right',
+    }[mode];
+    $('meta').textContent = `Nothing to do \u2014 ${why}.`;
+    return;
+  }
+  pushHistory();
+  for (const [w, x] of targets) w.X = x;
   refreshPanels(); render();
+  $('meta').textContent = `Distributed ${items.length} layers (${changed} moved).`;
 }
 function groupSelection() {
   if (!project) return;
@@ -2513,28 +2529,6 @@ function ungroupSelection() {
 }
 $('btnGroup').onclick = groupSelection;
 $('btnUngroup').onclick = ungroupSelection;
-
-// Lay a preset-built group out again left-to-right using the current widths, so
-// changing a font size in one child (or the whole group) keeps the spacing and
-// keeps short layers (colon, degree) vertically centred on the digits.
-function relayoutPresetGroup(gid) {
-  const s = slot();
-  const members = s.widgets.filter((x) => x._group === gid);
-  if (members.length < 2) return;
-  // only preset assemblies have a known reading order
-  const digits = members.filter((m) => m.Shape === 32);
-  const rowY = digits.length ? digits[0].Y || 0 : Math.min(...members.map((m) => m.Y || 0));
-  const rowH = digits.length ? Math.max(...digits.map((m) => m.Height)) : Math.max(...members.map((m) => m.Height));
-  const size = (digits[0] && digits[0]._font && digits[0]._font.size) || rowH || 100;
-  const gap = Math.round(size * 0.06);
-  const ordered = members.slice().sort((a, b) => (a.X || 0) - (b.X || 0));
-  let x = ordered[0].X || 0;
-  for (const m of ordered) {
-    m.X = Math.round(x);
-    m.Y = m.Shape === 32 ? rowY : Math.round(rowY + (rowH - m.Height) / 2);
-    x += (m.Shape === 32 ? m.Width * (m.Digits || 2) : m.Width) + gap;
-  }
-}
 
 function uniqName(base, taken) {
   const clean = String(base || 'item').replace(/[^\w\-.]+/g, '_');
@@ -3489,8 +3483,7 @@ async function regenerateWidgetGlyphs(w, s) {
     w.Bitmap = names[0];
   }
   w.Width = set.width; w.Height = set.height;
-  // preset-built groups re-flow so the reading keeps its spacing after a resize
-  if (w._group && w._preset) relayoutPresetGroup(w._group);
+  // no automatic re-flow: changing a font must never move a layer
   $('meta').textContent = `Rendered ${f.family} ${spec.map((g) => `"${g.char}"`).join(' ')}\u2009(${set.width}\u00d7${set.height}).`;
   refreshPanels(); render();
   const si = document.querySelector('[data-font-size]');
