@@ -138,9 +138,9 @@
     <div class="muted" id="convFile" style="margin-bottom:8px"></div>
     <label class="row"><span class="lbl">Device</span><select id="convDevice"></select></label>
     <div class="muted" id="convScale" style="margin-bottom:8px"></div>
-    <label class="row"><span class="lbl">Scaling</span><select id="convAspect">
-      <option value="stretch">Stretch to fill each axis</option>
+    <label class="row" id="convScaleRow"><span class="lbl">Scaling</span><select id="convAspect">
       <option value="fit">Fit (keep aspect, letterbox)</option>
+      <option value="stretch">Stretch to fill each axis</option>
     </select></label>
     <div id="convModeRow" class="muted" style="display:flex;gap:16px;margin-bottom:4px">
       <label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="radio" name="convMode" value="inplace" checked /> Convert current</label>

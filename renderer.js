@@ -2890,6 +2890,7 @@ async function openConvertDialog(ctx) {
   addGroup('Compilable', DEVICES.filter((d) => d.compilable));
   addGroup('Other watches (design + export — compile with EasyFace)', DEVICES.filter((d) => !d.compilable));
   sel.value = String(ctx.res.watchType);
+  $('convAspect').value = 'fit';
   updateConvScale();
   $('convGo').textContent = ctx.forImport ? 'Import' : 'Convert';
   $('convertModal').hidden = false;
@@ -2898,7 +2899,11 @@ function updateConvScale() {
   if (!convertCtx) return;
   const dev = deviceByType(parseInt($('convDevice').value, 10));
   const el = $('convScale');
-  if (!dev || dev.type === convertCtx.res.watchType) { el.textContent = 'Same device — no scaling.'; return; }
+  const same = !dev || dev.type === convertCtx.res.watchType;
+  // no scaling choices when staying on the original device
+  $('convScaleRow').hidden = same;
+  $('convScale').hidden = same;
+  if (same) return;
   let sx = dev.screen[0] / convertCtx.res.screenW, sy = dev.screen[1] / convertCtx.res.screenH;
   const fit = $('convAspect').value === 'fit';
   if (fit) { const s = Math.min(sx, sy); sx = sy = s; }
