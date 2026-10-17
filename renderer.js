@@ -516,32 +516,37 @@ function visualBox(w) {
 // safe accessor: returns a dummy slot when no project is open
 function slot() { return project ? project.slots[slotIndex] : { widgets: [], images: [], rawActions: [] }; }
 // Uploaded images are reduced to what the watch can actually show — the layer's
-// box, capped at the screen. A 976x549 phone photo on a 432x514 face was being
-// stored at full size (2 MB of the .bin); now it is cropped to fill and stored at
-// 432x514. 'cover' crops (full resolution of the visible part), 'stretch' scales
-// to the box, anything else fits inside. Never enlarged.
+// box, capped at the screen. The ASPECT RATIO IS ALWAYS PRESERVED: 'cover' crops
+// to fill, everything else fits inside, and the stored pixels are never squashed
+// (the fit is applied when drawing, so nothing is baked in and switching fit
+// later still has the original proportions). The one exception is a digit/list
+// layer, whose frames must all be the same size or the format breaks.
 function resizeUploadedImage(img, boxW, boxH) {
   const sw = img.naturalWidth, sh = img.naturalHeight;
+  const w0 = (ilmState && ilmState.widget) || null;
   const screenW = (project && project.screenW) || sw, screenH = (project && project.screenH) || sh;
   const capW = Math.max(1, Math.min(boxW || screenW, screenW));
   const capH = Math.max(1, Math.min(boxH || screenH, screenH));
   const c = document.createElement('canvas');
   const g = c.getContext('2d');
-  if (sw <= capW && sh <= capH) { c.width = sw; c.height = sh; g.drawImage(img, 0, 0); return c; }
-  const fit = (ilmState && ilmState.widget && ilmState.widget._fit) || 'stretch';
-  if (fit === 'cover') {
+  const isList = Boolean(w0 && (w0.Shape === 31 || w0.Shape === 32));
+  if (isList) {                        // frames share one box by definition
+    c.width = capW; c.height = capH;
+    g.drawImage(img, 0, 0, capW, capH);
+    return c;
+  }
+  const fit = (w0 && w0._fit) || 'contain';
+  if (fit === 'cover') {               // crop to fill, aspect kept
     const scale = Math.max(capW / sw, capH / sh);
     const dw = Math.round(sw * scale), dh = Math.round(sh * scale);
     c.width = Math.min(capW, dw); c.height = Math.min(capH, dh);
     g.drawImage(img, Math.round((dw - c.width) / 2), Math.round((dh - c.height) / 2), c.width, c.height, 0, 0, c.width, c.height);
-  } else if (fit === 'stretch') {
-    c.width = capW; c.height = capH;
-    g.drawImage(img, 0, 0, capW, capH);
-  } else {
-    const scale = Math.min(capW / sw, capH / sh);
-    c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
-    g.drawImage(img, 0, 0, c.width, c.height);
+    return c;
   }
+  if (sw <= capW && sh <= capH) { c.width = sw; c.height = sh; g.drawImage(img, 0, 0); return c; }
+  const scale = Math.min(capW / sw, capH / sh);   // fit inside, aspect kept
+  c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
+  g.drawImage(img, 0, 0, c.width, c.height);
   return c;
 }
 // ---------- project font (default for new digital/list layers) ----------
