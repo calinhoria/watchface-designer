@@ -292,7 +292,7 @@ function unpackV2(data, watchType) {
     ({ lste, lsta } = desugarGroups(lste, lsti, lstil, lstw, lsta));
     const orphanSec9 = lsta
       .filter((a) => a.RawData && !sec9Targets.includes(a.Id >>> 0))
-      .map((a) => Buffer.from(a.RawData).toString('hex'));
+      .map((a) => ({ id: a.Id >>> 0, blob: Buffer.from(a.RawData).toString('hex') }));
     const { widgets, rawActions } = buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta);
     // sec7 widgets that no element references (some packs — Mi Watch S5, MB9
     // Pro, S4 — carry composite/extra widgets positioned by other means). They
@@ -302,7 +302,7 @@ function unpackV2(data, watchType) {
     const orphanImgIds = new Set();
     for (const w of lstw) {
       if (matched7.has(w.Id >>> 0)) continue;
-      orphanWidgets.push({ blob: Buffer.from(w.RawData).toString('hex'), tgt: w.TargetId >>> 0 });
+      orphanWidgets.push({ blob: Buffer.from(w.RawData).toString('hex'), tgt: w.TargetId >>> 0, id: w.Id >>> 0 });
       if ((w.TargetId >>> 24) === 0x02) orphanImgIds.add(w.TargetId >>> 0);
     }
     const orphanImages = lsti
@@ -323,7 +323,7 @@ function unpackV2(data, watchType) {
       .map((im) => ({ id: im.Id >>> 0, name: im.Name }));
     const orphanLists = lstil
       .filter((l) => !matchedTargets.has(l.Id >>> 0))
-      .map((l) => ({ id: l.Id >>> 0, blob: l.OrigBlob }));
+      .map((l) => ({ id: l.Id >>> 0, blob: l.OrigBlob, names: l.NameList.slice() }));
     // app widgets (Shape 34): the sec5 app blobs are echoed verbatim
     const rawApps = lstApp.filter((a) => a.RawBlob).map((a) => ({ id: a.Id >>> 0, blob: a.RawBlob }));
     const images = new Map();
@@ -468,7 +468,7 @@ function readActions(data, blkCount, blkOff) {
       // new-format 56B button: app/jump code at +0x28
       let jumpApp = null;
       if (bin.length === 56 && bin[0] === 0xE7 && bin[1] === 0xBB) jumpApp = JUMP_APP_CODE[Buffer.from(bin.subarray(0x28, 0x2C)).toString('hex')] || null;
-      lst.push({ RawData: bin, Id: id, ImageName: `img_${String(imageId).padStart(4, '0')}.png`, ChildRef: childRef, JumpApp: jumpApp, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex') });
+      lst.push({ RawData: bin, Id: id, ImageName: `img_${String(imageId).padStart(4, '0')}.png`, ImageId: (0x02000000 | imageId) >>> 0, ChildRef: childRef, JumpApp: jumpApp, ActionId: getDWord(bin, 0x28), AppId: getDWord(bin, 0x2C), H0: Buffer.from(bin.subarray(0, 2)).toString('hex'), H40: Buffer.from(bin.subarray(40, 42)).toString('hex') });
     } catch (e) { }
     o += 0x10;
   }
@@ -724,7 +724,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
       if (hi === 0x02) {
         const img = lsti.find(c => (c.Id & 0xFF00FFFF) === e.TargetId);
         if (!img) { idx++; continue; }
-        widgets.push({ Shape: 30, Name: `image_${String(idx).padStart(2, '0')}`, X: e.PosX, Y: e.PosY, Width: img.Width, Height: img.Height, Alpha: 255, Bitmap: img.Name });
+        widgets.push({ Shape: 30, Name: `image_${String(idx).padStart(2, '0')}`, X: e.PosX, Y: e.PosY, Width: img.Width, Height: img.Height, Alpha: 255, Bitmap: img.Name, _OrigTargetId: e.TargetId >>> 0 });
       } else if (hi === 0x07) {
         const wdgt = lstw.find(c => c.Id === e.TargetId);
         if (!wdgt) { idx++; continue; }
@@ -748,6 +748,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             _u4: wdgt.U4, _u6: wdgt.U6,
             Blanking: (wdgt.RawData.length > 3 && (wdgt.RawData[3] & 4)) ? 0 : 1,
             Alpha: 255, DataSrcValue: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay), BitmapList: imgl.NameList.join('|'),
+            _OrigTargetId: wdgt.TargetId >>> 0, _OrigWidgetId: e.TargetId >>> 0,
           });
         } else if (wdgt.TypeId === 4 && imgi) {
           // Value-driven image widget (Redmi Watch 5 faces): a widget entry whose
@@ -760,6 +761,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             DataSrcValue: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay),
             _imgWidget: { align: wdgt.Align, shape: wdgt.Shape, disp: wdgt.DataSrcDisplay,
               raw: Buffer.from(wdgt.RawData).toString('hex') },
+            _OrigTargetId: wdgt.TargetId >>> 0, _OrigWidgetId: e.TargetId >>> 0,
           });
         } else if (wdgt.TypeId === 2 && imgl) {
           const hasCustom = wdgt.RawData.length > 0x0c && ((wdgt.RawData[0x0c] | (wdgt.RawData[0x0d] << 8)) === 0x200);
@@ -775,6 +777,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             Width: imgl.Width, Height: imgl.Height, Alpha: 255,
             DataSrcIndex: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay), BitmapList: bmpList,
             _listValues: hasCustom,   // stock faces may ship the array even if it equals the indices
+            _OrigTargetId: wdgt.TargetId >>> 0, _OrigWidgetId: e.TargetId >>> 0,
           });
         } else if (wdgt.TypeId === 3) {
           if (wdgt.DataSrcDisplay === 0x11) {
@@ -792,6 +795,7 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
               Width: imgi.Width, Height: imgi.Height, Alpha: 255,
               DataSrcVal: lookupDataSrc(wdgt.Shape, wdgt.DataSrcDisplay), PointerImage: imgi.Name,
               _widgetRaw: Buffer.from(wdgt.RawData).toString('hex'),
+              _OrigTargetId: wdgt.TargetId >>> 0, _OrigWidgetId: e.TargetId >>> 0,
             });
           }
         }
@@ -812,6 +816,8 @@ function buildWidgetsV2(watchType, lste, lsti, lstil, lstw, lstApp, lsta) {
             Bitmap: action.ImageName, Width: im.Width, Height: im.Height,
             _action: { h0: action.H0, h40: action.H40 }, _app: appName,
             _actionRaw: Buffer.from(action.RawData).toString('hex'),
+            _OrigActionId: e.TargetId >>> 0,
+            _OrigTargetId: action.ImageId != null ? action.ImageId >>> 0 : undefined,
           });
         } else {
           // orphan tap zone (no image widget): preserve raw blob for recompile

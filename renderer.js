@@ -861,10 +861,22 @@ function showUndoToast(message, onUndo, label = 'Undo') {
 async function loadImage(name, url) {
   if (imgCache.has(name)) return imgCache.get(name);
   const img = new Image();
+  const loaded = new Promise((res) => { img.onload = res; img.onerror = res; });
   img.src = url;
-  await img.decode();
+  await loaded;
+  // img.decode() only settles while the document is visible: in a hidden or
+  // occluded window it never resolves, which used to stall render() — and with
+  // it Save/Compile, since the preview is composed from the canvas. The browser
+  // decodes on demand at drawImage time, so treat decode as best-effort.
+  try { await Promise.race([img.decode(), new Promise((res) => setTimeout(res, 1000))]); } catch (e) { /* draw decodes anyway */ }
   imgCache.set(name, img);
   return img;
+}
+// decode() never settles in a hidden/occluded window (see loadImage); this waits
+// for the image to be usable without relying on it
+async function imgReady(img) {
+  if (img.complete && img.naturalWidth) { try { await Promise.race([img.decode(), new Promise((res) => setTimeout(res, 1000))]); } catch (e) { /* ignore */ } return true; }
+  return new Promise((res) => { img.onload = () => res(true); img.onerror = () => res(false); });
 }
 // Analog clock: demo pose + hand/pivot field mapping (mirrors core/packer.js)
 function testTime() {
@@ -1449,7 +1461,7 @@ $('ilmUpload').onchange = async () => {
   for (const file of $('ilmUpload').files) {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
-    try { await img.decode(); } catch (e) { continue; }
+    try { if (!(await imgReady(img))) continue; } catch (e) { continue; }
     const w0 = ilmState.widget;
     const isList = Boolean(w0 && (w0.Shape === 31 || w0.Shape === 32));
     let c, mode = null;
@@ -3340,6 +3352,14 @@ function widgetImageRefs(w) {
 function usedImageNames(s) {
   const used = new Set();
   for (const w of s.widgets) for (const n of widgetImageRefs(w)) used.add(n);
+  // images the file itself carries are echoed verbatim on compile — e.g. the
+  // hit-box image an imported tap zone references — so they must survive the
+  // cleanup even though no layer displays them
+  for (const o of (s.orphanSingles || [])) if (o && o.name) used.add(o.name);
+  for (const o of (s.orphanImages || [])) if (o && o.name) used.add(o.name);
+  // frames of an echoed list live inside its verbatim blob on compile, so they
+  // are referenced by the file even though no layer displays them
+  for (const o of (s.orphanLists || [])) for (const n of (o && o.names) || []) used.add(n);
   return used;
 }
 function unusedImages(s) {
@@ -4158,7 +4178,7 @@ $('fileUpload').onchange = async () => {
   for (const file of $('fileUpload').files) {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
-    try { await img.decode(); } catch (e) { continue; }
+    try { if (!(await imgReady(img))) continue; } catch (e) { continue; }
     // any source format -> PNG, through the fit dialog so nothing is squashed:
     // a project-wide upload has no layer box, so the watch screen is the window
     const r = await openImageFitDialog(img, file.name);

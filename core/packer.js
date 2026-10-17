@@ -6,7 +6,7 @@
 // Layout (all LE unless noted):
 //   header 168B | faceHeaders 88B each | entry tables | blobs (4B-aligned on the
 //   old generation, contiguous on the new one; preview last vs mid-stream)
-const { setWord, setDWord, rgbaToBgra, bgraToPal8, bgraToRgba } = require('./binutils');
+const { getDWord, setWord, setDWord, rgbaToBgra, bgraToPal8, bgraToRgba } = require('./binutils');
 const { encodeV10, encodeV20 } = require('./rle');
 const { PreviewSizes } = require('./watch');
 const crypto = require('crypto');
@@ -44,16 +44,25 @@ const RW4_ACTIONS = {
   calendar: '343101005304',
 };
 const ACTION_BLOB_SIZE = 56;
-// Position-only tap zones (no button image). Every real stock tap blob we have
-// is >=56 bytes with the app code at +40, a (kind | id) dword at +48 and the tap
-// box W/H right after — e.g. the Redmi Watch 5 "neon-night" taps:
-//   40: 01 00 13 12   app jump code (weather)
-//   48: 1f 00 00 07   kind 7 (image button) | image id 31
-//   52: 34 00 34 00   tap box 52x52
-//   56: 01 00 53 10 / 48: 03 00 00 09   heartrate, kind 9
-// We emit the same 56-byte shape with kind 2 (position-only, no image), which is
-// what the 366 stock zones use, and the tap box so the hit area is not empty.
-const ZONE_KIND = 0x02;
+// Tap-zone blobs, byte-verified against real stock faces. A tap zone is a sec0
+// element pointing at a sec9 action; the action carries the app code and a
+// reference to a *hit-box record*. Two layouts exist:
+//
+//  - Redmi Watch 6 (565): 52 bytes, no box W/H. The referenced single image's
+//    dimensions ARE the hit area, so stock ships one dedicated hit-box image per
+//    zone (referenced by the zone only, never drawn by any element), with the
+//    same id written at both +36 and +48. Verified on
+//    redmi_watch_6_test_wtchface.bin (9 taps: timer/flashlight/alarm/steps/hrm/
+//    calories/spo2/weather/music).
+//      40: 01 0c 6f 02   app code (timer)
+//      36: 01 00 00 02   hit-box image (260x40) -> tap area
+//      48: 01 00 00 02   same reference
+//  - everything else: 56 bytes with the app code at +40, a record reference at
+//    +48 and the tap box W/H at +52/+54 (Redmi Watch 5 "neon-night" taps).
+//      40: 01 00 13 12   app jump code (weather)
+//      48: 1f 00 00 07   referenced record (sec7 widget 31)
+//      52: 34 00 34 00   tap box 52x52
+const ZONE_52 = new Set([565]);
 const JUMP_APP_CODE = {
   weather: '01001312',
   activities: '01003311',
@@ -66,17 +75,27 @@ const ZONE_CODE = {
 };
 // apps we can author as a position-only tap zone (jump-code ones are byte-verified)
 const ZONE_APPS = [...new Set([...Object.keys(JUMP_APP_CODE), ...Object.keys(ZONE_CODE)])];
-function zoneBlob(app, ordinal, w, h, deviceType) {
+// `ref` is the id of the hit-box record; on 565 devices the packer synthesises
+// a single image sized to the layer (see prepareFace) because the blob has no
+// box of its own.
+function zoneBlob(app, ref, w, h, deviceType) {
   const key = String(app).toLowerCase();
-  // the jump codes are byte-verified in a working stock face, so prefer them
-  const code = JUMP_APP_CODE[key] || ZONE_CODE[key];
+  const size52 = ZONE_52.has(deviceType);
+  // the 565 codes are byte-verified for that layout; the jump codes for the rest
+  const code = size52 ? (ZONE_CODE[key] || JUMP_APP_CODE[key])
+    : (JUMP_APP_CODE[key] || ZONE_CODE[key]);
   if (!code) throw new Error(`tap app "${app}" has no verified zone template — use an image layer for it`);
-  const blob = Buffer.alloc(ACTION_BLOB_SIZE, 0);
+  const blob = Buffer.alloc(size52 ? 52 : ACTION_BLOB_SIZE, 0);
   Buffer.from(key, 'ascii').copy(blob, 0, 0, 15);
   Buffer.from(code, 'hex').copy(blob, 40);
-  setDWord(blob, 48, ((ZONE_KIND << 24) | ((ordinal || 1) & 0xff)) >>> 0);
-  setWord(blob, 52, w || 0);
-  setWord(blob, 54, h || 0);
+  if (size52) {
+    setDWord(blob, 36, (ref || 0) >>> 0);
+    setDWord(blob, 48, (ref || 0) >>> 0);
+  } else {
+    setDWord(blob, 48, (ref || 0) >>> 0);
+    setWord(blob, 52, w || 0);
+    setWord(blob, 54, h || 0);
+  }
   return blob;
 }
 
@@ -200,7 +219,7 @@ function compileFaceProject(proj) {
     });
     f.lists.forEach((L, i) => {
       const id = (0x03000000 | ((f.ordBase[3] + i) & 0xFF)) >>> 0;
-      L.users.forEach(u => u(id));
+      L.entryId = id; L.users.forEach(u => u(id));
     });
     f.widgets7.forEach((w7, i) => {
       if (!w7.widget) return; // orphan widget: nothing references it
@@ -219,6 +238,19 @@ function compileFaceProject(proj) {
       const nid = f.appIdMap.get(w._appId);
       if (nid != null) w._TargetId = nid;
     }
+    // Cross-reference remap for echoed blobs: imported tap/action records point
+    // at the *stock* entry ids, but every id is reassigned here, so map each
+    // original id to its new one and patch the echoed dwords (allocRaw).
+    f.refMap = new Map();
+    const addRef = (orig, next) => { if (orig != null && next != null) f.refMap.set(orig >>> 0, next >>> 0); };
+    f.singles.forEach((s) => addRef(s.origId, s.entryId));
+    f.lists.forEach((L) => addRef(L.origId, L.entryId));
+    f.orphanLists.forEach((o, j) => addRef(o.id, (0x03000000 | ((f.ordBase[3] + f.lists.length + j) & 0xFF)) >>> 0));
+    f.widgets7.forEach((w7, i) => addRef(w7.origId, (0x07000000 | ((f.ordBase[7] + i) & 0xFF)) >>> 0));
+    f.actions.forEach((a, i) => addRef(a.origId, (0x09000000 | (i & 0xFF)) >>> 0));
+    f.rawActions.forEach((r, j) => addRef(r.origId, (0x09000000 | ((f.actions.length + j) & 0xFF)) >>> 0));
+    f.orphanSec9.forEach((o, j) => addRef(o.id, (0x09000000 | ((f.actions.length + f.rawActions.length + j) & 0xFF)) >>> 0));
+    f.rawApps.forEach((a, i) => addRef(a.id, (0x05000000 | (i & 0xFF)) >>> 0));
   }
 
   // table layout: contiguous per face, sections 0..9 in order
@@ -410,7 +442,12 @@ function compileFaceProject(proj) {
         const w = a.widget;
         const box = tapBox(w);
         const isZone = a.kind === 'zone';
-        const blob = isZone ? zoneBlob(tapApp(w), i + 1, box.w, box.h, deviceType)
+        // zone tap: +36/+48 reference the hit-box image. 565 derives the tap
+        // area from that image's size; the other layouts carry W/H explicitly
+        // and draw the referenced content, so it is the (transparent) box image
+        // too — anything else would paint over the layer.
+        const zoneRef = isZone ? (w._TapBoxId || 0) : 0;
+        const blob = isZone ? zoneBlob(tapApp(w), zoneRef, box.w, box.h, deviceType)
           : (w._actionRaw ? (() => {
             const b2 = Buffer.from(w._actionRaw, 'hex');
             setDWord(b2, 48, (w._ImageId || 0) >>> 0);   // keep the stock layout
@@ -432,10 +469,22 @@ function compileFaceProject(proj) {
         }
       });
     };
+    // echoed tap/action blobs keep the stock body but their cross-references
+    // (the dword at +36/+48) point at stock entry ids, so rewrite them
+    const patchRefs = (blob) => {
+      for (const off of [36, 48]) {
+        if (blob.length < off + 4) continue;
+        const v = getDWord(blob, off) >>> 0;
+        if (!(v >>> 24)) continue; // 0 or a plain ordinal: not a reference
+        const nv = f.refMap.get(v);
+        if (nv != null) setDWord(blob, off, nv);
+      }
+      return blob;
+    };
     // orphan tap zones: verbatim blobs + elements (stock order: after widgets)
     const allocRaw = () => {
       f.rawActions.forEach((r, j) => {
-        const blob = Buffer.from(r.blob, 'hex');
+        const blob = patchRefs(Buffer.from(r.blob, 'hex'));
         const bo = alloc(blob.length);
         const id = wEntry(f, 9, f.actions.length + j, 9, bo, blob.length);
         blobParts.push({ off: bo, buf: blob });
@@ -457,8 +506,8 @@ function compileFaceProject(proj) {
     // orphan sec9 records (AOD slots): verbatim, no element, after raw zones
     const allocOrphans = () => {
       const base = f.actions.length + f.rawActions.length;
-      f.orphanSec9.forEach((hex, j) => {
-        const blob = Buffer.from(hex, 'hex');
+      f.orphanSec9.forEach((o, j) => {
+        const blob = patchRefs(Buffer.from(o.blob, 'hex'));
         const bo = alloc(blob.length);
         wEntry(f, 9, base + j, 9, bo, blob.length);
         blobParts.push({ off: bo, buf: blob });
@@ -561,15 +610,21 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
     else if (w.Shape === 27) { const h = handsOf(w).length; nElem += h; nSingle += h; nWidget += h; }
     else if (w.Shape === 31 || w.Shape === 32) {
       nElem += 1; nWidget += 1;
-      if (isZoneTap(w)) { nElem += 1; nAction += 1; } // extra tap-zone element
+      if (isZoneTap(w)) {
+        nElem += 1; nAction += 1; // extra tap-zone element
+        nSingle += 1;             // synthesised (transparent) hit-box image
+      }
       const key = packFrames(w).map(b => b.name).join('|');
       if (!seenList.has(key)) { seenList.add(key); listOrder.push(key); }
     }
   }
   // orphan tap zones (raw sec9 blobs + their sec0 elements) round-trip verbatim
-  const rawActions = (slot.rawActions || []).filter(r => r && r.blob);
+  const rawActions = (slot.rawActions || []).filter(r => r && r.blob)
+    .map(r => ({ ...r, origId: r.target != null ? r.target >>> 0 : undefined }));
   // sec9 records with no element (AOD slots): verbatim, no element
-  const orphanSec9 = (slot.orphanSec9 || []).filter(h => typeof h === 'string' && h.length);
+  const orphanSec9 = (slot.orphanSec9 || [])
+    .map(h => (typeof h === 'string' ? { id: undefined, blob: h } : h))
+    .filter(o => o && typeof o.blob === 'string' && o.blob.length);
   // sec7 widgets with no element (echoed verbatim) + the images they reference
   const orphanWidgets = (slot.orphanWidgets || []).filter(o => o && o.blob);
   const orphanImages = (slot.orphanImages || []).filter(o => o && o.name);
@@ -589,19 +644,36 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
     } else f.elements.push({ widget: w, hand: null, face: f });
   });
   // singles (widget order)
-  const pushSingle = (name, assign) => {
+  const pushSingle = (name, assign, origId) => {
     const im = getImg(name);
-    f.singles.push({ name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data), assign, enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null });
+    f.singles.push({ name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data), assign, origId: origId != null ? origId >>> 0 : undefined, enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null });
   };
   for (const w of widgets) {
-    if (w.Shape === 30) pushSingle(w.Bitmap, (id) => { w._ImageId = id; });
-    else if (w.Shape === 43 && w.PointerImage) pushSingle(w.PointerImage, (id) => { w._PointerImageId = id; });
+    if (w.Shape === 30) pushSingle(w.Bitmap, (id) => { w._ImageId = id; }, w._OrigTargetId);
+    else if (w.Shape === 43 && w.PointerImage) pushSingle(w.PointerImage, (id) => { w._PointerImageId = id; }, w._OrigTargetId);
     else if (w.Shape === 27) {
       for (const k of HANDS) {
         if (!w[k]) continue;
         const tkey = '_' + k.replace('HandImage', '') + 'ImageId';
         pushSingle(w[k], (id) => { w[tkey] = id; });
       }
+    }
+  }
+  // Tap zones reference a single image. On 565 that image's dimensions ARE the
+  // hit box (stock ships one per zone, never drawn); on the other layouts the
+  // blob carries its own W/H but the reference's content IS drawn by the watch,
+  // so it must be invisible — a transparent box-sized image either way.
+  {
+    let tn = 0;
+    for (const w of widgets) {
+      if (!isZoneTap(w)) continue;
+      const box = tapBox(w);
+      const bw = Math.max(1, box.w | 0), bh = Math.max(1, box.h | 0);
+      const bgra = Buffer.alloc(bw * bh * 4, 0); // fully transparent: draws nothing
+      f.singles.push({
+        name: `__tapbox_${tn++}`, w: bw, h: bh, bgra, synthetic: true,
+        assign: (id) => { w._TapBoxId = id; },
+      });
     }
   }
   // orphan singles: images referenced only by orphan widgets. The original
@@ -613,6 +685,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
       name: o.name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data),
       enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null,
       assign: (id) => orphanIdMap.set(o.id, id),
+      origId: o.id >>> 0,
     });
   }
   // unreferenced images: echoed verbatim as singles (no widget references them)
@@ -622,6 +695,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
       name: o.name, w: im.width, h: im.height, bgra: rgbaToBgra(im.data),
       enc: im.origBlob && im.rgbaHash ? { blob: im.origBlob, hash: im.rgbaHash } : null,
       assign: () => { },
+      origId: o.id >>> 0,
     });
   }
   // lists (dedup by bitmap names)
@@ -643,6 +717,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
         listEnc: frames[0].enc || null,
         values: bmps.map((b, i) => (b.value == null ? i : b.value)),
         users: [],
+        origId: w._OrigTargetId != null ? w._OrigTargetId >>> 0 : undefined,
       };
     }
     byKey[key].users.push((id) => { w._ImageId = id; });
@@ -656,7 +731,7 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   for (const w of widgets) {
     if (w.Shape === 30 && w._imgWidget) {
       const rawLen = w._imgWidget.raw ? w._imgWidget.raw.length / 2 : 20;
-      f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, imgWidget: true, face: f });
+      f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, imgWidget: true, face: f, origId: w._OrigWidgetId != null ? w._OrigWidgetId >>> 0 : undefined });
       continue;
     }
     if (w.Shape === 30) continue;
@@ -669,26 +744,29 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
       // otherwise a fixed 20-byte blob with [12]=0 (observed in stock).
       const custom = Boolean(w._listValues) || values.some((v, i) => v !== i);
       const L = byKey[frames.map(b => b.name).join('|')];
-      f.widgets7.push({ widget: w, hand: null, blobSize: custom ? 16 + 4 * frames.length : 20, values, custom, face: f });
+      f.widgets7.push({ widget: w, hand: null, blobSize: custom ? 16 + 4 * frames.length : 20, values, custom, face: f, origId: w._OrigWidgetId != null ? w._OrigWidgetId >>> 0 : undefined });
     } else if (w.Shape === 32) {
-      f.widgets7.push({ widget: w, hand: null, blobSize: 20, face: f });
+      f.widgets7.push({ widget: w, hand: null, blobSize: 20, face: f, origId: w._OrigWidgetId != null ? w._OrigWidgetId >>> 0 : undefined });
     } else if (w.Shape === 43) {
       // gauge/pointer: same 32-byte blob family as the clock hands, echoed
       // verbatim (only the pointer image id is patched at pack time)
       const rawLen = w._widgetRaw ? w._widgetRaw.length / 2 : 32;
-      f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, gauge: true, face: f });
+      f.widgets7.push({ widget: w, hand: null, blobSize: rawLen, gauge: true, face: f, origId: w._OrigWidgetId != null ? w._OrigWidgetId >>> 0 : undefined });
     }
   }
   // orphan widgets (no element): echoed verbatim, image id patched
   for (const o of f.orphanWidgets) {
-    f.widgets7.push({ widget: null, hand: null, blobSize: o.blob.length / 2, orphan: { blob: o.blob, tgt: o.tgt }, idMap: orphanIdMap, face: f });
+    f.widgets7.push({ widget: null, hand: null, blobSize: o.blob.length / 2, orphan: { blob: o.blob, tgt: o.tgt }, idMap: orphanIdMap, origId: o.id != null ? o.id >>> 0 : undefined, face: f });
   }
   // actions (buttons in widget order; blobs built at pack time)
   for (const w of widgets) {
     if (isButtonWidget(w)) {
       if (!w._action && !tapApp(w)) throw new Error(`Button "${w.Name}": needs a tap app (e.g. alarm).`);
-      f.actions.push({ widget: w, kind: 'button' });
+      f.actions.push({ widget: w, kind: 'button', origId: w._OrigActionId != null ? w._OrigActionId >>> 0 : undefined });
     } else if (isZoneTap(w)) {
+      if (w.Shape !== 31 && w.Shape !== 32) {
+        throw new Error(`Layer "${w.Name}": tap zones only work on list/digit layers (or image layers, which carry the tap as a button).`);
+      }
       const app = String(w._tap).toLowerCase();
       if (!RW4_ACTIONS[app]) throw new Error(`Layer "${w.Name}": unknown tap app "${w._tap}".`);
       if (!ZONE_CODE[app]) {
@@ -706,6 +784,10 @@ function prepareFace(deviceType, slot, faceIndex, warnings) {
   const used = new Set();
   for (const s of f.singles) used.add(s.name);
   for (const L of f.lists) for (const fr of L.frames) used.add(fr.name);
+  // frames of an echoed (orphan) list travel inside its verbatim blob, so the
+  // matching project images are not "unreferenced" — they are simply not
+  // emitted as standalone singles
+  for (const o of f.orphanLists) for (const n of o.names || []) used.add(n);
   for (const name of Object.keys(images)) {
     if (!used.has(name)) warnings.push(`Dropped unreferenced image ${name}.`);
   }
