@@ -204,6 +204,27 @@
     </div>
   </div>
 </div>
+<div id="cropModal" class="modal-backdrop" hidden>
+  <div class="modal crop-modal">
+    <h3>Add image <span id="cropName" class="muted"></span></h3>
+    <div id="cropStage" class="imgfit-stage">
+      <canvas id="cropCv"></canvas>
+      <div class="imgfit-win"></div>
+      <div class="imgfit-grip" id="cropGrip" hidden></div>
+    </div>
+    <div class="imgfit-modes" id="cropModes">
+      <label><input type="radio" name="cropMode" value="asis" /><span class="m-t">As is</span><span class="m-s">keep every pixel</span></label>
+      <label><input type="radio" name="cropMode" value="cover" /><span class="m-t">Cover</span><span class="m-s">fill · drag to move</span></label>
+      <label><input type="radio" name="cropMode" value="contain" /><span class="m-t">Contain</span><span class="m-s">fit width</span></label>
+    </div>
+    <div class="imgfit-size"><span>Result</span><b id="cropSize">—</b></div>
+    <div class="imgfit-info" id="cropInfo"></div>
+    <div class="modal-btns">
+      <button id="cropCancel">Cancel</button>
+      <button id="cropOk">Add image</button>
+    </div>
+  </div>
+</div>
 <script src="vendor/Sortable.min.js"></script>
 <script src="renderer.js"></script>
 <div id="toastHost" class="toast-host"></div>

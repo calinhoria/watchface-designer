@@ -515,40 +515,171 @@ function visualBox(w) {
 
 // safe accessor: returns a dummy slot when no project is open
 function slot() { return project ? project.slots[slotIndex] : { widgets: [], images: [], rawActions: [] }; }
-// Uploaded images are reduced to what the watch can actually show — the layer's
-// box, capped at the screen. The ASPECT RATIO IS ALWAYS PRESERVED: 'cover' crops
-// to fill, everything else fits inside, and the stored pixels are never squashed
-// (the fit is applied when drawing, so nothing is baked in and switching fit
-// later still has the original proportions). The one exception is a digit/list
-// layer, whose frames must all be the same size or the format breaks.
-function resizeUploadedImage(img, boxW, boxH) {
-  const sw = img.naturalWidth, sh = img.naturalHeight;
-  const w0 = (ilmState && ilmState.widget) || null;
-  const screenW = (project && project.screenW) || sw, screenH = (project && project.screenH) || sh;
+// Digit/list frames are the one upload we must not ask about: the format needs
+// every frame to be the same size, so they are cropped to the layer's cell box
+// silently. Everything else goes through the fit dialog below.
+function resizeForListBox(img, boxW, boxH) {
+  const screenW = (project && project.screenW) || img.naturalWidth;
+  const screenH = (project && project.screenH) || img.naturalHeight;
   const capW = Math.max(1, Math.min(boxW || screenW, screenW));
   const capH = Math.max(1, Math.min(boxH || screenH, screenH));
   const c = document.createElement('canvas');
-  const g = c.getContext('2d');
-  const isList = Boolean(w0 && (w0.Shape === 31 || w0.Shape === 32));
-  if (isList) {                        // frames share one box by definition
-    c.width = capW; c.height = capH;
-    g.drawImage(img, 0, 0, capW, capH);
-    return c;
-  }
-  const fit = (w0 && w0._fit) || 'contain';
-  if (fit === 'cover') {               // crop to fill, aspect kept
-    const scale = Math.max(capW / sw, capH / sh);
-    const dw = Math.round(sw * scale), dh = Math.round(sh * scale);
-    c.width = Math.min(capW, dw); c.height = Math.min(capH, dh);
-    g.drawImage(img, Math.round((dw - c.width) / 2), Math.round((dh - c.height) / 2), c.width, c.height, 0, 0, c.width, c.height);
-    return c;
-  }
-  if (sw <= capW && sh <= capH) { c.width = sw; c.height = sh; g.drawImage(img, 0, 0); return c; }
-  const scale = Math.min(capW / sw, capH / sh);   // fit inside, aspect kept
-  c.width = Math.max(1, Math.round(sw * scale)); c.height = Math.max(1, Math.round(sh * scale));
-  g.drawImage(img, 0, 0, c.width, c.height);
+  c.width = capW; c.height = capH;
+  c.getContext('2d').drawImage(img, 0, 0, capW, capH);
   return c;
 }
+
+// ---------- upload fit dialog ----------
+// The window is the watch screen, so the preview is literally what the watch
+// shows. Three ways in:
+//   as is   — original pixels, nothing resized
+//   cover   — scaled to fill the window, drag the picture under it
+//   contain — scaled so its WIDTH matches the window (height follows)
+// Resolves with a canvas, or null when the upload is cancelled.
+const CROP_VIEW_MAX = 300;
+let cropState = null;                        // { img, W, H, mode, fx, fy, view, stageW, stageH, drag, resolve }
+let cropLast = { mode: null, fx: 0.5, fy: 0.5 };   // mode null = pick a sensible default per image
+const cropClamp = (v) => Math.max(0, Math.min(1, v));
+
+function cropWindowSize() {
+  if (project) return { W: project.screenW || 240, H: project.screenH || 280 };
+  return { W: 240, H: 280 };
+}
+// how much the source is scaled to match the window for a given mode
+function cropScale(img, mode, W, H) {
+  const sw = img.naturalWidth, sh = img.naturalHeight;
+  if (mode === 'cover') return Math.max(W / sw, H / sh);
+  if (mode === 'contain') return W / sw;
+  return 1;
+}
+function cropOutputSize(img, mode, W, H) {
+  const sw = img.naturalWidth, sh = img.naturalHeight;
+  if (mode === 'cover') return { w: W, h: H };
+  if (mode === 'contain') return { w: W, h: Math.max(1, Math.round(sh * (W / sw))) };
+  return { w: sw, h: sh };
+}
+function cropRender(img, mode, fx, fy, W, H) {
+  const { w, h } = cropOutputSize(img, mode, W, H);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const dw = Math.max(w, Math.round(img.naturalWidth * cropScale(img, mode, W, H)));
+  const dh = Math.max(h, Math.round(img.naturalHeight * cropScale(img, mode, W, H)));
+  g.imageSmoothingEnabled = cropScale(img, mode, W, H) <= 1;   // smooth shrinking, crisp pixel art
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(img, -Math.round(fx * Math.max(0, dw - w)), -Math.round(fy * Math.max(0, dh - h)), dw, dh);
+  return c;
+}
+function cropDraw() {
+  const st = cropState;
+  if (!st) return;
+  const cv2 = $('cropCv');
+  cv2.width = st.stageW; cv2.height = st.stageH;
+  const g = cv2.getContext('2d');
+  g.clearRect(0, 0, st.stageW, st.stageH);
+  g.fillStyle = '#05070c'; g.fillRect(0, 0, st.stageW, st.stageH);
+  const v = st.view;
+  const s = cropScale(st.img, st.mode, st.W, st.H);
+  const dw = Math.max(1, Math.round(st.img.naturalWidth * s * v));
+  const dh = Math.max(1, Math.round(st.img.naturalHeight * s * v));
+  let dx = 0, dy = 0;
+  if (st.mode === 'cover') {
+    dx = -Math.round(st.fx * Math.max(0, dw - st.stageW));
+    dy = -Math.round(st.fy * Math.max(0, dh - st.stageH));
+  }
+  g.imageSmoothingEnabled = s * v <= 1;
+  g.imageSmoothingQuality = 'high';
+  g.drawImage(st.img, dx, dy, dw, dh);
+  // readout + hint
+  const out = cropOutputSize(st.img, st.mode, st.W, st.H);
+  $('cropSize').textContent = `${out.w} × ${out.h} px`;
+  const info = $('cropInfo');
+  const sw = st.img.naturalWidth, sh = st.img.naturalHeight;
+  info.classList.remove('warn');
+  if (st.mode === 'cover') {
+    const slack = dw > st.stageW || dh > st.stageH;
+    info.textContent = slack ? 'Drag inside the frame to choose which part shows.' : 'Fills the screen exactly.';
+  } else if (st.mode === 'contain') {
+    if (out.h > st.H) { info.classList.add('warn'); info.textContent = `Taller than the screen (${st.H} px) — the watch shows the top.`; }
+    else info.textContent = `Scaled to the screen width (${st.W} px).`;
+  } else {
+    if (sw > st.W || sh > st.H) { info.classList.add('warn'); info.textContent = `Bigger than the screen (${st.W} × ${st.H}) — the watch shows the top-left.`; }
+    else info.textContent = `Smaller than the screen (${st.W} × ${st.H}) — kept at ${sw} × ${sh}.`;
+  }
+  const canDrag = st.mode === 'cover' && (dw > st.stageW || dh > st.stageH);
+  $('cropStage').classList.toggle('can-drag', canDrag);
+  $('cropGrip').hidden = !canDrag;
+}
+function cropLayout() {
+  const st = cropState;
+  st.view = Math.min(CROP_VIEW_MAX / st.W, CROP_VIEW_MAX / st.H, 2);
+  st.stageW = Math.max(40, Math.round(st.W * st.view));
+  st.stageH = Math.max(40, Math.round(st.H * st.view));
+  $('cropStage').style.width = st.stageW + 'px';
+  $('cropStage').style.height = st.stageH + 'px';
+}
+function cropClose(result) {
+  const st = cropState;
+  cropState = null;
+  $('cropModal').hidden = true;
+  if (st) st.resolve(result);
+}
+// -> { canvas, mode } or null when cancelled. mode is null when the picture
+// already matched the screen, so the caller leaves the layer's fit alone.
+function openImageFitDialog(img, displayName) {
+  return new Promise((resolve) => {
+    const { W, H } = cropWindowSize();
+    // already screen-sized: every mode gives the same picture, so don't ask
+    if (img.naturalWidth === W && img.naturalHeight === H) {
+      resolve({ canvas: cropRender(img, 'asis', 0.5, 0.5, W, H), mode: null });
+      return;
+    }
+    // first time round: don't shrink and don't blow small pictures up, so an
+    // image that already fits the screen starts on "as is" and a bigger one on
+    // "cover". After that the last choice sticks.
+    const mode = cropLast.mode || (img.naturalWidth <= W && img.naturalHeight <= H ? 'asis' : 'cover');
+    cropState = { img, W, H, mode, fx: cropLast.fx, fy: cropLast.fy, drag: null, resolve };
+    $('cropName').textContent = displayName ? `· ${displayName}` : '';
+    for (const r of document.querySelectorAll('input[name=cropMode]')) r.checked = (r.value === cropState.mode);
+    cropLayout();
+    $('cropModal').hidden = false;
+    cropDraw();
+  });
+}
+for (const r of document.querySelectorAll('input[name=cropMode]')) {
+  r.onchange = () => { if (!cropState) return; cropState.mode = r.value; cropDraw(); };
+}
+$('cropCancel').onclick = () => cropClose(null);
+$('cropOk').onclick = () => {
+  const st = cropState;
+  if (!st) return;
+  cropLast = { mode: st.mode, fx: st.fx, fy: st.fy };
+  cropClose({ canvas: cropRender(st.img, st.mode, st.fx, st.fy, st.W, st.H), mode: st.mode });
+};
+$('cropStage').onpointerdown = (e) => {
+  const st = cropState;
+  if (!st || st.mode !== 'cover' || !$('cropStage').classList.contains('can-drag')) return;
+  st.drag = { x: e.clientX, y: e.clientY, fx: st.fx, fy: st.fy };
+  $('cropStage').setPointerCapture(e.pointerId);
+  $('cropStage').classList.add('dragging');
+  e.preventDefault();
+};
+$('cropStage').onpointermove = (e) => {
+  const st = cropState;
+  if (!st || !st.drag) return;
+  const s = cropScale(st.img, st.mode, st.W, st.H);
+  const dw = Math.max(1, Math.round(st.img.naturalWidth * s * st.view));
+  const dh = Math.max(1, Math.round(st.img.naturalHeight * s * st.view));
+  const slackX = dw - st.stageW, slackY = dh - st.stageH;
+  if (slackX > 0) st.fx = cropClamp(st.drag.fx - (e.clientX - st.drag.x) / slackX);
+  if (slackY > 0) st.fy = cropClamp(st.drag.fy - (e.clientY - st.drag.y) / slackY);
+  cropDraw();
+};
+const cropEndDrag = (e) => { if (cropState) cropState.drag = null; $('cropStage').classList.remove('dragging'); if (e && e.pointerId != null && $('cropStage').hasPointerCapture(e.pointerId)) $('cropStage').releasePointerCapture(e.pointerId); };
+$('cropStage').onpointerup = cropEndDrag;
+$('cropStage').onpointercancel = cropEndDrag;
+$('cropModal').addEventListener('mousedown', (e) => { if (e.target === $('cropModal')) cropClose(null); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && cropState) cropClose(null); });
 // ---------- project font (default for new digital/list layers) ----------
 function updateProjFontSelect() {
   const sel = $('projFont');
@@ -1320,7 +1451,18 @@ $('ilmUpload').onchange = async () => {
     const img = new Image(); img.src = url;
     try { await img.decode(); } catch (e) { continue; }
     const w0 = ilmState.widget;
-    const c = resizeUploadedImage(img, w0 && w0.Width, w0 && w0.Height);
+    const isList = Boolean(w0 && (w0.Shape === 31 || w0.Shape === 32));
+    let c, mode = null;
+    if (isList) {
+      c = resizeForListBox(img, w0.Width, w0.Height);
+      $('meta').textContent = 'Digit frames are cropped to the cell box (frames must all match).';
+    } else {
+      const r = await openImageFitDialog(img, file.name);
+      if (!r) continue;                       // cancelled
+      c = r.canvas; mode = r.mode;
+    }
+    // the chosen fit is how the editor should draw it from now on
+    if (mode === 'cover' || mode === 'contain') w0._fit = mode;
     const name = uniqName(file.name.replace(/\.[^.]+$/, '') + '.png', taken); taken.add(name);
     imgCache.delete(name);
     s.images.push({ name, width: c.width, height: c.height, url: c.toDataURL('image/png') });
@@ -4017,9 +4159,11 @@ $('fileUpload').onchange = async () => {
     const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
     const img = new Image(); img.src = url;
     try { await img.decode(); } catch (e) { continue; }
-    // any source format -> PNG, and no bigger than the screen: a project-wide
-    // upload has no layer box, so the device screen is the cap
-    const c = resizeUploadedImage(img, 0, 0);
+    // any source format -> PNG, through the fit dialog so nothing is squashed:
+    // a project-wide upload has no layer box, so the watch screen is the window
+    const r = await openImageFitDialog(img, file.name);
+    if (!r) continue;                         // cancelled
+    const c = r.canvas;
     const pngUrl = c.toDataURL('image/png');
     const name = uniqName(file.name.replace(/\.[^.]+$/, '') + '.png', taken); taken.add(name);
     imgCache.delete(name);
